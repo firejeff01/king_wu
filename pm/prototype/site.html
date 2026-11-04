@@ -1,0 +1,933 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>社區工作站原型</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=Noto+Sans+TC:wght@500;700;900&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+<style>
+/* 長輩友善：大字（預設 19px，可放大到 25px）、大按鈕（≥ 64px）、高對比、圖示一律配文字、每頁只問一件事 */
+:root{
+  --fs:19px;
+  --bg:#eef2f7; --panel:#ffffff; --text:#0b1324; --muted:#475569; --border:#cbd5e1;
+  --head:#0b1220; --accent:#0284c7; --accent-soft:#e0f2fe;
+  --ok:#047857; --ok-bg:#d1fae5; --warn:#b45309; --warn-bg:#fef3c7; --bad:#b91c1c; --bad-bg:#fee2e2;
+  --radius:18px; --shadow:0 2px 0 rgba(15,23,42,.06),0 8px 24px rgba(15,23,42,.08);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0a0f1a; --panel:#141c2b; --text:#f1f5f9; --muted:#cbd5e1; --border:#334155;
+    --accent:#38bdf8; --accent-soft:#0c2a3d; --ok:#34d399; --ok-bg:#062a20; --warn:#fbbf24; --warn-bg:#2d2208; --bad:#f87171; --bad-bg:#2e1111;
+    --shadow:0 2px 0 rgba(0,0,0,.3);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0a0f1a; --panel:#141c2b; --text:#f1f5f9; --muted:#cbd5e1; --border:#334155;
+  --accent:#38bdf8; --accent-soft:#0c2a3d; --ok:#34d399; --ok-bg:#062a20; --warn:#fbbf24; --warn-bg:#2d2208; --bad:#f87171; --bad-bg:#2e1111;
+  --shadow:0 2px 0 rgba(0,0,0,.3);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{font-size:var(--fs)}
+body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,"Noto Sans TC",system-ui,sans-serif;font-weight:500;line-height:1.5;min-height:100vh}
+button,input,textarea,select{font:inherit;color:inherit}
+button{cursor:pointer}
+svg.lucide{width:1.3em;height:1.3em;stroke-width:2.2;flex-shrink:0}
+
+/* ---------- 頁首 ---------- */
+.head{position:sticky;top:0;z-index:10;background:var(--head);color:#fff;padding:12px 20px;display:flex;align-items:center;gap:12px;box-shadow:0 2px 12px rgba(0,0,0,.2)}
+.head .site{display:flex;align-items:center;gap:10px;font-weight:800;font-size:1.05rem;border:0;background:none;color:#fff;padding:0;text-align:left}
+.head .site .mark{width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,#0ea5e9,#6366f1);display:grid;place-items:center;flex-shrink:0}
+.head .site small{display:block;font-weight:500;font-size:.75rem;color:#94a3b8}
+.head .sp{flex:1}
+.hbtn{height:48px;min-width:48px;padding:0 14px;border-radius:14px;border:1px solid #334155;background:#111b2e;color:#e2e8f0;display:inline-flex;align-items:center;justify-content:center;gap:8px;font-weight:700;font-size:.85rem}
+.hbtn:active{transform:scale(.97)}
+.clock{font-variant-numeric:tabular-nums;font-weight:700;color:#cbd5e1;font-size:.9rem;text-align:right;line-height:1.2}
+.clock small{display:block;font-weight:500;color:#64748b;font-size:.7rem}
+
+.wrap{max-width:1100px;margin:0 auto;padding:20px 20px 120px}
+section.screen{display:none}
+section.screen.on{display:block;animation:in .2s ease}
+@keyframes in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+/* ---------- 通用元件 ---------- */
+.title-row{display:flex;align-items:center;gap:12px;margin:4px 0 18px;flex-wrap:wrap}
+.title-row h1{margin:0;font-size:1.55rem;font-weight:900}
+.back{min-height:56px;padding:0 18px;border-radius:16px;border:2px solid var(--border);background:var(--panel);display:inline-flex;align-items:center;justify-content:center;gap:8px;font-weight:800}
+.back:active{transform:scale(.98)}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:20px}
+.big{width:100%;min-height:72px;border-radius:18px;border:0;font-weight:900;font-size:1.15rem;display:flex;align-items:center;justify-content:center;gap:10px;letter-spacing:.04em;padding:0 16px}
+.big:active{transform:scale(.985)}
+.big.primary{background:linear-gradient(135deg,#0284c7,#4f46e5);color:#fff;box-shadow:0 6px 18px rgba(79,70,229,.3)}
+.big.ok{background:var(--ok);color:#fff}
+.big.danger{background:#dc2626;color:#fff}
+.big.ghost{background:var(--panel);border:2px solid var(--border);color:var(--text)}
+.btn-row{display:grid;grid-template-columns:1fr 2fr;gap:12px;margin-top:20px}
+.steps{display:flex;gap:8px;align-items:center;margin-bottom:18px;font-weight:800;color:var(--muted)}
+.steps i{flex:1;height:8px;border-radius:999px;background:var(--border)}
+.steps i.on{background:linear-gradient(90deg,#0284c7,#4f46e5)}
+.steps span{white-space:nowrap;font-size:.95rem}
+.q{font-size:1.35rem;font-weight:900;margin:0 0 14px}
+.opts{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+.opt{min-height:96px;border-radius:18px;border:2px solid var(--border);background:var(--panel);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;font-weight:800;padding:10px;text-align:center}
+.opt svg.lucide{width:2rem;height:2rem}
+.opt.sel{border-color:var(--accent);background:var(--accent-soft);box-shadow:inset 0 0 0 2px var(--accent)}
+.opt.red.sel{background:var(--bad-bg);border-color:var(--bad);box-shadow:inset 0 0 0 2px var(--bad)}
+.opt .note{font-weight:600}
+.field{display:block;margin:14px 0}
+.field span{display:block;font-weight:800;margin-bottom:8px}
+.in{width:100%;min-height:64px;border-radius:16px;border:2px solid var(--border);background:var(--panel);padding:0 18px;font-size:1.1rem;font-weight:700;outline:none}
+textarea.in{padding:14px 18px;min-height:120px;resize:vertical}
+.in:focus{border-color:var(--accent);box-shadow:0 0 0 4px var(--accent-soft)}
+.in.err{border-color:var(--bad);box-shadow:0 0 0 4px var(--bad-bg)}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:999px;font-weight:800;font-size:.85rem;border:0}
+.p-ok{background:var(--ok-bg);color:var(--ok)}.p-warn{background:var(--warn-bg);color:var(--warn)}.p-bad{background:var(--bad-bg);color:var(--bad)}.p-info{background:var(--accent-soft);color:var(--accent)}
+.note{color:var(--muted);font-size:.9rem}
+.voice{margin-top:10px;width:100%}
+.voice.rec{border-color:var(--bad);color:var(--bad);background:var(--bad-bg)}
+
+/* ---------- 登入 ---------- */
+#s-login{min-height:100vh;background:radial-gradient(900px 500px at 0% 0%,#1e3a8a 0,transparent 60%),radial-gradient(700px 500px at 100% 100%,#0e7490 0,transparent 60%),#0b1220;color:#fff;padding:28px 20px}
+#s-login .inner{max-width:900px;margin:0 auto}
+.lang{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.lang button{height:48px;padding:0 16px;border-radius:14px;border:1px solid #334155;background:#111b2e;color:#e2e8f0;font-weight:800}
+.lang button.on{background:#e0f2fe;color:#0b1220;border-color:#e0f2fe}
+.who{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:14px;margin-top:18px}
+.who button{min-height:150px;border-radius:20px;border:2px solid #263247;background:rgba(17,27,46,.85);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;font-weight:800}
+.who button:active{border-color:#38bdf8;background:#0c2a3d}
+.face{width:64px;height:64px;border-radius:50%;display:grid;place-items:center;font-size:1.5rem;font-weight:900;background:linear-gradient(135deg,#38bdf8,#818cf8);color:#fff}
+.who small{color:#94a3b8;font-weight:600}
+.pin{max-width:420px;margin:20px auto 0;text-align:center}
+.dots{display:flex;justify-content:center;gap:16px;margin:18px 0 22px}
+.dots i{width:22px;height:22px;border-radius:50%;border:3px solid #64748b}
+.dots i.on{background:#38bdf8;border-color:#38bdf8}
+.pad{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.pad button{height:80px;border-radius:18px;border:0;background:#1b2740;color:#fff;font-size:1.8rem;font-weight:800}
+.pad button:active{background:#2b3b5c}
+.pad button.fn{font-size:1rem;background:#111b2e}
+.linkw{color:#7dd3fc;background:none;border:0;font-weight:700;text-decoration:underline;margin-top:16px;min-height:48px}
+
+/* ---------- 首頁 ---------- */
+.hello{display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin-bottom:18px}
+.hello h1{margin:0;font-size:1.6rem;font-weight:900}
+.hello .shift{margin-left:auto;display:flex;gap:10px;flex-wrap:wrap}
+.hello .pill{min-height:48px}
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.tile{position:relative;min-height:150px;border-radius:22px;border:0;color:#fff;display:flex;flex-direction:column;align-items:flex-start;justify-content:space-between;padding:18px;text-align:left;font-weight:900;font-size:1.25rem;box-shadow:var(--shadow);overflow:hidden}
+.tile svg.lucide{width:2.4rem;height:2.4rem}
+.tile small{display:block;font-weight:600;font-size:.82rem;opacity:.9}
+.tile:active{transform:scale(.98)}
+.tile .badge{position:absolute;top:14px;right:14px;min-width:40px;height:40px;border-radius:999px;background:#fff;color:#b91c1c;display:grid;place-items:center;font-weight:900;padding:0 10px}
+.tile::after{content:"";position:absolute;right:-30px;bottom:-30px;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,.1)}
+.c1{background:linear-gradient(135deg,#0284c7,#0369a1)}.c2{background:linear-gradient(135deg,#0d9488,#0f766e)}
+.c3{background:linear-gradient(135deg,#4f46e5,#4338ca)}.c4{background:linear-gradient(135deg,#ea580c,#c2410c)}
+.c5{background:linear-gradient(135deg,#dc2626,#b91c1c)}.c6{background:linear-gradient(135deg,#059669,#047857)}
+.c7{background:linear-gradient(135deg,#7c3aed,#6d28d9)}.c8{background:linear-gradient(135deg,#334155,#1e293b)}
+.todo{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:4px}
+.todo button{display:flex;align-items:center;gap:14px;padding:16px;text-align:left;background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);font-weight:700;color:var(--text)}
+.todo .n{font-size:1.9rem;font-weight:900;min-width:56px;text-align:center}
+.sec-title{font-weight:900;font-size:1.1rem;margin:26px 0 10px;display:flex;align-items:center;gap:8px}
+
+/* ---------- 戶別選擇 ---------- */
+.unit-show{font-size:2.2rem;font-weight:900;letter-spacing:.06em;text-align:center;padding:14px;border-radius:16px;background:var(--accent-soft);border:2px solid var(--accent);margin-bottom:14px;min-height:80px;font-variant-numeric:tabular-nums}
+.bldg{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px}
+.bldg button{height:64px;border-radius:14px;border:2px solid var(--border);background:var(--panel);font-weight:900;font-size:1.2rem}
+.bldg button.sel{background:var(--text);color:var(--panel);border-color:var(--text)}
+.kp{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.kp button{height:70px;border-radius:14px;border:2px solid var(--border);background:var(--panel);font-size:1.6rem;font-weight:900}
+.kp button:active{background:var(--accent-soft)}
+.kp button.fn{font-size:1rem;color:var(--muted)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+
+/* ---------- 清單 ---------- */
+.list{display:flex;flex-direction:column;gap:12px}
+.item{display:flex;align-items:center;gap:14px;padding:16px;border-radius:16px;border:2px solid var(--border);background:var(--panel);text-align:left;width:100%;color:var(--text);font-weight:600}
+button.item:active{background:var(--accent-soft)}
+.item.sel{border-color:var(--accent);background:var(--accent-soft)}
+.item .ic{width:56px;height:56px;border-radius:14px;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent);flex-shrink:0}
+.item .ic.ok{background:var(--ok-bg);color:var(--ok)}.item .ic.warn{background:var(--warn-bg);color:var(--warn)}
+.item b{display:block;font-size:1.1rem}
+.item .r{margin-left:auto;text-align:right;flex-shrink:0}
+.check{width:34px;height:34px;border-radius:10px;border:3px solid var(--border);display:grid;place-items:center;flex-shrink:0;color:transparent}
+.item.sel .check{background:var(--accent);border-color:var(--accent);color:#fff}
+.total{display:flex;justify-content:space-between;align-items:center;font-size:1.3rem;font-weight:900;padding:18px;border-radius:16px;background:var(--head);color:#fff;margin-top:14px}
+.total b{font-size:2rem;font-variant-numeric:tabular-nums}
+.sign{height:220px;border-radius:16px;border:3px dashed var(--border);background:var(--panel);touch-action:none;width:100%;display:block}
+.photo{height:200px;width:100%;border-radius:16px;border:3px dashed var(--border);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:var(--muted);font-weight:800;background:var(--panel)}
+.photo svg.lucide{width:3rem;height:3rem}
+.photo.done{border-style:solid;border-color:var(--ok);color:var(--ok);background:var(--ok-bg)}
+.stepper{display:flex;align-items:center;gap:14px}
+.stepper button{width:72px;height:72px;border-radius:16px;border:2px solid var(--border);background:var(--panel);font-size:2rem;font-weight:900}
+.stepper b{font-size:2.2rem;min-width:60px;text-align:center}
+.money{font-size:2rem;font-weight:900;text-align:center;padding:14px;border-radius:16px;border:2px solid var(--accent);background:var(--accent-soft);margin-bottom:12px;font-variant-numeric:tabular-nums}
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:14px 0}
+.compare div{border-radius:16px;padding:14px;background:var(--panel);border:2px solid var(--border);text-align:center}
+.compare b{display:block;font-size:1.6rem}
+
+/* ---------- 完成畫面 ---------- */
+.done-box{text-align:center;padding:40px 20px}
+.done-box .ring{width:140px;height:140px;border-radius:50%;margin:0 auto 18px;display:grid;place-items:center;background:var(--ok-bg);color:var(--ok);animation:pop .35s ease}
+.done-box .ring svg.lucide{width:80px;height:80px;stroke-width:3}
+.done-box h2{font-size:1.8rem;margin:0 0 8px;font-weight:900}
+@keyframes pop{0%{transform:scale(.6)}70%{transform:scale(1.08)}100%{transform:scale(1)}}
+
+/* ---------- 對話框（取代瀏覽器 alert） ---------- */
+.ov{position:fixed;inset:0;background:rgba(2,6,23,.6);z-index:40;display:none;align-items:center;justify-content:center;padding:16px}
+.ov.on{display:flex}
+.dlg{background:var(--panel);border-radius:22px;padding:24px;width:min(560px,100%);max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.dlg h2{margin:0 0 10px;font-size:1.4rem;font-weight:900}
+.dlg p{margin:0 0 8px;font-size:1.05rem}
+
+/* ---------- 底部導覽 ---------- */
+.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:10;background:var(--panel);border-top:1px solid var(--border);display:none;grid-template-columns:repeat(5,1fr);padding:6px 6px calc(6px + env(safe-area-inset-bottom))}
+.tabbar a{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 0;border-radius:12px;color:var(--muted);text-decoration:none;font-weight:800;font-size:.8rem}
+.tabbar a.on{color:var(--accent);background:var(--accent-soft)}
+.tabbar svg.lucide{width:1.6rem;height:1.6rem}
+.toast{position:fixed;left:50%;bottom:110px;transform:translateX(-50%) translateY(20px);opacity:0;background:#0b1220;color:#fff;padding:14px 22px;border-radius:14px;font-weight:800;transition:.25s;z-index:60;pointer-events:none;max-width:90vw;text-align:center}
+.toast.on{opacity:1;transform:translateX(-50%)}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}
+.cal div,.cal button{border-radius:12px;padding:8px 4px;text-align:center;border:1px solid var(--border);background:var(--panel);font-weight:800;min-height:60px}
+.cal small{display:block;font-size:.75rem;font-weight:800}
+.cal .D small{color:#0369a1}.cal .O{opacity:.55}.cal .L small{color:#b45309}.cal .today{border:3px solid var(--accent)}
+.cal button.sel{background:var(--accent);color:#fff;border-color:var(--accent)}
+.cal .wd{border:0;background:none;color:var(--muted);min-height:0}
+.chk{display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:14px;border:2px solid var(--border);background:var(--panel);font-weight:800;text-align:left;width:100%;color:var(--text);min-height:64px}
+.chk.sel{border-color:var(--ok);background:var(--ok-bg)}
+.chk.sel .check{background:var(--ok);border-color:var(--ok);color:#fff}
+.notice{display:block;width:100%;text-align:left;padding:18px;border-radius:16px;border:2px solid var(--border);background:var(--panel);color:var(--text)}
+.notice.unread{border-color:var(--accent)}
+.notice b{font-size:1.1rem}
+
+@media (max-width:900px){
+  .tiles{grid-template-columns:repeat(2,1fr)}
+  .todo{grid-template-columns:1fr}
+  .two{grid-template-columns:1fr}
+  .tabbar{display:grid}
+  .hello .shift{margin-left:0}
+}
+@media (max-width:560px){
+  .wrap{padding:16px 16px 120px}
+  .head{padding:10px 12px;gap:8px}
+  .head .site small,.clock,.hbtn .t{display:none}
+  .tile{min-height:132px;font-size:1.12rem;padding:14px}
+  .btn-row{grid-template-columns:1fr}
+  .btn-row .ghost{order:2}
+  .opts{grid-template-columns:repeat(2,1fr)}
+  .opts.three{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- ================= 登入（櫃台模式） ================= -->
+<section class="screen" id="s-login">
+  <div class="inner">
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+      <div style="display:flex;align-items:center;gap:12px;font-weight:900;font-size:1.2rem">
+        <div style="width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,#0ea5e9,#6366f1);display:grid;place-items:center"><i data-lucide="building-2"></i></div>
+        <div>春暉苑 社區工作站<div style="font-size:.8rem;color:#94a3b8;font-weight:600">櫃台模式 · 點自己的名字登入</div></div>
+      </div>
+      <div style="flex:1"></div>
+      <div class="lang" id="lang">
+        <button class="on" data-act="lang">中文</button><button data-act="lang">English</button><button data-act="lang">Indonesia</button><button data-act="lang">Tiếng Việt</button><button data-act="lang">ไทย</button>
+      </div>
+    </div>
+
+    <div id="whoStep">
+      <h2 style="font-size:1.6rem;margin:28px 0 0;font-weight:900">請點選您的名字</h2>
+      <div class="who" id="who"></div>
+    </div>
+
+    <div id="pinStep" style="display:none">
+      <div class="pin">
+        <div class="face" style="margin:20px auto 8px;width:84px;height:84px;font-size:2rem" id="pinFace">劉</div>
+        <div style="font-size:1.4rem;font-weight:900" id="pinName">劉德華</div>
+        <div style="color:#94a3b8;margin-top:6px">請輸入 4 位數密碼</div>
+        <div class="dots" id="dots"><i></i><i></i><i></i><i></i></div>
+        <div class="pad" id="pad"></div>
+        <button class="linkw" data-act="forgotPin">忘記密碼？</button>
+        <p style="color:#64748b;font-size:.85rem;margin-top:8px">原型：任意輸入 4 碼即可登入</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 主畫面框架 ================= -->
+<div id="app" style="display:none">
+  <header class="head">
+    <button class="site" data-act="switchSite"><span class="mark"><i data-lucide="building-2"></i></span><span><span id="siteName">春暉苑</span><small>點此切換社區</small></span></button>
+    <div class="sp"></div>
+    <div class="clock" id="clock">--:--<small>--</small></div>
+    <button class="hbtn" data-act="fontSize" aria-label="字體大小"><i data-lucide="a-large-small"></i><span class="t">字體</span></button>
+    <button class="hbtn" data-act="logout" aria-label="交班登出"><i data-lucide="log-out"></i><span class="t" id="userName">登出</span></button>
+  </header>
+
+  <div class="wrap">
+
+    <!-- ========== 首頁 ========== -->
+    <section class="screen" id="s-home">
+      <div class="hello">
+        <h1 id="hello">早安</h1>
+        <div class="shift"><a class="pill p-ok" href="#me" style="text-decoration:none"><i data-lucide="clock"></i>今日日班 07:00–19:00</a><a class="pill p-warn" href="#notice" style="text-decoration:none" id="noticePill"><i data-lucide="megaphone"></i><span>2 則新公告</span></a></div>
+      </div>
+      <div class="tiles" id="tiles"></div>
+      <div class="sec-title"><i data-lucide="list-todo"></i>待辦事項</div>
+      <div class="todo" id="todo"></div>
+    </section>
+
+    <!-- ========== 包裹登記 ========== -->
+    <section class="screen" id="s-pkgin">
+      <div class="title-row"><button class="back" data-go="home"><i data-lucide="arrow-left"></i>首頁</button><h1>包裹登記</h1></div>
+      <div class="card"><div class="wiz" data-w="pkgin">
+        <div class="step" data-s="1">
+          <div class="steps"><span>第 1 步／共 3 步</span><i class="on"></i><i></i><i></i></div>
+          <p class="q">收件人是哪一戶？</p>
+          <div class="unitpicker" id="up-pkgin"></div>
+          <div class="btn-row"><button class="big ghost" data-go="home">取消</button><button class="big primary" data-act="unitNext" data-w="pkgin" data-n="2">下一步 <i data-lucide="arrow-right"></i></button></div>
+        </div>
+        <div class="step" data-s="2">
+          <div class="steps"><span>第 2 步／共 3 步</span><i class="on"></i><i class="on"></i><i></i></div>
+          <p class="q">包裹類型</p>
+          <div class="opts single" id="pkType">
+            <button class="opt sel"><i data-lucide="package"></i>一般包裹</button><button class="opt"><i data-lucide="snowflake"></i>冷藏 / 冷凍</button>
+            <button class="opt"><i data-lucide="mail"></i>掛號信</button><button class="opt"><i data-lucide="box"></i>大型物品</button>
+          </div>
+          <p class="q" style="margin-top:22px">件數</p>
+          <div class="stepper"><button data-act="cnt" data-d="-1">−</button><b id="cnt">1</b><button data-act="cnt" data-d="1">＋</button><span class="note">件</span></div>
+          <div class="btn-row"><button class="big ghost" data-act="wiz" data-w="pkgin" data-n="1"><i data-lucide="arrow-left"></i>上一步</button><button class="big primary" data-act="wiz" data-w="pkgin" data-n="3">下一步 <i data-lucide="arrow-right"></i></button></div>
+        </div>
+        <div class="step" data-s="3">
+          <div class="steps"><span>第 3 步／共 3 步</span><i class="on"></i><i class="on"></i><i class="on"></i></div>
+          <p class="q">拍一張包裹照片（可略過）</p>
+          <button class="photo" data-act="snap"><i data-lucide="camera"></i>點這裡拍照</button>
+          <div class="btn-row"><button class="big ghost" data-act="wiz" data-w="pkgin" data-n="2"><i data-lucide="arrow-left"></i>上一步</button><button class="big ok" data-act="pkginDone"><i data-lucide="check"></i>完成登記</button></div>
+        </div>
+      </div></div>
+    </section>
+
+    <!-- ========== 包裹領取 ========== -->
+    <section class="screen" id="s-pkgout">
+      <div class="title-row"><button class="back" data-go="home"><i data-lucide="arrow-left"></i>首頁</button><h1>包裹領取</h1></div>
+      <div class="card"><div class="wiz" data-w="pkgout">
+        <div class="step" data-s="1">
+          <div class="steps"><span>第 1 步／共 3 步</span><i class="on"></i><i></i><i></i></div>
+          <p class="q">住戶是哪一戶？</p>
+          <div class="unitpicker" id="up-pkgout"></div>
+          <div class="btn-row"><button class="big ghost" data-go="home">取消</button><button class="big primary" data-act="unitNext" data-w="pkgout" data-n="2">查詢包裹 <i data-lucide="search"></i></button></div>
+        </div>
+        <div class="step" data-s="2">
+          <div class="steps"><span>第 2 步／共 3 步</span><i class="on"></i><i class="on"></i><i></i></div>
+          <p class="q"><span class="unitLabel">A-12-3</span> 有 3 件包裹，請勾選要領取的</p>
+          <div class="list multi" id="pkList">
+            <button class="item sel"><span class="check"><i data-lucide="check"></i></span><span class="ic"><i data-lucide="package"></i></span><span><b>黑貓宅急便 · 一般</b><span class="note">11/03 14:20 · 2 號櫃</span></span><span class="r"><span class="pill p-ok">1 天</span></span></button>
+            <button class="item sel"><span class="check"><i data-lucide="check"></i></span><span class="ic"><i data-lucide="snowflake"></i></span><span><b>新竹物流 · 冷藏</b><span class="note">11/04 09:05 · 冰箱</span></span><span class="r"><span class="pill p-warn">今天</span></span></button>
+            <button class="item"><span class="check"><i data-lucide="check"></i></span><span class="ic"><i data-lucide="mail"></i></span><span><b>中華郵政 · 掛號</b><span class="note">10/26 11:40 · 信件櫃</span></span><span class="r"><span class="pill p-bad">9 天</span></span></button>
+          </div>
+          <div class="btn-row"><button class="big ghost" data-act="wiz" data-w="pkgout" data-n="1"><i data-lucide="arrow-left"></i>上一步</button><button class="big primary" data-act="pkoutNext">請住戶簽名 <i data-lucide="arrow-right"></i></button></div>
+        </div>
+        <div class="step" data-s="3">
+          <div class="steps"><span>第 3 步／共 3 步</span><i class="on"></i><i class="on"></i><i class="on"></i></div>
+          <p class="q">請領取人在框內簽名</p>
+          <canvas class="sign" id="sign"></canvas>
+          <div style="display:flex;justify-content:flex-end;margin-top:8px"><button class="back" data-act="clearSign"><i data-lucide="eraser"></i>重簽</button></div>
+          <div class="btn-row"><button class="big ghost" data-act="wiz" data-w="pkgout" data-n="2"><i data-lucide="arrow-left"></i>上一步</button><button class="big ok" data-act="pkoutDone"><i data-lucide="check"></i>確認領取</button></div>
+        </div>
+      </div></div>
+    </section>
+
+    <!-- ========== 訪客 ========== -->
+    <section class="screen" id="s-visitor">
+      <div class="title-row"><button class="back" data-go="home"><i data-lucide="arrow-left"></i>首頁</button><h1>訪客登記</h1></div>
+      <div class="card">
+        <div class="two">
+          <div><p class="q">拜訪哪一戶？</p><div class="unitpicker" id="up-visitor"></div></div>
+          <div>
+            <p class="q">來訪事由</p>
+            <div class="opts single" id="visReason">
+              <button class="opt sel"><i data-lucide="users"></i>親友拜訪</button><button class="opt"><i data-lucide="hammer"></i>施工 / 維修</button>
+              <button class="opt"><i data-lucide="truck"></i>送貨</button><button class="opt"><i data-lucide="more-horizontal"></i>其他</button>
+            </div>
+            <label class="field"><span>訪客姓名</span><input class="in" id="visName" placeholder="例：林先生"></label>
+            <p class="q" style="font-size:1.1rem">人數</p>
+            <div class="stepper"><button data-act="vcnt" data-d="-1">−</button><b id="vcnt">1</b><button data-act="vcnt" data-d="1">＋</button><span class="note">人</span></div>
+          </div>
+        </div>
+        <div class="btn-row"><button class="big ghost" data-go="home">取消</button><button class="big ok" data-act="visitorIn"><i data-lucide="log-in"></i>登記進入</button></div>
+      </div>
+      <div class="sec-title"><i data-lucide="user-check"></i>目前在社區內的訪客</div>
+      <div class="list" id="visList"></div>
+    </section>
+
+    <!-- ========== 報修 ========== -->
+    <section class="screen" id="s-repair">
+      <div class="title-row"><button class="back" data-go="home"><i data-lucide="arrow-left"></i>首頁</button><h1>報修</h1><button class="back" style="margin-left:auto" data-go="repairs"><i data-lucide="list"></i>報修進度</button></div>
+      <div class="card"><div class="wiz" data-w="repair">
+        <div class="step" data-s="1">
+          <div class="steps"><span>第 1 步／共 3 步</span><i class="on"></i><i></i><i></i></div>
+          <p class="q">什麼東西壞了？</p>
+          <div class="opts single need" id="rpCat">
+            <button class="opt"><i data-lucide="droplets"></i>水管 / 漏水</button><button class="opt"><i data-lucide="zap"></i>電燈 / 電力</button>
+            <button class="opt"><i data-lucide="arrow-up-down"></i>電梯</button><button class="opt"><i data-lucide="door-open"></i>門禁 / 大門</button>
+            <button class="opt"><i data-lucide="flame"></i>消防設備</button><button class="opt"><i data-lucide="sparkles"></i>清潔</button>
+            <button class="opt"><i data-lucide="car"></i>停車場</button><button class="opt"><i data-lucide="more-horizontal"></i>其他</button>
+          </div>
+          <div class="btn-row"><button class="big ghost" data-go="home">取消</button><button class="big primary" data-act="needOpt" data-sel="#rpCat" data-w="repair" data-n="2" data-msg="請先點選壞掉的東西">下一步 <i data-lucide="arrow-right"></i></button></div>
+        </div>
+        <div class="step" data-s="2">
+          <div class="steps"><span>第 2 步／共 3 步</span><i class="on"></i><i class="on"></i><i></i></div>
+          <p class="q">在哪裡？</p>
+          <div class="opts single" id="rpWhere">
+            <button class="opt"><i data-lucide="home"></i>住戶家中</button><button class="opt"><i data-lucide="armchair"></i>大廳</button>
+            <button class="opt"><i data-lucide="square-parking"></i>地下室</button><button class="opt"><i data-lucide="dumbbell"></i>健身房</button>
+            <button class="opt"><i data-lucide="trees"></i>中庭花園</button><button class="opt"><i data-lucide="building"></i>樓梯 / 走道</button>
+          </div>
+          <div class="btn-row"><button class="big ghost" data-act="wiz" data-w="repair" data-n="1"><i data-lucide="arrow-left"></i>上一步</button><button class="big primary" data-act="needOpt" data-sel="#rpWhere" data-w="repair" data-n="3" data-msg="請先點選地點">下一步 <i data-lucide="arrow-right"></i></button></div>
+        </div>
+        <div class="step" data-s="3">
+          <div class="steps"><span>第 3 步／共 3 步</span><i class="on"></i><i class="on"></i><i class="on"></i></div>
+          <div class="two">
+            <div><p class="q">拍照</p><button class="photo" data-act="snap"><i data-lucide="camera"></i>點這裡拍照</button></div>
+            <div><p class="q">簡單說明</p><textarea class="in" id="rpDesc" placeholder="例：B2 車道旁天花板滴水"></textarea>
+              <button class="back voice" data-act="voice" data-t="#rpDesc" data-text="B2 車道旁天花板一直滴水，地上有積水"><i data-lucide="mic"></i>按一下用說的</button></div>
+          </div>
+          <div class="btn-row"><button class="big ghost" data-act="wiz" data-w="repair" data-n="2"><i data-lucide="arrow-left"></i>上一步</button><button class="big ok" data-act="repairDone"><i data-lucide="send"></i>送出報修</button></div>
+        </div>
+      </div></div>
+    </section>
+
+    <!-- ========== 報修進度 ========== -->
+    <section class="screen" id="s-repairs">
+      <div class="title-row"><button class="back" data-go="repair"><i data-lucide="arrow-left"></i>報修</button><h1>報修進度</h1></div>
+      <div class="list" id="rpList"></div>
+    </section>
+
+    <!-- ========== 事件通報 ========== -->
+    <section class="screen" id="s-incident">
+      <div class="title-row"><button class="back" data-go="home"><i data-lucide="arrow-left"></i>首頁</button><h1>事件通報</h1></div>
+      <div class="card">
+        <p class="q">有多嚴重？</p>
+        <div class="opts single three" id="incLv" style="grid-template-columns:repeat(3,1fr)">
+          <button class="opt red" style="min-height:130px" data-lv="緊急"><i data-lucide="siren" style="color:#dc2626"></i><span style="font-size:1.2rem">緊急</span><span class="note">火警、受傷、治安</span></button>
+          <button class="opt" style="min-height:130px" data-lv="重要"><i data-lucide="triangle-alert" style="color:#ea580c"></i><span style="font-size:1.2rem">重要</span><span class="note">漏水、停電、糾紛</span></button>
+          <button class="opt sel" style="min-height:130px" data-lv="一般"><i data-lucide="info" style="color:#0284c7"></i><span style="font-size:1.2rem">一般</span><span class="note">其他狀況</span></button>
+        </div>
+        <div class="two" style="margin-top:20px">
+          <div><p class="q">拍照或錄影</p><button class="photo" data-act="snap"><i data-lucide="camera"></i>點這裡拍照</button></div>
+          <div><p class="q">發生什麼事？</p><textarea class="in" id="incDesc" placeholder="例：B2 停車場有積水"></textarea>
+            <button class="back voice" data-act="voice" data-t="#incDesc" data-text="B2 停車場靠近 18 號車位有大量積水"><i data-lucide="mic"></i>按一下用說的</button></div>
+        </div>
+        <div class="btn-row"><button class="big ghost" data-go="home">取消</button><button class="big danger" data-act="incidentSend"><i data-lucide="send"></i>立即通報</button></div>
+      </div>
+    </section>
+
+    <!-- ========== 管理費收款 ========== -->
+    <section class="screen" id="s-fee">
+      <div class="title-row"><button class="back" data-go="home"><i data-lucide="arrow-left"></i>首頁</button><h1>管理費收款</h1><button class="back" style="margin-left:auto" data-act="dayClose"><i data-lucide="calculator"></i>今日日結</button></div>
+      <div class="card"><div class="wiz" data-w="fee">
+        <div class="step" data-s="1">
+          <div class="steps"><span>第 1 步／共 3 步</span><i class="on"></i><i></i><i></i></div>
+          <p class="q">哪一戶要繳費？</p>
+          <div class="unitpicker" id="up-fee"></div>
+          <div class="btn-row"><button class="big ghost" data-go="home">取消</button><button class="big primary" data-act="unitNext" data-w="fee" data-n="2">查詢應繳 <i data-lucide="search"></i></button></div>
+        </div>
+        <div class="step" data-s="2">
+          <div class="steps"><span>第 2 步／共 3 步</span><i class="on"></i><i class="on"></i><i></i></div>
+          <p class="q"><span class="unitLabel">A-12-3</span> · 區權人 周○○ · 38.6 坪</p>
+          <div class="list multi" id="bills">
+            <button class="item sel" data-v="2316"><span class="check"><i data-lucide="check"></i></span><span><b>2026 年 9 月 管理費</b><span class="note">逾期 35 天</span></span><span class="r"><b>$2,316</b></span></button>
+            <button class="item sel" data-v="2316"><span class="check"><i data-lucide="check"></i></span><span><b>2026 年 10 月 管理費</b><span class="note">逾期 4 天</span></span><span class="r"><b>$2,316</b></span></button>
+            <button class="item sel" data-v="500"><span class="check"><i data-lucide="check"></i></span><span><b>2026 年 10 月 車位清潔費</b><span class="note">B2-022</span></span><span class="r"><b>$500</b></span></button>
+            <button class="item" data-v="2316"><span class="check"><i data-lucide="check"></i></span><span><b>2026 年 11 月 管理費</b><span class="note">11/30 前繳</span></span><span class="r"><b>$2,316</b></span></button>
+          </div>
+          <div class="total"><span>本次收款</span><b id="feeTotal">$5,132</b></div>
+          <div class="btn-row"><button class="big ghost" data-act="wiz" data-w="fee" data-n="1"><i data-lucide="arrow-left"></i>上一步</button><button class="big primary" data-act="feeNext">下一步 <i data-lucide="arrow-right"></i></button></div>
+        </div>
+        <div class="step" data-s="3">
+          <div class="steps"><span>第 3 步／共 3 步</span><i class="on"></i><i class="on"></i><i class="on"></i></div>
+          <p class="q">怎麼付款？</p>
+          <div class="opts single" id="payWay">
+            <button class="opt sel"><i data-lucide="banknote"></i>現金</button><button class="opt"><i data-lucide="landmark"></i>匯款 / 轉帳</button>
+            <button class="opt"><i data-lucide="file-check"></i>支票</button><button class="opt"><i data-lucide="credit-card"></i>刷卡</button>
+          </div>
+          <div class="total"><span>應收金額</span><b id="feeTotal2">$5,132</b></div>
+          <div class="btn-row"><button class="big ghost" data-act="wiz" data-w="fee" data-n="2"><i data-lucide="arrow-left"></i>上一步</button><button class="big ok" data-act="feeDone"><i data-lucide="printer"></i>收款並列印收據</button></div>
+        </div>
+      </div></div>
+    </section>
+
+    <!-- ========== 交接日誌 ========== -->
+    <section class="screen" id="s-handover">
+      <div class="title-row"><button class="back" data-go="home"><i data-lucide="arrow-left"></i>首頁</button><h1>交接班</h1></div>
+      <div class="two">
+        <div class="card">
+          <p class="q">點交物品（點一下打勾）</p>
+          <div class="list multi" id="hoList">
+            <button class="chk"><span class="check"><i data-lucide="check"></i></span>鑰匙 32 串</button>
+            <button class="chk"><span class="check"><i data-lucide="check"></i></span>對講機 4 支</button>
+            <button class="chk"><span class="check"><i data-lucide="check"></i></span>手電筒 2 支</button>
+            <button class="chk"><span class="check"><i data-lucide="check"></i></span>現金日結 $12,480</button>
+          </div>
+        </div>
+        <div class="card">
+          <p class="q">本班自動摘要</p>
+          <div class="list">
+            <a class="item" href="#pkgout" style="text-decoration:none"><span class="ic"><i data-lucide="package"></i></span><span><b>包裹 收 18 / 領 11</b></span></a>
+            <a class="item" href="#visitor" style="text-decoration:none"><span class="ic"><i data-lucide="user-check"></i></span><span><b>訪客 9 人</b><span class="note">1 位施工人員尚未離開</span></span></a>
+            <a class="item" href="#repairs" style="text-decoration:none"><span class="ic"><i data-lucide="wrench"></i></span><span><b>報修 2 件</b><span class="note">B2 漏水處理中</span></span></a>
+          </div>
+          <label class="field"><span>要提醒下一班的事</span><textarea class="in" id="hoNote" placeholder="例：C 棟 9 樓明早 9 點搬家，請協助電梯保護"></textarea></label>
+          <button class="back voice" data-act="voice" data-t="#hoNote" data-text="C 棟 9 樓明天早上 9 點搬家，請先鋪電梯保護墊"><i data-lucide="mic"></i>按一下用說的</button>
+        </div>
+      </div>
+      <div class="btn-row"><button class="big ghost" data-go="home">稍後再填</button><button class="big ok" data-act="handoverDone"><i data-lucide="repeat"></i>送出並交班</button></div>
+    </section>
+
+    <!-- ========== 巡邏 ========== -->
+    <section class="screen" id="s-patrol">
+      <div class="title-row"><button class="back" data-go="home"><i data-lucide="arrow-left"></i>首頁</button><h1>巡邏打點</h1></div>
+      <div class="card" style="text-align:center">
+        <p class="q" id="ptTitle">21:00 夜間巡邏</p>
+        <div style="height:14px;border-radius:999px;background:var(--border);overflow:hidden;margin:0 0 20px"><div id="ptBar" style="height:100%;background:linear-gradient(90deg,#0284c7,#4f46e5);transition:.3s"></div></div>
+        <button class="big primary" style="min-height:120px;font-size:1.4rem" data-act="scan"><i data-lucide="scan-line" style="width:2.4rem;height:2.4rem"></i><span id="scanLabel">掃描巡邏點 QR Code</span></button>
+      </div>
+      <div class="list" style="margin-top:16px" id="ptList"></div>
+    </section>
+
+    <!-- ========== 社區財務（總幹事） ========== -->
+    <section class="screen" id="s-fin">
+      <div class="title-row"><button class="back" data-go="home"><i data-lucide="arrow-left"></i>首頁</button><h1>社區財務</h1></div>
+      <div class="tiles" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr))">
+        <button class="tile c3" data-go="expense"><i data-lucide="receipt"></i><span>登錄支出<small>拍發票就能記帳</small></span></button>
+        <button class="tile c6" data-go="petty"><i data-lucide="wallet"></i><span>零用金<small id="pettyTile">餘額 $3,260</small></span></button>
+        <button class="tile c1" data-act="reportGo"><i data-lucide="file-text"></i><span>產出月報<small id="repTile">10 月尚未封帳</small></span></button>
+      </div>
+      <div class="sec-title"><i data-lucide="calendar-check"></i>10 月結帳檢查（全部打勾才能封帳）</div>
+      <div class="list" id="closeList"></div>
+      <div class="btn-row" style="grid-template-columns:1fr"><button class="big primary" data-act="closeMonth"><i data-lucide="lock"></i>10 月封帳</button></div>
+    </section>
+
+    <!-- ========== 登錄支出 ========== -->
+    <section class="screen" id="s-expense">
+      <div class="title-row"><button class="back" data-go="fin"><i data-lucide="arrow-left"></i>社區財務</button><h1>登錄支出</h1></div>
+      <div class="card"><div class="wiz" data-w="expense">
+        <div class="step" data-s="1">
+          <div class="steps"><span>第 1 步／共 3 步</span><i class="on"></i><i></i><i></i></div>
+          <p class="q">拍下發票或收據</p>
+          <button class="photo" data-act="snap" style="height:260px" id="expPhoto"><i data-lucide="camera"></i>點這裡拍照</button>
+          <div class="btn-row"><button class="big ghost" data-go="fin">取消</button><button class="big primary" data-act="expNext1">下一步 <i data-lucide="arrow-right"></i></button></div>
+        </div>
+        <div class="step" data-s="2">
+          <div class="steps"><span>第 2 步／共 3 步</span><i class="on"></i><i class="on"></i><i></i></div>
+          <p class="q">這筆是什麼費用？</p>
+          <div class="opts single" id="expCat">
+            <button class="opt"><i data-lucide="wrench"></i>修繕費</button><button class="opt"><i data-lucide="spray-can"></i>清潔用品</button>
+            <button class="opt"><i data-lucide="droplet"></i>水費</button><button class="opt"><i data-lucide="zap"></i>電費</button>
+            <button class="opt"><i data-lucide="arrow-up-down"></i>電梯保養</button><button class="opt"><i data-lucide="pen-line"></i>文具郵電</button>
+            <button class="opt"><i data-lucide="more-horizontal"></i>其他</button>
+          </div>
+          <div class="btn-row"><button class="big ghost" data-act="wiz" data-w="expense" data-n="1"><i data-lucide="arrow-left"></i>上一步</button><button class="big primary" data-act="needOpt" data-sel="#expCat" data-w="expense" data-n="3" data-msg="請先點選費用類別">下一步 <i data-lucide="arrow-right"></i></button></div>
+        </div>
+        <div class="step" data-s="3">
+          <div class="steps"><span>第 3 步／共 3 步</span><i class="on"></i><i class="on"></i><i class="on"></i></div>
+          <p class="q">金額</p>
+          <div class="money" id="expAmt">$0</div>
+          <div class="kp" id="expKp"></div>
+          <p class="q" style="margin-top:18px">用什麼付？</p>
+          <div class="opts single" id="expPay">
+            <button class="opt sel"><i data-lucide="wallet"></i>零用金</button><button class="opt"><i data-lucide="landmark"></i>專戶轉帳</button><button class="opt"><i data-lucide="file-check"></i>支票</button>
+          </div>
+          <div class="card" style="margin-top:16px;background:var(--accent-soft);border-color:var(--accent);box-shadow:none" id="expRule"></div>
+          <div class="btn-row"><button class="big ghost" data-act="wiz" data-w="expense" data-n="2"><i data-lucide="arrow-left"></i>上一步</button><button class="big ok" data-act="expDone"><i data-lucide="check"></i>完成</button></div>
+        </div>
+      </div></div>
+    </section>
+
+    <!-- ========== 零用金 ========== -->
+    <section class="screen" id="s-petty">
+      <div class="title-row"><button class="back" data-go="fin"><i data-lucide="arrow-left"></i>社區財務</button><h1>零用金</h1></div>
+      <div class="card" style="text-align:center">
+        <div class="note">帳面餘額（額度 $5,000）</div>
+        <div style="font-size:2.6rem;font-weight:900" id="pettyBal">$3,260</div>
+        <div class="btn-row" style="grid-template-columns:1fr 1fr 1fr">
+          <button class="big ghost" data-go="expense"><i data-lucide="minus-circle"></i>支用</button>
+          <button class="big ghost" data-act="pettyTopup"><i data-lucide="plus-circle"></i>撥補</button>
+          <button class="big primary" data-act="pettyCount"><i data-lucide="calculator"></i>月底盤點</button>
+        </div>
+      </div>
+      <div class="sec-title"><i data-lucide="list"></i>本月紀錄</div>
+      <div class="list" id="pettyList"></div>
+    </section>
+
+    <!-- ========== 零用金盤點 ========== -->
+    <section class="screen" id="s-pettycount">
+      <div class="title-row"><button class="back" data-go="petty"><i data-lucide="arrow-left"></i>零用金</button><h1>零用金盤點</h1></div>
+      <div class="card">
+        <p class="q">請數一數抽屜裡的現金，輸入總金額</p>
+        <div class="money" id="pcAmt">$0</div>
+        <div class="kp" id="pcKp"></div>
+        <div class="compare"><div><span class="note">帳面金額</span><b id="pcBook">$3,260</b></div><div><span class="note">差額</span><b id="pcDiff">−$3,260</b></div></div>
+        <label class="field" id="pcWhy" style="display:none"><span>差額原因（必填）</span><textarea class="in" id="pcWhyT" placeholder="例：11/02 購買垃圾袋 $120 收據遺失"></textarea></label>
+        <div class="btn-row"><button class="big ghost" data-go="petty">取消</button><button class="big ok" data-act="pcDone"><i data-lucide="check"></i>完成盤點</button></div>
+      </div>
+    </section>
+
+    <!-- ========== 銀行對帳 ========== -->
+    <section class="screen" id="s-bank">
+      <div class="title-row"><button class="back" data-go="fin"><i data-lucide="arrow-left"></i>社區財務</button><h1>登錄存摺餘額</h1></div>
+      <div class="card">
+        <p class="q">請看存摺 10/31 的餘額，填入下方</p>
+        <label class="field"><span>管理費專戶（帳面 $1,284,560）</span><input class="in" id="bk1" inputmode="numeric" placeholder="例：1284560" style="font-size:1.4rem"></label>
+        <label class="field"><span>公共基金專戶（帳面 $2,802,800）</span><input class="in" id="bk2" inputmode="numeric" placeholder="例：2802800" style="font-size:1.4rem"></label>
+        <button class="photo" data-act="snap" style="height:140px"><i data-lucide="camera"></i>拍存摺內頁（建議）</button>
+        <div class="btn-row"><button class="big ghost" data-go="fin">取消</button><button class="big ok" data-act="bankDone"><i data-lucide="check"></i>比對</button></div>
+      </div>
+    </section>
+
+    <!-- ========== 月報 ========== -->
+    <section class="screen" id="s-report">
+      <div class="title-row"><button class="back" data-go="fin"><i data-lucide="arrow-left"></i>社區財務</button><h1>產出 10 月管委會月報</h1></div>
+      <div class="card">
+        <p class="q">要放進月報的內容（點一下可取消）</p>
+        <div class="list multi" id="repParts">
+          <button class="chk sel"><span class="check"><i data-lucide="check"></i></span>財務報表（收支、資金、公共基金、管理費收繳）</button>
+          <button class="chk sel"><span class="check"><i data-lucide="check"></i></span>工作報告（報修、事件、保養、巡邏統計）</button>
+          <button class="chk sel"><span class="check"><i data-lucide="check"></i></span>應付未付清單</button>
+          <button class="chk sel"><span class="check"><i data-lucide="check"></i></span>憑證影本（發票、收據、簽核單）</button>
+        </div>
+        <p class="q" style="margin-top:22px">版本</p>
+        <div class="opts single" id="repVer">
+          <button class="opt sel"><i data-lucide="file-lock-2"></i>完整版<span class="note">給管委會</span></button>
+          <button class="opt"><i data-lucide="clipboard"></i>公告版<span class="note">去除個資，可張貼</span></button>
+        </div>
+        <label class="field"><span>總幹事補充說明（會放在工作報告最前面）</span><textarea class="in" id="repNote" placeholder="例：本月完成 B2 排水溝清淤"></textarea></label>
+        <div class="btn-row"><button class="big ghost" data-go="fin">取消</button><button class="big primary" data-act="reportDone"><i data-lucide="file-down"></i>產生 PDF</button></div>
+      </div>
+    </section>
+
+    <!-- ========== 改善單 ========== -->
+    <section class="screen" id="s-improve">
+      <div class="title-row"><button class="back" data-go="home"><i data-lucide="arrow-left"></i>首頁</button><h1>督導改善單</h1></div>
+      <div class="card">
+        <span class="pill p-warn">期限 11/12</span>
+        <p class="q" style="margin-top:12px">缺失：垃圾分類區異味、未定時清運</p>
+        <p class="note">督導 陳志豪 · 11/01 巡點時發現</p>
+        <div class="two" style="margin-top:14px">
+          <div><p class="q" style="font-size:1.1rem">改善後照片</p><button class="photo" data-act="snap"><i data-lucide="camera"></i>點這裡拍照</button></div>
+          <div><p class="q" style="font-size:1.1rem">怎麼改善的？</p><textarea class="in" id="imText" placeholder="例：已改為每日 8:00、18:00 兩次清運"></textarea>
+            <button class="back voice" data-act="voice" data-t="#imText" data-text="已改為每天早上 8 點和晚上 6 點各清運一次，並加裝除臭設備"><i data-lucide="mic"></i>按一下用說的</button></div>
+        </div>
+        <div class="btn-row"><button class="big ghost" data-go="home">稍後再回覆</button><button class="big ok" data-act="improveDone"><i data-lucide="send"></i>送出給督導</button></div>
+      </div>
+    </section>
+
+    <!-- ========== 公告 ========== -->
+    <section class="screen" id="s-notice">
+      <div class="title-row"><button class="back" data-go="home"><i data-lucide="arrow-left"></i>首頁</button><h1>公告</h1></div>
+      <div class="list" id="noticeList"></div>
+    </section>
+
+    <!-- ========== 我的 ========== -->
+    <section class="screen" id="s-me">
+      <div class="title-row"><button class="back" data-go="home"><i data-lucide="arrow-left"></i>首頁</button><h1>我的班表</h1></div>
+      <div class="card"><p class="q">2026 年 11 月</p><div class="cal" id="cal"></div></div>
+      <div class="btn-row" style="grid-template-columns:1fr 1fr">
+        <button class="big ghost" data-go="notice"><i data-lucide="megaphone"></i>公告</button>
+        <button class="big primary" data-go="leave"><i data-lucide="calendar-plus"></i>我要請假</button>
+      </div>
+      <div class="sec-title"><i data-lucide="history"></i>我的請假</div>
+      <div class="list" id="myLeaves"></div>
+    </section>
+
+    <!-- ========== 請假 ========== -->
+    <section class="screen" id="s-leave">
+      <div class="title-row"><button class="back" data-go="me"><i data-lucide="arrow-left"></i>我的班表</button><h1>我要請假</h1></div>
+      <div class="card"><div class="wiz" data-w="leave">
+        <div class="step" data-s="1">
+          <div class="steps"><span>第 1 步／共 3 步</span><i class="on"></i><i></i><i></i></div>
+          <p class="q">請什麼假？</p>
+          <div class="opts single" id="lvType">
+            <button class="opt"><i data-lucide="palmtree"></i>特休<span class="note">剩 6 天</span></button><button class="opt"><i data-lucide="thermometer"></i>病假</button>
+            <button class="opt"><i data-lucide="briefcase"></i>事假</button><button class="opt"><i data-lucide="heart"></i>婚喪假</button>
+          </div>
+          <div class="btn-row"><button class="big ghost" data-go="me">取消</button><button class="big primary" data-act="needOpt" data-sel="#lvType" data-w="leave" data-n="2" data-msg="請先點選假別">下一步 <i data-lucide="arrow-right"></i></button></div>
+        </div>
+        <div class="step" data-s="2">
+          <div class="steps"><span>第 2 步／共 3 步</span><i class="on"></i><i class="on"></i><i></i></div>
+          <p class="q">哪幾天？（點日期，可選多天）</p>
+          <div class="cal" id="lvCal"></div>
+          <div class="btn-row"><button class="big ghost" data-act="wiz" data-w="leave" data-n="1"><i data-lucide="arrow-left"></i>上一步</button><button class="big primary" data-act="leaveNext2">下一步 <i data-lucide="arrow-right"></i></button></div>
+        </div>
+        <div class="step" data-s="3">
+          <div class="steps"><span>第 3 步／共 3 步</span><i class="on"></i><i class="on"></i><i class="on"></i></div>
+          <p class="q">請確認</p>
+          <div class="list"><div class="item"><span class="ic"><i data-lucide="calendar-days"></i></span><span><b id="lvSum">特休</b><span class="note" id="lvDays"></span></span></div></div>
+          <label class="field"><span>原因（可不填）</span><textarea class="in" id="lvWhy"></textarea></label>
+          <div class="btn-row"><button class="big ghost" data-act="wiz" data-w="leave" data-n="2"><i data-lucide="arrow-left"></i>上一步</button><button class="big ok" data-act="leaveDone"><i data-lucide="send"></i>送出申請</button></div>
+        </div>
+      </div></div>
+    </section>
+
+    <!-- ========== 完成 ========== -->
+    <section class="screen" id="s-done">
+      <div class="card done-box">
+        <div class="ring"><i data-lucide="check"></i></div>
+        <h2 id="doneTitle">完成</h2>
+        <p class="note" id="doneSub" style="font-size:1.05rem"></p>
+        <div class="btn-row" style="max-width:640px;margin:26px auto 0" id="doneBtns"></div>
+      </div>
+    </section>
+  </div>
+
+  <nav class="tabbar">
+    <a href="#home" data-t="home"><i data-lucide="home"></i>首頁</a>
+    <a href="#pkgin" data-t="pkgin"><i data-lucide="package"></i>包裹</a>
+    <a href="#repair" data-t="repair"><i data-lucide="wrench"></i>報修</a>
+    <a href="#incident" data-t="incident"><i data-lucide="siren"></i>通報</a>
+    <a href="#me" data-t="me"><i data-lucide="user"></i>我的</a>
+  </nav>
+</div>
+
+<div class="ov" id="ov"><div class="dlg" id="dlg"></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const fmt=n=>"$"+Number(n).toLocaleString("zh-TW");
+const USERS=[
+  {n:"劉德華",r:"總幹事",role:"mgr",sites:["春暉苑"]},{n:"蔡宜庭",r:"秘書",role:"sec",sites:["春暉苑"]},
+  {n:"許文雄",r:"保全",role:"guard",sites:["春暉苑"]},{n:"Budi",r:"保全",role:"guard",sites:["春暉苑"]},
+  {n:"林秀英",r:"清潔",role:"clean",sites:["春暉苑"]},{n:"王志強",r:"機電",role:"tech",sites:["春暉苑","雲頂閱"]},
+];
+const TILES=[
+  {id:"pkgin",t:"包裹登記",s:"收到包裹",i:"package-plus",c:"c1",roles:"mgr sec guard"},
+  {id:"pkgout",t:"包裹領取",s:"住戶來拿",i:"package-check",c:"c2",b:12,roles:"mgr sec guard"},
+  {id:"visitor",t:"訪客登記",s:"有人來訪",i:"user-check",c:"c3",roles:"mgr sec guard"},
+  {id:"fee",t:"管理費收款",s:"開收據",i:"banknote",c:"c6",roles:"mgr sec"},
+  {id:"repair",t:"報修",s:"東西壞了",i:"wrench",c:"c4",b:4,roles:"mgr sec guard clean tech"},
+  {id:"incident",t:"事件通報",s:"緊急狀況",i:"siren",c:"c5",roles:"mgr sec guard clean tech"},
+  {id:"patrol",t:"巡邏打點",s:"掃 QR Code",i:"scan-line",c:"c8",roles:"mgr guard"},
+  {id:"handover",t:"交接班",s:"下班前填寫",i:"repeat",c:"c7",roles:"mgr sec guard"},
+  {id:"fin",t:"社區財務",s:"支出、月報",i:"book-open-check",c:"c3",roles:"mgr"},
+  {id:"me",t:"我的班表",s:"班表、請假",i:"calendar-days",c:"c8",roles:"mgr sec guard clean tech"},
+];
+let me=USERS[0], site="春暉苑";
+let state={pkg:12,repairs:[{id:"R-28812",t:"電梯門感應器",st:"待料",who:"永大電梯"},{id:"R-28790",t:"B2 天花板滴水",st:"處理中",who:"王志強"}],
+  visitors:[{n:"陳先生",u:"C-09-2",r:"施工 / 維修",t:"08:40"}],petty:3260,pettyLog:[["11/02","垃圾袋","−$480"],["11/01","月初撥補","+$2,000"],["10/30","文具","−$260"]],
+  check:{fee:true,sign:true,petty:false,bank:false,improve:false},closed:false,notices:[{t:"11/15 起颱風防災 SOP 更新",d:"請各社區於 11/15 前完成防颱物資盤點，並將沙包放置於 B2 車道入口。",read:false},{t:"冬季制服發放",d:"11/20 起由督導帶至各社區發放，請確認尺寸。",read:false},{t:"10 月優良社區表揚",d:"恭喜河畔晴空獲得 10 月服務品質第一名！",read:true}],
+  leaves:[["10/15","特休 1 天","已核准"]],patrol:3};
+const PATROL=["大廳","中庭花園","B1 停車場","B2 機房","頂樓水塔","垃圾集中區"];
+
+/* ---------- 對話框 / 提示 ---------- */
+let tt;function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("on");clearTimeout(tt);tt=setTimeout(()=>t.classList.remove("on"),2600);}
+let DLG={};
+function dialog(title,html,btns){DLG={};$("#dlg").innerHTML=`<h2>${title}</h2>${html}<div class="btn-row" style="grid-template-columns:${btns.length>1?"1fr 1fr":"1fr"}">${btns.map((b,i)=>{DLG[i]=b.fn;return `<button class="big ${b.cls||"ghost"}" data-dlg="${i}">${b.label}</button>`}).join("")}</div>`;$("#ov").classList.add("on");lucide.createIcons();}
+function closeDlg(){$("#ov").classList.remove("on");}
+
+/* ---------- 登入 ---------- */
+$("#who").innerHTML=USERS.map((u,i)=>`<button data-act="pickUser" data-i="${i}"><span class="face">${u.n[0]}</span>${u.n}<small>${u.r}</small></button>`).join("");
+$("#pad").innerHTML=[1,2,3,4,5,6,7,8,9,"返回",0,"刪除"].map(k=>`<button class="${typeof k==="string"?"fn":""}" data-act="pin" data-k="${k}">${k}</button>`).join("");
+let pin="";
+function dots(){$$("#dots i").forEach((d,i)=>d.classList.toggle("on",i<pin.length));}
+function login(){
+  $("#s-login").classList.remove("on");$("#app").style.display="";
+  site=me.sites[0];$("#siteName").textContent=site;$("#userName").textContent=me.n+" · 交班登出";
+  const h=new Date().getHours();$("#hello").textContent=`${me.n} ${me.r}，${h<11?"早安":h<18?"午安":"晚安"}`;
+  renderHome();try{sessionStorage.setItem("pcmp-site-user",USERS.indexOf(me))}catch(e){}
+  if(!location.hash||location.hash==="#")location.hash="home";route();
+}
+function renderHome(){
+  $("#tiles").innerHTML=TILES.filter(t=>t.roles.includes(me.role)).map(t=>{const b=t.id==="pkgout"?state.pkg:t.id==="repair"?state.repairs.length:t.b;return `<button class="tile ${t.c}" data-go="${t.id}">${b?`<span class="badge">${b}</span>`:""}<i data-lucide="${t.i}"></i><span>${t.t}<small>${t.s}</small></span></button>`}).join("");
+  const todo=[];
+  if(me.role!=="clean"&&me.role!=="tech")todo.push(["pkgout",state.pkg,"var(--warn)","包裹未領取","3 件超過 7 天"]);
+  todo.push(["repairs",state.repairs.length,"var(--accent)","報修處理中","點此看進度"]);
+  if(me.role==="mgr"&&!state.check.improve)todo.push(["improve",1,"var(--bad)","改善單待回覆","期限 11/12"]);
+  const un=state.notices.filter(n=>!n.read).length;if(un)todo.push(["notice",un,"var(--accent)","未讀公告","請點此閱讀"]);
+  $("#todo").innerHTML=todo.map(([g,n,c,b,s])=>`<button data-go="${g}"><span class="n" style="color:${c}">${n}</span><span><b>${b}</b><span class="note" style="display:block">${s}</span></span></button>`).join("");
+  $("#noticePill span").textContent=un?`${un} 則新公告`:"公告";
+  lucide.createIcons();
+}
+
+/* ---------- 路由 ---------- */
+function go(id){location.hash=id;}
+function route(){
+  if($("#app").style.display==="none")return;
+  const id=(location.hash||"#home").slice(1)||"home";
+  const ok=$("#s-"+id)?id:"home";
+  $$("#app section.screen").forEach(s=>s.classList.toggle("on",s.id==="s-"+ok));
+  $$(".tabbar a").forEach(a=>a.classList.toggle("on",a.dataset.t===ok));
+  $$(`#s-${ok} .wiz`).forEach(w=>wiz(w.dataset.w,1));
+  R[ok]&&R[ok]();
+  closeDlg();window.scrollTo(0,0);lucide.createIcons();
+}
+window.addEventListener("hashchange",route);
+
+/* 每個畫面進入時重設／渲染 */
+const resetOpts=sel=>$$(sel+" .opt").forEach((o,i)=>o.classList.remove("sel"));
+const R={
+  home:renderHome,
+  pkgin(){c=1;$("#cnt").textContent=1;resetPhoto("#s-pkgin");},
+  pkgout(){clearSign();},
+  visitor(){$("#visName").value="";$("#visName").classList.remove("err");vc=1;$("#vcnt").textContent=1;renderVisitors();},
+  repair(){resetOpts("#rpCat");resetOpts("#rpWhere");$("#rpDesc").value="";resetPhoto("#s-repair");},
+  repairs(){$("#rpList").innerHTML=state.repairs.map(r=>`<div class="item"><span class="ic ${r.st==="已完成"?"ok":"warn"}"><i data-lucide="wrench"></i></span><span><b>${r.t}</b><span class="note">${r.id} · ${r.who}</span></span><span class="r"><span class="pill ${r.st==="處理中"?"p-info":r.st==="待處理"?"p-bad":"p-warn"}">${r.st}</span></span></div>`).join("");},
+  incident(){$$("#incLv .opt").forEach(o=>o.classList.toggle("sel",o.dataset.lv==="一般"));$("#incDesc").value="";resetPhoto("#s-incident");},
+  fee(){$$("#bills .item").forEach((b,i)=>b.classList.toggle("sel",i<3));sumBills();},
+  handover(){$$("#hoList .chk").forEach(c=>c.classList.remove("sel"));$("#hoNote").value="";},
+  patrol:renderPatrol,
+  fin:renderFin,
+  expense(){resetOpts("#expCat");amt="";$("#expAmt").textContent="$0";resetPhoto("#s-expense");expRule();},
+  petty(){$("#pettyBal").textContent=fmt(state.petty);$("#pettyList").innerHTML=state.pettyLog.map(([d,t,a])=>`<div class="item"><span class="ic ${a[0]==="+"?"ok":""}"><i data-lucide="${a[0]==="+"?"plus":"minus"}"></i></span><span><b>${t}</b><span class="note">${d}</span></span><span class="r"><b>${a}</b></span></div>`).join("");},
+  pettycount(){pc="";updPc();},
+  bank(){$("#bk1").value="";$("#bk2").value="";},
+  improve(){$("#imText").value="";resetPhoto("#s-improve");},
+  notice(){$("#noticeList").innerHTML=state.notices.map((n,i)=>`<button class="notice ${n.read?"":"unread"}" data-act="readNotice" data-i="${i}">${n.read?"":'<span class="pill p-info">未讀</span> '}<b>${n.t}</b><div class="note" style="margin-top:6px">${n.read?n.d:"點一下閱讀"}</div></button>`).join("");},
+  me:renderCal,
+  leave(){resetOpts("#lvType");lvSel.clear();renderLvCal();},
+};
+function resetPhoto(scope){$$(scope+" .photo").forEach(p=>{if(p.classList.contains("done")){p.classList.remove("done");p.innerHTML=p.dataset.orig||p.innerHTML;}});}
+
+/* ---------- 精靈 ---------- */
+function wiz(name,n){const w=$(`.wiz[data-w="${name}"]`);if(!w)return;w.querySelectorAll(".step").forEach(s=>s.style.display=s.dataset.s==n?"":"none");window.scrollTo(0,0);if(name==="pkgout"&&n==3)setTimeout(initSign,30);}
+function done(t,s,again){$("#doneTitle").textContent=t;$("#doneSub").textContent=s;
+  $("#doneBtns").innerHTML=(again?`<button class="big ghost" data-go="${again}"><i data-lucide="rotate-ccw"></i>再一筆</button>`:"")+`<button class="big primary" data-go="home"><i data-lucide="home"></i>回首頁</button>`;
+  $("#doneBtns").style.gridTemplateColumns=again?"1fr 2fr":"1fr";go("done");}
+const selText=sel=>$(sel+" .opt.sel")?.innerText.trim().split("\n")[0]||"";
+
+/* ---------- 戶別選擇器 ---------- */
+const UNITS={};
+$$(".unitpicker").forEach(p=>{
+  UNITS[p.id]={b:"A",v:""};
+  p.innerHTML=`<div class="unit-show"><span class="b">A</span> 棟 <span class="f">＿</span></div>
+  <div class="bldg">${["A","B","C","D"].map((b,i)=>`<button class="${i?"":"sel"}" data-act="bldg" data-b="${b}">${b} 棟</button>`).join("")}</div>
+  <div class="kp">${[1,2,3,4,5,6,7,8,9,"清除",0,"－"].map(k=>`<button class="${k==="清除"?"fn":""}" data-act="ukey" data-k="${k}">${k}</button>`).join("")}</div>
+  <p class="note" style="margin-top:10px">先點棟別，再按「樓層 － 門號」，例如 12 － 3</p>`;
+});
+const unitOf=id=>{const u=UNITS[id];return u.b+"-"+u.v;};
+const unitOk=id=>/^\d{1,2}-\d{1,2}$/.test(UNITS[id].v);
+
+/* ---------- 金額鍵盤 ---------- */
+const kpHtml=[1,2,3,4,5,6,7,8,9,"清除",0,"⌫"].map(k=>`<button class="${typeof k==="string"?"fn":""}" data-k="${k}">${k}</button>`).join("");
+$("#expKp").innerHTML=kpHtml;$("#pcKp").innerHTML=kpHtml;
+let amt="",pc="";
+const press=(s,k)=>k==="清除"?"":k==="⌫"?s.slice(0,-1):(s+k).replace(/^0+/,"").slice(0,7);
+$("#expKp").addEventListener("click",e=>{const k=e.target.closest("button")?.dataset.k;if(k==null)return;amt=press(amt,k);$("#expAmt").textContent=fmt(+amt||0);expRule();});
+$("#pcKp").addEventListener("click",e=>{const k=e.target.closest("button")?.dataset.k;if(k==null)return;pc=press(pc,k);updPc();});
+function expRule(){const a=+amt||0;$("#expRule").innerHTML=a>5000?`<b>需要管委會簽核：</b>超過 5,000 元，完成後系統會產生請款單，請列印給財委／主委簽名後拍照上傳。`:`<b>簽核：</b>5,000 元以下由總幹事核准，不需管委會簽名。`;}
+function updPc(){const v=+pc||0,d=v-state.petty;$("#pcAmt").textContent=fmt(v);$("#pcBook").textContent=fmt(state.petty);$("#pcDiff").textContent=(d>0?"+":d<0?"−":"")+fmt(Math.abs(d));$("#pcDiff").style.color=d===0?"var(--ok)":"var(--bad)";$("#pcWhy").style.display=d!==0&&pc?"":"none";}
+
+/* ---------- 其他渲染 ---------- */
+function sumBills(){const t=$$("#bills .item.sel").reduce((a,b)=>a+ +b.dataset.v,0);$("#feeTotal").textContent=fmt(t);$("#feeTotal2").textContent=fmt(t);return t;}
+let c=1,vc=1;
+function renderVisitors(){$("#visList").innerHTML=state.visitors.length?state.visitors.map((v,i)=>`<div class="item"><span class="ic"><i data-lucide="user"></i></span><span><b>${v.n} → ${v.u}</b><span class="note">${v.r} · ${v.t} 進入</span></span><span class="r"><button class="back" data-act="visitorOut" data-i="${i}"><i data-lucide="log-out"></i>離開</button></span></div>`).join(""):`<p class="note">目前沒有訪客</p>`;lucide.createIcons();}
+function renderPatrol(){const n=state.patrol;$("#ptBar").style.width=(n/PATROL.length*100)+"%";$("#ptTitle").textContent=`21:00 夜間巡邏 · 已完成 ${n} / ${PATROL.length} 點`;
+  $("#scanLabel").textContent=n<PATROL.length?`掃描「${PATROL[n]}」的 QR Code`:"本輪巡邏已完成";
+  $("#ptList").innerHTML=PATROL.map((p,i)=>`<div class="item" style="${i>n?"opacity:.6":""}"><span class="ic ${i<n?"ok":""}"><i data-lucide="${i<n?"check":"map-pin"}"></i></span><span><b>${i+1}. ${p}</b><span class="note">${i<n?"21:"+String(2+i*7).padStart(2,"0")+" 完成":i===n?"下一個":""}</span></span>${i===n?`<span class="r"><button class="back" data-go="incident"><i data-lucide="triangle-alert"></i>有異常</button></span>`:""}</div>`).join("");lucide.createIcons();}
+function renderFin(){const k=state.check;
+  const rows=[["fee","管理費收款已入帳","自動帶入，共 274 筆",null],["sign","支出已上傳簽核單","38 筆皆已上傳",null],["petty","零用金盤點","點此完成盤點","pettycount"],["bank","銀行存摺餘額","點此登錄管理費專戶、公共基金專戶","bank"]];
+  $("#closeList").innerHTML=rows.map(([key,t,s,g])=>{const okk=k[key];const tagName=g&&!okk?"button":"div";return `<${tagName} class="item" ${g&&!okk?`data-go="${g}"`:""}><span class="ic ${okk?"ok":"warn"}"><i data-lucide="${okk?"check":"triangle-alert"}"></i></span><span><b>${t}${okk?"":"（未完成）"}</b><span class="note">${okk?(key==="petty"?"已盤點，帳實相符":key==="bank"?"已比對，無差異":s):s}</span></span>${g&&!okk?'<span class="r"><i data-lucide="chevron-right"></i></span>':""}</${tagName}>`}).join("");
+  $("#pettyTile").textContent="餘額 "+fmt(state.petty);$("#repTile").textContent=state.closed?"10 月已封帳，可產出":"10 月尚未封帳";lucide.createIcons();}
+function renderCal(){let h="";"日一二三四五六".split("").forEach(w=>h+=`<div class="wd">${w}</div>`);
+  const lv=new Set(state.leaves.filter(l=>l[0].startsWith("11/")).flatMap(l=>l[3]||[]));
+  for(let d=1;d<=30;d++){const w=(d-1)%7;const k=lv.has(d)?"L":w===0?"O":"D";h+=`<div class="${k} ${d===4?"today":""}">${d}<small>${{D:"日班",O:"休",L:"請假"}[k]}</small></div>`;}
+  $("#cal").innerHTML=h;$("#myLeaves").innerHTML=state.leaves.map(l=>`<div class="item"><span class="ic"><i data-lucide="calendar-days"></i></span><span><b>${l[1]}</b><span class="note">${l[0]}</span></span><span class="r"><span class="pill ${l[2]==="已核准"?"p-ok":"p-warn"}">${l[2]}</span></span></div>`).join("");lucide.createIcons();}
+const lvSel=new Set();
+function renderLvCal(){let h="";"日一二三四五六".split("").forEach(w=>h+=`<div class="wd">${w}</div>`);
+  for(let d=1;d<=30;d++){const past=d<5;h+=`<button class="${lvSel.has(d)?"sel":""}" ${past?'disabled style="opacity:.35"':""} data-act="lvDay" data-d="${d}">${d}<small>${(d-1)%7===0?"休":"日班"}</small></button>`;}
+  $("#lvCal").innerHTML=h;}
+
+/* ---------- 簽名板 ---------- */
+let sctx,drawing=false,signed=false;
+function initSign(){const cv=$("#sign");if(!cv||!cv.offsetWidth)return;const r=window.devicePixelRatio||1;cv.width=cv.offsetWidth*r;cv.height=cv.offsetHeight*r;sctx=cv.getContext("2d");sctx.scale(r,r);sctx.lineWidth=3.5;sctx.lineCap="round";sctx.strokeStyle=getComputedStyle(document.body).color;signed=false;}
+function clearSign(){initSign();}
+function pos(e){const b=$("#sign").getBoundingClientRect();return[e.clientX-b.left,e.clientY-b.top];}
+$("#sign").addEventListener("pointerdown",e=>{if(!sctx)initSign();drawing=true;sctx.beginPath();sctx.moveTo(...pos(e));});
+$("#sign").addEventListener("pointermove",e=>{if(!drawing)return;sctx.lineTo(...pos(e));sctx.stroke();signed=true;});
+window.addEventListener("pointerup",()=>drawing=false);
+
+/* =====================================================================
+   動作
+   ===================================================================== */
+const now=()=>{const d=new Date();return String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");};
+const A={
+  lang(el){$$("#lang button").forEach(x=>x.classList.remove("on"));el.classList.add("on");if(el.textContent!=="中文")toast("原型僅示意中文，正式版會顯示 "+el.textContent+" 介面");},
+  pickUser(el){me=USERS[+el.dataset.i];$("#pinFace").textContent=me.n[0];$("#pinName").textContent=me.n+" · "+me.r;$("#whoStep").style.display="none";$("#pinStep").style.display="";pin="";dots();},
+  pin(el){const k=el.dataset.k;if(k==="返回"){$("#whoStep").style.display="";$("#pinStep").style.display="none";return;}if(k==="刪除")pin=pin.slice(0,-1);else if(pin.length<4)pin+=k;dots();if(pin.length===4)setTimeout(login,200);},
+  forgotPin(){dialog("忘記密碼","<p>請找總幹事或督導幫您重設密碼。</p><p class='note'>重設後會用簡訊通知您新的 4 位數密碼。</p>",[{label:"我知道了",cls:"primary",fn:closeDlg}]);},
+  logout(){dialog("交班登出",`<p>確定要登出「${me.n}」嗎？</p><p class="note">還沒填交接日誌的話，建議先填寫。</p>`,[{label:"先填交接",fn:()=>{closeDlg();go("handover");}},{label:"確定登出",cls:"primary",fn:()=>{closeDlg();try{sessionStorage.removeItem("pcmp-site-user")}catch(e){}$("#app").style.display="none";$("#whoStep").style.display="";$("#pinStep").style.display="none";$("#s-login").classList.add("on");history.replaceState(null,"","#");}}]);},
+  switchSite(){if(me.sites.length<2){toast("您目前只派駐在「"+site+"」");return;}
+    dialog("切換社區",`<div class="list">${me.sites.map(s=>`<button class="item ${s===site?"sel":""}" data-act="pickSite" data-s="${s}"><span class="ic"><i data-lucide="building"></i></span><span><b>${s}</b></span></button>`).join("")}</div>`,[{label:"取消",fn:closeDlg}]);},
+  pickSite(el){site=el.dataset.s;$("#siteName").textContent=site;closeDlg();toast("已切換到「"+site+"」");go("home");},
+  fontSize(){si=(si+1)%sizes.length;document.documentElement.style.setProperty("--fs",sizes[si]);toast(["標準字體","大字體","特大字體"][si]);try{localStorage.setItem("pcmp-fs",si)}catch(e){}},
+  wiz(el){wiz(el.dataset.w,+el.dataset.n);},
+  needOpt(el){if(!$(el.dataset.sel+" .opt.sel")){toast(el.dataset.msg);return;}wiz(el.dataset.w,+el.dataset.n);},
+  bldg(el){const p=el.closest(".unitpicker");p.querySelectorAll(".bldg button").forEach(x=>x.classList.remove("sel"));el.classList.add("sel");UNITS[p.id].b=el.dataset.b;p.querySelector(".b").textContent=el.dataset.b;},
+  ukey(el){const p=el.closest(".unitpicker"),u=UNITS[p.id],k=el.dataset.k;
+    if(k==="清除")u.v="";else if(k==="－"){if(u.v&&!u.v.includes("-"))u.v+="-";}else{const parts=u.v.split("-");if(parts[parts.length-1].length<2)u.v+=k;}
+    p.querySelector(".f").textContent=u.v||"＿";},
+  unitNext(el){const id="up-"+el.dataset.w;if(!unitOk(id)){toast("請輸入完整戶別，例如 12 － 3");return;}$$(`#s-${el.dataset.w} .unitLabel`).forEach(s=>s.textContent=unitOf(id));wiz(el.dataset.w,+el.dataset.n);},
+  cnt(el){c=Math.max(1,c+ +el.dataset.d);$("#cnt").textContent=c;},
+  vcnt(el){vc=Math.max(1,vc+ +el.dataset.d);$("#vcnt").textContent=vc;},
+  snap(el){if(!el.dataset.orig)el.dataset.orig=el.innerHTML;el.classList.add("done");el.innerHTML='<i data-lucide="check-circle-2"></i>已拍照（點一下重拍）';lucide.createIcons();},
+  voice(el){const t=$(el.dataset.t);el.classList.add("rec");el.innerHTML='<i data-lucide="mic"></i>正在聽…請說話';lucide.createIcons();setTimeout(()=>{t.value=el.dataset.text;el.classList.remove("rec");el.innerHTML='<i data-lucide="mic"></i>按一下用說的';lucide.createIcons();toast("已轉成文字，可再修改");},1300);},
+  pkginDone(){state.pkg+=c;done("包裹已登記",`${unitOf("up-pkgin")} · ${selText("#pkType")} ${c} 件 · 請放到櫃台後方 2 號櫃`,"pkgin");},
+  clearSign(){clearSign();toast("已清除，請重新簽名");},
+  pkoutNext(){const n=$$("#pkList .item.sel").length;if(!n){toast("請至少勾選 1 件包裹");return;}wiz("pkgout",3);},
+  pkoutDone(){if(!signed){toast("請住戶先在框內簽名");return;}const n=$$("#pkList .item.sel").length;state.pkg=Math.max(0,state.pkg-n);done("領取完成",`${unitOf("up-pkgout")} 領取 ${n} 件包裹`,"pkgout");},
+  visitorIn(){if(!unitOk("up-visitor")){toast("請輸入拜訪的戶別");return;}if(!$("#visName").value.trim()){$("#visName").classList.add("err");$("#visName").focus();toast("請輸入訪客姓名");return;}
+    state.visitors.unshift({n:$("#visName").value.trim(),u:unitOf("up-visitor"),r:selText("#visReason"),t:now()});done("訪客已登記",`${$("#visName").value.trim()} ${vc} 人 → ${unitOf("up-visitor")} · 進入時間 ${now()}`,"visitor");},
+  visitorOut(el){const v=state.visitors[+el.dataset.i];dialog("訪客離開",`<p>確認「${v.n}」已離開社區？</p>`,[{label:"取消",fn:closeDlg},{label:"確認離開",cls:"primary",fn:()=>{state.visitors.splice(+el.dataset.i,1);closeDlg();renderVisitors();toast(v.n+" 已登記離開 "+now());}}]);},
+  repairDone(){const t=selText("#rpCat")+"（"+selText("#rpWhere")+"）";state.repairs.unshift({id:"R-288"+(31+state.repairs.length),t,st:"待處理",who:"王志強"});done("報修已送出",`${t} · 已通知機電 王志強`,"repair");},
+  incidentSend(){const lv=$("#incLv .opt.sel").dataset.lv;if(!$("#incDesc").value.trim()){toast("請說明發生什麼事（可按「用說的」）");$("#incDesc").focus();return;}
+    const go2=()=>{closeDlg();done("已通報",lv==="緊急"?"已通知：總幹事、督導 陳志豪、區域主管、營運副總（推播＋簡訊）":lv==="重要"?"已通知：總幹事、督導 陳志豪":"已通知：總幹事");};
+    if(lv==="緊急")dialog("確定通報緊急事件？",`<p>系統會<b>立即</b>通知督導、區域主管與營運副總。</p><p class="note">若有人受傷或火警，請先撥打 119。</p>`,[{label:"取消",fn:closeDlg},{label:"確定通報",cls:"danger",fn:go2}]);else go2();},
+  feeNext(){if(!sumBills()){toast("請至少勾選 1 筆要繳的費用");return;}wiz("fee",3);},
+  feeDone(){const t=sumBills(),w=selText("#payWay");dialog("確認收款",`<p>${unitOf("up-fee")} · ${w}</p><div class="total"><span>收款</span><b>${fmt(t)}</b></div>`,[{label:"返回",fn:closeDlg},{label:"確認並列印",cls:"ok",fn:()=>{closeDlg();done("收款完成",`收據 No. CH-2026-001284 已列印 · ${w} ${fmt(t)}${w==="現金"?" · 已計入今日現金日結":""}`,"fee");}}]);},
+  dayClose(){dialog("今日現金日結",`<div class="list"><div class="item"><span><b>收款筆數</b></span><span class="r"><b>6 筆</b></span></div><div class="item"><span><b>現金合計</b></span><span class="r"><b>$12,480</b></span></div><div class="item"><span><b>收據號碼</b></span><span class="r">001279 – 001284</span></div></div><p class="note" style="margin-top:10px">交班時請將現金與日結表交給總幹事簽收。</p>`,[{label:"關閉",fn:closeDlg},{label:"列印日結表",cls:"primary",fn:()=>{closeDlg();toast("日結表已列印");}}]);},
+  handoverDone(){const n=$$("#hoList .chk.sel").length;if(n<4){dialog("還有物品沒點交",`<p>還有 ${4-n} 項沒有打勾，確定要交班嗎？</p>`,[{label:"回去點交",fn:closeDlg},{label:"仍要交班",cls:"primary",fn:()=>{closeDlg();done("交班完成","接班人：楊志明 已確認接收（有未點交項目，已通知總幹事）");}}]);return;}done("交班完成","接班人：楊志明 已確認接收");},
+  scan(){if(state.patrol>=PATROL.length){toast("本輪巡邏已全部完成");return;}const p=PATROL[state.patrol];state.patrol++;renderPatrol();toast("掃描成功："+p+" ✓");if(state.patrol===PATROL.length)setTimeout(()=>done("巡邏完成","6 個巡邏點全部完成，下一輪 23:00"),600);},
+  expNext1(){if(!$("#expPhoto").classList.contains("done")){dialog("沒有拍照",`<p>沒有發票或收據照片，月底封帳時會被要求補上。</p>`,[{label:"回去拍照",fn:closeDlg},{label:"先略過",cls:"primary",fn:()=>{closeDlg();wiz("expense",2);}}]);return;}wiz("expense",2);},
+  expDone(){const a=+amt||0;if(!a){toast("請輸入金額");return;}const cat=selText("#expCat"),pay=selText("#expPay");
+    if(pay==="零用金"){if(a>state.petty){toast("零用金餘額不足，請改用其他付款方式");return;}state.petty-=a;state.pettyLog.unshift(["11/04",cat,"−"+fmt(a)]);}
+    done("支出已登錄",`${cat} ${fmt(a)} · ${pay}${a>5000?" · 請款單已產生，請列印給管委會簽核":""}`,"expense");},
+  pettyTopup(){dialog("零用金撥補",`<p>將從管理費專戶撥補 <b>${fmt(5000-state.petty)}</b>，補足額度 $5,000。</p><p class="note">撥補需上傳提款憑證。</p>`,[{label:"取消",fn:closeDlg},{label:"確認撥補",cls:"primary",fn:()=>{const d=5000-state.petty;state.petty=5000;state.pettyLog.unshift(["11/04","撥補","+"+fmt(d)]);closeDlg();R.petty();lucide.createIcons();toast("已撥補 "+fmt(d));}}]);},
+  pettyCount(){go("pettycount");},
+  pcDone(){if(!pc){toast("請輸入點算的金額");return;}const d=(+pc)-state.petty;if(d!==0&&!$("#pcWhyT").value.trim()){$("#pcWhyT").classList.add("err");toast("有差額，請填寫原因");return;}state.check.petty=true;done("盤點完成",d===0?"帳實相符 ✓":`差額 ${fmt(d)}，已記錄原因並通知公司財務`);},
+  bankDone(){const a=$("#bk1").value.replace(/\D/g,""),b=$("#bk2").value.replace(/\D/g,"");if(!a||!b){toast("兩個帳戶的餘額都要填");return;}
+    const d1=+a-1284560,d2=+b-2802800;if(d1||d2){dialog("餘額不一致",`<p>${d1?`管理費專戶差 ${fmt(d1)}<br>`:""}${d2?`公共基金專戶差 ${fmt(d2)}`:""}</p><p class="note">請再確認存摺；若無誤，系統會列入差異並通知公司財務協助查明。</p>`,[{label:"重新輸入",fn:closeDlg},{label:"確認送出",cls:"primary",fn:()=>{closeDlg();state.check.bank=true;done("已登錄","已列入銀行對帳差異，公司財務將協助查明");}}]);return;}
+    state.check.bank=true;done("對帳完成","兩個帳戶餘額與帳面相符 ✓");},
+  closeMonth(){const k=state.check;if(state.closed){toast("10 月已封帳");return;}if(!(k.petty&&k.bank)){toast("還有項目沒完成，請先處理黃色的項目");return;}
+    dialog("確定 10 月封帳？",`<p>封帳後 10 月的收支就不能再修改，需要更正時要做調整單。</p>`,[{label:"取消",fn:closeDlg},{label:"確定封帳",cls:"primary",fn:()=>{state.closed=true;closeDlg();renderFin();toast("10 月已封帳，可以產出月報了");}}]);},
+  reportGo(){if(!state.closed){dialog("還沒封帳",`<p>月報要在封帳後才能產出，數字才會正確。</p>`,[{label:"我知道了",cls:"primary",fn:closeDlg}]);return;}go("report");},
+  reportDone(){const n=$$("#repParts .chk.sel").length;if(!n){toast("請至少勾選 1 項內容");return;}const v=selText("#repVer");done("月報已產生",`春暉苑_2026年10月_管委會月報（${v}）.pdf · 共 ${n} 個章節 · 已同步到總公司`);},
+  improveDone(){if(!$("#s-improve .photo").classList.contains("done")){toast("請拍一張改善後的照片");return;}if(!$("#imText").value.trim()){toast("請說明怎麼改善的");return;}state.check.improve=true;done("已送出","改善回覆已送給督導 陳志豪複查");},
+  readNotice(el){const n=state.notices[+el.dataset.i];dialog(n.t,`<p>${n.d}</p><p class="note">發布：總公司營運部 · 11/03</p>`,[{label:"我已閱讀",cls:"primary",fn:()=>{n.read=true;closeDlg();R.notice();renderHome();}}]);},
+  lvDay(el){const d=+el.dataset.d;lvSel.has(d)?lvSel.delete(d):lvSel.add(d);renderLvCal();},
+  leaveNext2(){if(!lvSel.size){toast("請點選要請假的日期");return;}const ds=[...lvSel].sort((a,b)=>a-b);$("#lvSum").textContent=selText("#lvType")+" "+ds.length+" 天";$("#lvDays").textContent=ds.map(d=>"11/"+d).join("、");wiz("leave",3);},
+  leaveDone(){const ds=[...lvSel].sort((a,b)=>a-b);const l=["11/"+ds[0]+(ds.length>1?"–11/"+ds.at(-1):""),selText("#lvType")+" "+ds.length+" 天","審核中",ds];state.leaves.unshift(l);done("請假已送出",`${l[0]} ${l[1]} · 等待總幹事審核，結果會通知您`);},
+};
+
+/* ---------- 事件委派 ---------- */
+document.addEventListener("click",e=>{
+  const d=e.target.closest("[data-dlg]");if(d){(DLG[d.dataset.dlg]||closeDlg)();return;}
+  if(e.target.id==="ov"){closeDlg();return;}
+  const a=e.target.closest("[data-act]");if(a&&A[a.dataset.act]){A[a.dataset.act](a);return;}
+  const g=e.target.closest("[data-go]");if(g){go(g.dataset.go);return;}
+  const o=e.target.closest(".opt");if(o){const grp=o.parentElement;grp.querySelectorAll(".opt").forEach(x=>x.classList.remove("sel"));o.classList.add("sel");return;}
+  const it=e.target.closest(".multi .item, .multi .chk");if(it){it.classList.toggle("sel");if(it.closest("#bills"))sumBills();}
+});
+document.addEventListener("input",e=>{if(e.target.classList.contains("in"))e.target.classList.remove("err");});
+
+/* ---------- 其他 ---------- */
+function tick(){const d=new Date(),w="日一二三四五六"[d.getDay()];$("#clock").innerHTML=`${now()}<small>${d.getMonth()+1}/${d.getDate()}（${w}）</small>`;}
+setInterval(tick,10000);tick();
+const sizes=["19px","22px","25px"];let si=0;
+try{const s=+localStorage.getItem("pcmp-fs");if(s){si=s;document.documentElement.style.setProperty("--fs",sizes[si]);}}catch(e){}
+
+/* ---------- 啟動 ---------- */
+let saved=null;try{saved=sessionStorage.getItem("pcmp-site-user")}catch(e){}
+if(saved!=null&&USERS[saved]){me=USERS[saved];login();}else{$("#s-login").classList.add("on");}
+lucide.createIcons();
+</script>
+</body>
+</html>

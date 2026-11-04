@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>畫面原型總覽</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;700;800&family=Noto+Sans+TC:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0b1220;--panel:#111b2e;--text:#e2e8f0;--muted:#94a3b8;--border:#1f2a3c}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:radial-gradient(900px 500px at 0% 0%,#1e3a8a 0,transparent 60%),radial-gradient(700px 500px at 100% 100%,#0e7490 0,transparent 60%),var(--bg);color:var(--text);font-family:Inter,"Noto Sans TC",system-ui,sans-serif;padding:48px 16px}
+.w{max-width:1000px;margin:0 auto}
+h1{font-size:34px;margin:0 0 8px;font-weight:900}
+p.sub{color:var(--muted);margin:0 0 32px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+a.card{display:block;text-decoration:none;color:inherit;background:rgba(17,27,46,.85);border:1px solid var(--border);border-radius:20px;padding:26px;transition:.2s}
+a.card:hover{border-color:#38bdf8;transform:translateY(-2px)}
+.tag{display:inline-block;font-size:12px;font-weight:700;padding:3px 10px;border-radius:999px;background:#0c2a3d;color:#7dd3fc;margin-bottom:10px}
+h2{margin:0 0 10px;font-size:22px}
+ul{margin:12px 0 0;padding-left:20px;color:var(--muted);line-height:1.8;font-size:14px}
+.note{margin-top:28px;color:var(--muted);font-size:13px;line-height:1.8;border-top:1px solid var(--border);padding-top:18px}
+@media (max-width:720px){.grid{grid-template-columns:1fr}h1{font-size:26px}}
+</style>
+</head>
+<body>
+<div class="w">
+  <h1>物業社區管理平台 · 畫面原型</h1>
+  <p class="sub">v0.2 · 每個按鈕皆可操作（新增、編輯、審核、匯入、試算、簽名、拍照…），資料皆為虛構，對應《社區管理系統需求規劃書》v0.5</p>
+  <div class="grid">
+    <a class="card" href="admin.html">
+      <span class="tag">後台 · 公司幹部</span>
+      <h2>總公司管理平台</h2>
+      <div style="color:var(--muted);font-size:14px">桌機為主，支援平板與手機；深淺色模式</div>
+      <ul>
+        <li>登入＋雙因子驗證</li>
+        <li>儀表板：KPI、營收毛利趨勢、預警清單</li>
+        <li>社區列表／社區詳情（管委會、人力編制、戶別、管理費設定）</li>
+        <li>合約、人事、排班、督導稽核、報修事件</li>
+        <li>管理費收繳分析、社區財務總覽、公司經營分析</li>
+        <li>樹狀組織架構、系統設定</li>
+        <li>所有新增／編輯／審核皆有表單或確認視窗，資料會即時更新畫面</li>
+      </ul>
+    </a>
+    <a class="card" href="site.html">
+      <span class="tag">前台 · 社區工作人員</span>
+      <h2>社區工作站</h2>
+      <div style="color:var(--muted);font-size:14px">長輩友善設計，手機、平板、櫃台電腦皆可用</div>
+      <ul>
+        <li>櫃台模式：點名字＋4 碼 PIN 快速切換使用者</li>
+        <li>首頁大圖示，依角色顯示功能（試試用「Budi 保全」登入）</li>
+        <li>包裹登記／領取（含簽名）、訪客、報修、事件通報</li>
+        <li>管理費收款開收據、交接班、巡邏打點</li>
+        <li>總幹事：社區財務、拍照登錄支出、產出月報</li>
+        <li>我的班表與請假；字體三段放大；5 種語系切換</li>
+        <li>零用金盤點、存摺對帳、封帳、改善單回覆、公告、訪客離開登記</li>
+      </ul>
+    </a>
+  </div>
+  <div class="note">
+    <b>前台長輩友善設計原則</b><br>
+    ① 預設 19px 大字，可再放大到 25px ② 按鈕高度 ≥ 64px，主要按鈕 72px ③ 每頁只問一件事，最多 3 步，頂端顯示「第 N 步／共 3 步」<br>
+    ④ 圖示一律搭配文字 ⑤ 用點選取代打字（戶別鍵盤、大選項卡、拍照、語音輸入） ⑥ 每個畫面都有大大的「首頁」與「上一步」 ⑦ 完成後顯示大勾勾與「回首頁」
+  </div>
+</div>
+</body>
+</html>
