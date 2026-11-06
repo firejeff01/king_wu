@@ -1,0 +1,1189 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>平台營運後台</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+<style>
+:root{
+  --bg:#f4f6fa; --panel:#ffffff; --panel-2:#f8fafc; --text:#0f172a; --muted:#64748b; --border:#e2e8f0;
+  --side:#0b1220; --side-text:#94a3b8; --side-hover:#162036;
+  --accent:#0ea5e9; --accent-2:#6366f1; --accent-soft:#e0f2fe;
+  --ok:#059669; --ok-bg:#d1fae5; --warn:#b45309; --warn-bg:#fef3c7; --bad:#dc2626; --bad-bg:#fee2e2; --info-bg:#e0e7ff; --info:#4338ca;
+  --shadow:0 1px 2px rgba(15,23,42,.04),0 4px 16px rgba(15,23,42,.06);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0a0f1a; --panel:#111827; --panel-2:#0f1623; --text:#e5e7eb; --muted:#94a3b8; --border:#1f2a3c;
+    --side:#070b14; --side-hover:#121b2d; --accent-soft:#0c2a3d;
+    --ok:#34d399; --ok-bg:#06281f; --warn:#fbbf24; --warn-bg:#2d2208; --bad:#f87171; --bad-bg:#2e1111; --info-bg:#1e1b4b; --info:#a5b4fc;
+    --shadow:0 1px 2px rgba(0,0,0,.3);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0a0f1a; --panel:#111827; --panel-2:#0f1623; --text:#e5e7eb; --muted:#94a3b8; --border:#1f2a3c;
+  --side:#070b14; --side-hover:#121b2d; --accent-soft:#0c2a3d;
+  --ok:#34d399; --ok-bg:#06281f; --warn:#fbbf24; --warn-bg:#2d2208; --bad:#f87171; --bad-bg:#2e1111; --info-bg:#1e1b4b; --info:#a5b4fc;
+  --shadow:0 1px 2px rgba(0,0,0,.3);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,"Noto Sans TC",system-ui,sans-serif;font-size:14px;line-height:1.55}
+button,input,select,textarea{font:inherit;color:inherit}
+svg.lucide{width:18px;height:18px;stroke-width:1.8;flex-shrink:0}
+a{color:var(--accent);cursor:pointer}
+
+/* ---------- login ---------- */
+#login{position:fixed;inset:0;z-index:50;display:grid;grid-template-columns:1.1fr 1fr;background:var(--bg)}
+#login .hero{background:radial-gradient(1200px 600px at 10% 10%,#1e3a8a 0,transparent 60%),radial-gradient(800px 500px at 90% 90%,#0e7490 0,transparent 60%),#0b1220;color:#e2e8f0;padding:56px;display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden}
+#login .hero::after{content:"";position:absolute;inset:0;background-image:linear-gradient(rgba(148,163,184,.08) 1px,transparent 1px),linear-gradient(90deg,rgba(148,163,184,.08) 1px,transparent 1px);background-size:36px 36px;mask-image:linear-gradient(180deg,#000,transparent)}
+#login .hero h1{font-size:38px;line-height:1.25;margin:0 0 12px;position:relative;z-index:1}
+#login .hero p{color:#94a3b8;max-width:460px;position:relative;z-index:1}
+.logo{display:flex;align-items:center;gap:10px;font-weight:700;font-size:16px;position:relative;z-index:1}
+.logo .mark{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent-2));display:grid;place-items:center;color:#fff}
+#login .form{display:flex;align-items:center;justify-content:center;padding:32px 16px}
+.card-login{width:100%;max-width:380px}
+.card-login h2{margin:0 0 4px;font-size:24px}
+.field{display:block;margin:0}
+.field span{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
+.card-login .field{margin:16px 0}
+.input{width:100%;height:40px;border:1px solid var(--border);border-radius:10px;padding:0 12px;background:var(--panel);outline:none}
+textarea.input{height:auto;min-height:80px;padding:10px 12px}
+.input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.otp{display:flex;gap:8px}.otp .input{text-align:center;font-size:18px;font-weight:600;padding:0}
+.err{color:var(--bad);font-size:12.5px;margin-top:6px;display:none}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:38px;padding:0 14px;border-radius:10px;border:1px solid var(--border);background:var(--panel);cursor:pointer;font-weight:500;white-space:nowrap}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:linear-gradient(135deg,var(--accent),var(--accent-2));border:0;color:#fff}
+.btn.danger{background:var(--bad);border:0;color:#fff}
+.btn.ok{background:var(--ok);border:0;color:#fff}
+.btn.block{width:100%;height:44px}
+.btn.sm{height:30px;padding:0 10px;font-size:12.5px;border-radius:8px}
+.linkbtn{border:0;background:none;color:var(--accent);cursor:pointer;padding:0;font-size:12.5px}
+
+/* ---------- shell ---------- */
+.app{display:grid;grid-template-columns:240px minmax(0,1fr);min-height:100vh}
+aside{background:var(--side);color:var(--side-text);position:sticky;top:0;height:100vh;overflow-y:auto;padding:18px 12px;display:flex;flex-direction:column;gap:4px}
+aside .logo{color:#fff;padding:2px 8px 18px}
+aside .grp{font-size:11px;letter-spacing:.08em;color:#475569;padding:14px 10px 6px}
+aside a{display:flex;align-items:center;gap:10px;color:var(--side-text);text-decoration:none;padding:8px 10px;border-radius:8px;font-size:14px}
+aside a:hover{background:var(--side-hover);color:#e2e8f0}
+aside a.active{background:linear-gradient(90deg,rgba(14,165,233,.22),rgba(99,102,241,.08));color:#fff;box-shadow:inset 2px 0 0 var(--accent)}
+aside .foot{margin-top:auto;padding:12px 10px;font-size:12px;color:#475569}
+header.top{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:12px;padding:12px 24px;background:color-mix(in srgb,var(--bg) 85%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--border)}
+.scope{display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:0 10px;height:38px}
+.scope select{border:0;background:transparent;outline:none;height:36px;max-width:140px}
+.search{flex:1;max-width:420px;display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:0 12px;height:38px;color:var(--muted)}
+.search input{border:0;outline:none;background:transparent;flex:1;min-width:0}
+.top .sp{flex:1}
+.iconbtn{width:38px;height:38px;border-radius:10px;border:1px solid var(--border);background:var(--panel);display:grid;place-items:center;cursor:pointer;position:relative;flex-shrink:0}
+.iconbtn .dot{position:absolute;top:7px;right:8px;width:8px;height:8px;border-radius:50%;background:var(--bad);border:2px solid var(--panel)}
+.user{display:flex;align-items:center;gap:10px;cursor:pointer;border:0;background:none;padding:0;text-align:left}
+.avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#38bdf8,#818cf8);color:#fff;display:grid;place-items:center;font-weight:700;font-size:13px;flex-shrink:0}
+.user small{display:block;color:var(--muted);font-size:12px;line-height:1.2}
+.menu-toggle{display:none}
+main{padding:24px;max-width:1440px;width:100%}
+.page-head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+.page-head h1{margin:0;font-size:22px;letter-spacing:-.01em}
+.crumb{color:var(--muted);font-size:12.5px;margin-bottom:4px}
+.actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.actions select.input{height:38px;width:auto}
+section.screen{display:none}
+section.screen.on{display:block;animation:fade .25s ease}
+@keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+
+/* ---------- components ---------- */
+.grid{display:grid;gap:16px}
+.g-6{grid-template-columns:repeat(6,minmax(0,1fr))}
+.g-4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.g-3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.g-2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.g-21{grid-template-columns:2fr 1fr;align-items:start}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow);padding:18px;min-width:0}
+.card.click{cursor:pointer}.card.click:hover{border-color:var(--accent)}
+.card h3{margin:0 0 12px;font-size:15px;display:flex;align-items:center;gap:8px;justify-content:space-between}
+.card h3 .l{display:flex;align-items:center;gap:8px}
+.kpi .lbl{color:var(--muted);font-size:12.5px;display:flex;align-items:center;gap:6px}
+.kpi .val{font-size:26px;font-weight:700;letter-spacing:-.02em;margin-top:6px;font-variant-numeric:tabular-nums}
+.kpi .delta{font-size:12px;margin-top:2px}
+.up{color:var(--ok)}.down{color:var(--bad)}
+.kpi .ico{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent)}
+.tag{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:600;white-space:nowrap}
+.t-ok{background:var(--ok-bg);color:var(--ok)}.t-warn{background:var(--warn-bg);color:var(--warn)}.t-bad{background:var(--bad-bg);color:var(--bad)}.t-info{background:var(--info-bg);color:var(--info)}.t-mute{background:var(--panel-2);color:var(--muted);border:1px solid var(--border)}
+.tbl-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:12px;background:var(--panel)}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th{text-align:left;font-weight:600;color:var(--muted);font-size:12.5px;background:var(--panel-2);padding:10px 14px;border-bottom:1px solid var(--border);white-space:nowrap}
+td{padding:11px 14px;border-bottom:1px solid var(--border);white-space:nowrap}
+tr:last-child td{border-bottom:0}
+tbody tr.click{cursor:pointer}
+tbody tr.click:hover{background:var(--panel-2)}
+.num{text-align:right;font-variant-numeric:tabular-nums}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+.chip{height:32px;padding:0 12px;border-radius:999px;border:1px solid var(--border);background:var(--panel);cursor:pointer;font-size:13px}
+.chip.on{background:var(--text);color:var(--panel);border-color:var(--text)}
+.alert-list{display:flex;flex-direction:column;gap:8px}
+.alert{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border-radius:10px;background:var(--panel-2);border:1px solid var(--border);cursor:pointer;text-align:left;width:100%}
+.alert:hover{border-color:var(--accent)}
+.alert .i{width:28px;height:28px;border-radius:8px;display:grid;place-items:center;flex-shrink:0;padding:0}
+.alert b{display:block;font-size:13.5px}
+.alert small{color:var(--muted)}
+.bar-row{display:grid;grid-template-columns:110px 1fr 52px;gap:10px;align-items:center;margin:8px 0;font-size:13px}
+.bar{height:8px;background:var(--panel-2);border-radius:999px;overflow:hidden;border:1px solid var(--border)}
+.bar>i{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,var(--accent),var(--accent-2))}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--border);margin-bottom:16px;overflow-x:auto}
+.tabs button{border:0;background:none;padding:10px 14px;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;white-space:nowrap}
+.tabs button.on{color:var(--text);border-color:var(--accent);font-weight:600}
+.dl{display:grid;grid-template-columns:120px 1fr;gap:8px 16px;font-size:13.5px;margin:0}
+.dl dt{color:var(--muted)}.dl dd{margin:0}
+.progress{display:flex;align-items:center;gap:8px}
+.progress .bar{width:80px}
+.legend{display:flex;gap:14px;font-size:12px;color:var(--muted);flex-wrap:wrap}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.chart svg:not(.lucide){width:100%;height:auto;display:block}
+.tree ul{list-style:none;margin:0;padding-left:22px;border-left:1px dashed var(--border)}
+.tree>ul{padding-left:0;border:0}
+.tree li{margin:6px 0}
+.node{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border:1px solid var(--border);border-radius:10px;background:var(--panel);cursor:pointer}
+.node:hover,.node.sel{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.node small{color:var(--muted)}
+.node.off{opacity:.5}
+.sched{font-size:12px}
+.sched td,.sched th{padding:6px 4px;text-align:center;min-width:30px}
+.sched td:first-child,.sched th:first-child{text-align:left;padding-left:12px;min-width:120px;position:sticky;left:0;background:var(--panel);z-index:1}
+.sc{display:inline-block;width:26px;height:22px;line-height:22px;border-radius:6px;font-weight:600;font-size:11.5px;cursor:pointer;border:0;padding:0}
+.s-D{background:#e0f2fe;color:#0369a1}.s-N{background:#ede9fe;color:#5b21b6}.s-O{background:transparent;color:var(--muted)}.s-L{background:#fef3c7;color:#92400e}
+.placeholder{border:1px dashed var(--border);border-radius:14px;padding:36px;text-align:center;color:var(--muted);cursor:pointer}
+.placeholder:hover{border-color:var(--accent)}
+.hint{font-size:12px;color:var(--muted)}
+.timeline{list-style:none;margin:0;padding:0}
+.timeline li{position:relative;padding:0 0 14px 22px;border-left:2px solid var(--border);margin-left:6px}
+.timeline li::before{content:"";position:absolute;left:-7px;top:3px;width:12px;height:12px;border-radius:50%;background:var(--accent)}
+.timeline li:last-child{border-color:transparent}
+.timeline small{color:var(--muted);display:block}
+.seg{display:inline-flex;border:1px solid var(--border);border-radius:8px;overflow:hidden}
+.seg button{border:0;background:var(--panel);padding:4px 10px;cursor:pointer;font-size:12.5px}
+.seg button.on.okb{background:var(--ok);color:#fff}.seg button.on.badb{background:var(--bad);color:#fff}
+.switch{position:relative;width:40px;height:22px;flex-shrink:0}
+.switch input{opacity:0;width:0;height:0}
+.switch i{position:absolute;inset:0;background:var(--border);border-radius:999px;cursor:pointer;transition:.2s}
+.switch i::after{content:"";position:absolute;left:3px;top:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:.2s}
+.switch input:checked+i{background:var(--accent)}
+.switch input:checked+i::after{transform:translateX(18px)}
+.row{display:flex;align-items:center;gap:10px;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)}
+.row:last-child{border:0}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.form-grid .full{grid-column:1/-1}
+.drop{border:2px dashed var(--border);border-radius:12px;padding:28px;text-align:center;color:var(--muted);cursor:pointer}
+.drop:hover{border-color:var(--accent)}
+.drop.done{border-style:solid;border-color:var(--ok);color:var(--ok);background:var(--ok-bg)}
+.wsteps{display:flex;gap:6px;margin-bottom:16px}
+.wsteps span{flex:1;font-size:12px;color:var(--muted);border-top:3px solid var(--border);padding-top:6px}
+.wsteps span.on{color:var(--text);border-color:var(--accent);font-weight:600}
+
+/* ---------- overlay: modal / drawer / popover ---------- */
+.ov{position:fixed;inset:0;background:rgba(2,6,23,.5);z-index:40;display:none;backdrop-filter:blur(2px)}
+.ov.on{display:block}
+.modal{position:fixed;left:50%;top:50%;transform:translate(-50%,-48%);opacity:0;pointer-events:none;width:min(640px,calc(100vw - 32px));max-height:calc(100vh - 48px);display:flex;flex-direction:column;background:var(--panel);border:1px solid var(--border);border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.25);z-index:45;transition:.18s}
+.modal.wide{width:min(920px,calc(100vw - 32px))}
+.modal.on{opacity:1;pointer-events:auto;transform:translate(-50%,-50%)}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(560px,100vw);background:var(--panel);border-left:1px solid var(--border);z-index:45;transform:translateX(100%);transition:.2s;display:flex;flex-direction:column;box-shadow:-10px 0 40px rgba(0,0,0,.15)}
+.drawer.on{transform:none}
+.m-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:16px 20px;border-bottom:1px solid var(--border)}
+.m-head h2{margin:0;font-size:17px}
+.m-body{padding:20px;overflow-y:auto;flex:1}
+.m-foot{display:flex;gap:8px;justify-content:flex-end;padding:14px 20px;border-top:1px solid var(--border);flex-wrap:wrap}
+.m-foot:empty{display:none}
+.pop{position:fixed;top:60px;right:24px;width:min(360px,calc(100vw - 32px));background:var(--panel);border:1px solid var(--border);border-radius:14px;box-shadow:0 20px 50px rgba(0,0,0,.2);z-index:46;display:none;padding:8px}
+.pop.on{display:block}
+.pop .pi{display:flex;gap:10px;padding:10px;border-radius:10px;cursor:pointer;align-items:flex-start;border:0;background:none;width:100%;text-align:left}
+.pop .pi:hover{background:var(--panel-2)}
+.pop .pi small{display:block;color:var(--muted)}
+.drawer-bg{display:none}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(20px);opacity:0;background:var(--text);color:var(--panel);padding:10px 16px;border-radius:10px;transition:.25s;z-index:60;pointer-events:none;max-width:90vw;text-align:center}
+.toast.on{opacity:1;transform:translateX(-50%)}
+
+@media (max-width:1200px){.g-6{grid-template-columns:repeat(3,minmax(0,1fr))}.g-4{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:960px){
+  .app{grid-template-columns:1fr}
+  aside{position:fixed;left:0;top:0;bottom:0;width:260px;z-index:30;transform:translateX(-100%);transition:transform .2s}
+  aside.open{transform:none}
+  .drawer-bg.on{display:block;position:fixed;inset:0;background:rgba(2,6,23,.5);z-index:25}
+  .menu-toggle{display:grid}
+  .g-21,.g-3,.g-2{grid-template-columns:1fr}
+  .search{display:none}
+  .user div{display:none}
+  #login{grid-template-columns:1fr}
+  #login .hero{display:none}
+}
+@media (max-width:640px){
+  header.top{padding:10px 16px;gap:8px}
+  main{padding:16px}
+  .g-6,.g-4{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .kpi .val{font-size:21px}
+  .scope select{max-width:90px}
+  .dl{grid-template-columns:100px 1fr}
+  .form-grid{grid-template-columns:1fr}
+  .pop{right:16px}
+}
+/* ---------- 營運後台補充樣式 ---------- */
+aside{background:#0d1324}
+.logo .mark.ops{background:linear-gradient(135deg,#f59e0b,#ef4444)}
+.kb{display:grid;grid-template-columns:repeat(7,minmax(190px,1fr));gap:12px;overflow-x:auto;padding-bottom:8px}
+.kcol{background:var(--panel-2);border:1px solid var(--border);border-radius:12px;padding:10px;min-height:240px}
+.kcol h4{margin:0 0 4px;font-size:13px;display:flex;justify-content:space-between}
+.kcard{display:block;width:100%;text-align:left;background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:10px;margin-top:8px;cursor:pointer}
+.kcard:hover{border-color:var(--accent)}
+.kcard b{display:block;font-size:13px}
+.kcard small{color:var(--muted);display:block}
+.kmove{display:flex;gap:4px;margin-top:6px}
+.kmove button{flex:1;height:24px;border:1px solid var(--border);background:var(--panel-2);border-radius:6px;cursor:pointer;font-size:12px}
+.msgs{display:flex;flex-direction:column;gap:10px;margin-bottom:12px}
+.msg{padding:10px 12px;border-radius:12px;background:var(--panel-2);border:1px solid var(--border);max-width:90%}
+.msg.me{align-self:flex-end;background:var(--accent-soft)}
+.msg.note{background:var(--warn-bg);border-style:dashed}
+.msg small{display:block;color:var(--muted);font-size:11.5px;margin-bottom:2px}
+.perm{border:0;background:none;cursor:pointer;padding:2px 6px;border-radius:6px}
+.perm:hover{background:var(--panel-2)}
+.banner{display:flex;gap:12px;align-items:center;padding:12px 16px;border-radius:12px;background:var(--info-bg);color:var(--info);margin-bottom:16px}
+.check{display:flex;align-items:center;gap:8px;font-size:13.5px;margin:6px 0}
+.lang{display:inline-block;font-size:11px;padding:1px 6px;border-radius:6px;margin-right:3px;border:1px solid var(--border)}
+.lang.on{background:var(--ok-bg);color:var(--ok);border-color:transparent}
+.stat3{display:flex;gap:24px;flex-wrap:wrap}
+.stat3 div b{display:block;font-size:20px}
+.stat3 div small{color:var(--muted)}
+</style>
+</head>
+<body>
+
+<!-- ================= 登入 ================= -->
+<div id="login">
+  <div class="hero">
+    <div class="logo"><div class="mark ops"><i data-lucide="shield-check"></i></div>平台營運後台</div>
+    <div>
+      <h1>物業社區管理平台<br>營運後台</h1>
+      <p>管理租戶、方案、帳務、推薦夥伴、客服與系統。平台人員專用，與租戶後台帳號分開。</p>
+    </div>
+    <div style="position:relative;z-index:1;color:#64748b;font-size:12px">SaaS 原型 v0.1 · 僅供討論，資料為虛構</div>
+  </div>
+  <div class="form">
+    <div class="card-login" id="step1">
+      <h2>平台人員登入</h2>
+      <div class="hint">所有平台人員一律強制雙因子驗證（P-ADM-01）</div>
+      <label class="field"><span>Email</span><input class="input" id="lgUser" value="zihao@pcmp.example"></label>
+      <label class="field"><span>密碼</span><input class="input" id="lgPwd" type="password" value="password"></label>
+      <div class="err" id="lgErr">請輸入 Email 與密碼</div>
+      <button class="btn primary block" data-act="loginNext">下一步</button>
+      <p style="margin-top:14px"><button class="linkbtn" data-act="forgotPwd">忘記密碼？</button></p>
+    </div>
+    <div class="card-login" id="step2" style="display:none">
+      <h2>雙因子驗證</h2>
+      <div class="hint">請輸入驗證 App 上的 6 位數驗證碼（原型：任意 6 碼）</div>
+      <div class="otp field" style="margin:16px 0" id="otp">
+        <input class="input" maxlength="1" inputmode="numeric"><input class="input" maxlength="1" inputmode="numeric"><input class="input" maxlength="1" inputmode="numeric"><input class="input" maxlength="1" inputmode="numeric"><input class="input" maxlength="1" inputmode="numeric"><input class="input" maxlength="1" inputmode="numeric">
+      </div>
+      <div class="err" id="otpErr">請輸入完整 6 位數驗證碼</div>
+      <button class="btn primary block" data-act="loginOtp">驗證並登入</button>
+      <button class="btn block" style="margin-top:8px" data-act="loginBack">返回</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= 主框架 ================= -->
+<div class="app">
+  <aside id="side">
+    <div class="logo"><div class="mark ops"><i data-lucide="shield-check"></i></div>平台營運後台</div>
+    <a href="#dashboard"><i data-lucide="layout-dashboard"></i>營運儀表板</a>
+    <a href="#reports"><i data-lucide="pie-chart"></i>營運報表</a>
+    <div class="grp">客戶開發</div>
+    <a href="#leads"><i data-lucide="kanban"></i>潛在客戶</a>
+    <a href="#apps"><i data-lucide="inbox"></i>試用申請</a>
+    <a href="#funnel"><i data-lucide="filter"></i>銷售漏斗</a>
+    <div class="grp">租戶管理</div>
+    <a href="#tenants"><i data-lucide="building-2"></i>租戶列表</a>
+    <a href="#health"><i data-lucide="heart-pulse"></i>健康度與流失預警</a>
+    <a href="#grants"><i data-lucide="key-round"></i>授權存取紀錄</a>
+    <div class="grp">方案與帳務</div>
+    <a href="#plans"><i data-lucide="layers"></i>方案與價格</a>
+    <a href="#coupons"><i data-lucide="ticket-percent"></i>優惠碼</a>
+    <a href="#billing"><i data-lucide="receipt"></i>帳單與收款對帳</a>
+    <a href="#dunning"><i data-lucide="alarm-clock"></i>逾期催收</a>
+    <div class="grp">推薦夥伴</div>
+    <a href="#partners"><i data-lucide="handshake"></i>夥伴列表</a>
+    <a href="#comms"><i data-lucide="coins"></i>佣金與撥付</a>
+    <a href="#portal"><i data-lucide="door-open"></i>夥伴入口（預覽）</a>
+    <div class="grp">服務</div>
+    <a href="#support"><i data-lucide="life-buoy"></i>客服中心</a>
+    <a href="#announce"><i data-lucide="megaphone"></i>平台公告</a>
+    <a href="#templates"><i data-lucide="library"></i>平台範本庫</a>
+    <a href="#content"><i data-lucide="clapperboard"></i>教學與說明</a>
+    <a href="#releases"><i data-lucide="rocket"></i>版本更新說明</a>
+    <a href="#terms"><i data-lucide="scroll-text"></i>服務條款版本</a>
+    <div class="grp">系統</div>
+    <a href="#monitor"><i data-lucide="activity"></i>系統監控</a>
+    <a href="#staff"><i data-lucide="user-cog"></i>平台人員與權限</a>
+    <a href="#flags"><i data-lucide="toggle-right"></i>功能開關</a>
+    <a href="#params"><i data-lucide="sliders-horizontal"></i>平台參數</a>
+    <a href="#audit"><i data-lucide="history"></i>平台稽核日誌</a>
+    <div class="foot">SaaS 原型 v0.1 · 資料為虛構</div>
+  </aside>
+  <div class="drawer-bg" id="drawerBg" data-act="closeMenu"></div>
+
+  <div>
+    <header class="top">
+      <button class="iconbtn menu-toggle" data-act="openMenu" aria-label="選單"><i data-lucide="menu"></i></button>
+      <div class="search"><i data-lucide="search"></i><input id="q" placeholder="搜尋租戶名稱或代碼後按 Enter…"></div>
+      <div class="sp"></div>
+      <button class="iconbtn" data-act="theme" aria-label="深淺色"><i data-lucide="sun-moon"></i></button>
+      <button class="iconbtn" data-act="bell" aria-label="通知"><i data-lucide="bell"></i><span class="dot" id="bellDot"></span></button>
+      <button class="user" data-act="userMenu"><span class="avatar">張</span><div><b>張子豪</b><small>平台管理員</small></div></button>
+    </header>
+
+    <main>
+      <section class="screen" id="s-dashboard">
+        <div class="page-head"><div><div class="crumb">總覽 · 2026/11/06</div><h1>營運儀表板</h1></div>
+          <div class="actions"><button class="btn" data-act="exportJob" data-name="營運儀表板"><i data-lucide="download"></i>匯出</button></div></div>
+        <div class="grid g-6" id="dKpi"></div>
+        <div class="grid g-21" style="margin-top:16px">
+          <div class="card chart"><h3><span class="l"><i data-lucide="bar-chart-3"></i>近 12 個月 MRR（萬元）與社區數</span></h3><div id="dChart"></div></div>
+          <div class="card"><h3><span class="l"><i data-lucide="list-todo"></i>待處理清單</span><span class="tag t-bad" id="todoCnt"></span></h3><div class="alert-list" id="dTodo"></div></div>
+        </div>
+        <div class="grid g-3" style="margin-top:16px">
+          <div class="card"><h3><span class="l"><i data-lucide="repeat"></i>試用轉付費與導入</span></h3><div id="dConv"></div></div>
+          <div class="card"><h3><span class="l"><i data-lucide="layers"></i>方案分布</span><a href="#reports" class="hint">營運報表</a></h3><div id="dPlan"></div></div>
+          <div class="card"><h3><span class="l"><i data-lucide="phone-call"></i>今日需跟進</span><a href="#leads" class="hint">潛在客戶</a></h3><div id="dFollow"></div></div>
+        </div>
+      </section>
+
+      <section class="screen" id="s-reports">
+        <div class="page-head"><div><div class="crumb">總覽</div><h1>營運報表</h1></div>
+          <div class="actions"><button class="btn" data-act="exportJob" data-name="營運報表"><i data-lucide="download"></i>匯出 Excel</button></div></div>
+        <div class="grid g-2">
+          <div class="card"><h3><span class="l"><i data-lucide="trending-up"></i>本月 MRR 變動明細（P-OPS-07）</span></h3><div id="rMove"></div></div>
+          <div class="card"><h3><span class="l"><i data-lucide="grid-3x3"></i>方案分布與營收占比（P-DASH-05）</span></h3><div id="rDist"></div></div>
+        </div>
+        <div class="card" style="margin-top:16px"><h3><span class="l"><i data-lucide="database"></i>各租戶用量</span><button class="btn sm" data-act="goMonitor" data-tab="line">查看系統監控</button></h3><div class="tbl-wrap"><table><thead><tr><th>租戶</th><th>方案</th><th class="num">本月推播</th><th class="num">推播配額</th><th class="num">儲存（GB）</th><th class="num">儲存配額</th></tr></thead><tbody id="rUse"></tbody></table></div></div>
+      </section>
+
+      <section class="screen" id="s-leads">
+        <div class="page-head"><div><div class="crumb">客戶開發</div><h1>潛在客戶</h1></div>
+          <div class="actions"><div class="seg"><button data-act="leadView" data-v="kb" id="lvKb">看板</button><button data-act="leadView" data-v="list" id="lvList">列表</button></div><button class="btn primary" data-act="newLead"><i data-lucide="plus"></i>新增潛在客戶</button></div></div>
+        <div id="leadBox"></div>
+        <p class="hint" style="margin-top:8px">點選卡片查看聯繫紀錄；用 ◀ ▶ 移動階段。移到「試用中」會建立試用租戶，移到「成交」會轉為正式租戶。</p>
+      </section>
+
+      <section class="screen" id="s-apps">
+        <div class="page-head"><div><div class="crumb">客戶開發</div><h1>試用申請</h1></div>
+          <div class="actions"><button class="btn" data-act="openSignup"><i data-lucide="external-link"></i>官網申請頁</button></div></div>
+        <div class="toolbar" id="appChips"></div>
+        <div class="tbl-wrap"><table><thead><tr><th>申請編號</th><th>申請日</th><th>公司</th><th>聯絡人</th><th class="num">社區數</th><th>推薦碼</th><th>狀態</th><th></th></tr></thead><tbody id="appRows"></tbody></table></div>
+      </section>
+
+      <section class="screen" id="s-funnel">
+        <div class="page-head"><div><div class="crumb">客戶開發</div><h1>銷售漏斗與未成交原因</h1></div>
+          <div class="actions"><select class="input" data-change="fSrc" id="fSrc"></select><select class="input" data-change="fPtn" id="fPtn"></select><select class="input" data-change="fSales" id="fSales"></select></div></div>
+        <div class="grid g-2">
+          <div class="card"><h3><span class="l"><i data-lucide="filter"></i>銷售漏斗（P-CRM-06）</span></h3><div id="fBars"></div></div>
+          <div class="card"><h3><span class="l"><i data-lucide="x-circle"></i>未成交原因（P-CRM-05）</span><span class="hint">含歷史紀錄</span></h3><div id="fLost"></div></div>
+        </div>
+      </section>
+
+      <section class="screen" id="s-tenants">
+        <div class="page-head"><div><div class="crumb">租戶管理</div><h1>租戶列表</h1></div>
+          <div class="actions"><button class="btn" data-act="exportJob" data-name="租戶列表"><i data-lucide="download"></i>匯出</button><button class="btn primary" data-act="newTenant"><i data-lucide="plus"></i>建立租戶</button></div></div>
+        <div class="toolbar" id="tChips"></div>
+        <div class="tbl-wrap"><table><thead><tr><th>租戶</th><th>代碼</th><th>方案</th><th>狀態</th><th class="num">社區</th><th class="num">使用者</th><th class="num">MRR</th><th>到期／下次帳單</th><th>最近活躍</th><th>健康度</th></tr></thead><tbody id="tRows"></tbody></table></div>
+      </section>
+
+      <section class="screen" id="s-tenant">
+        <div class="page-head"><div><div class="crumb"><a href="#tenants">租戶列表</a> / 租戶詳情</div><h1 id="tTitle"></h1></div><div class="actions" id="tActs"></div></div>
+        <div class="grid g-4" style="margin-bottom:16px" id="tKpi"></div>
+        <div class="tabs" id="tTabs"></div>
+        <div id="tBody"></div>
+      </section>
+
+      <section class="screen" id="s-health">
+        <div class="page-head"><div><div class="crumb">租戶管理</div><h1>健康度與流失預警</h1></div></div>
+        <div class="card" style="margin-bottom:16px"><div class="hint">健康度依「使用率、LINE 綁定率、帳款逾期天數、未結客服問題」計分：使用率 &lt; 50% +2、&lt; 70% +1；綁定率 &lt; 60% +1；逾期 &gt; 30 天 +2、有逾期 +1；未結問題 ≥ 2 +1。合計 ≥ 3 為危險、≥ 1 為注意。</div></div>
+        <div class="tbl-wrap"><table><thead><tr><th>租戶</th><th>健康度</th><th class="num">使用率</th><th class="num">LINE 綁定率</th><th class="num">逾期天數</th><th class="num">未結客服</th><th>下次跟進</th><th></th></tr></thead><tbody id="hRows"></tbody></table></div>
+      </section>
+
+      <section class="screen" id="s-grants">
+        <div class="page-head"><div><div class="crumb">租戶管理</div><h1>授權存取紀錄</h1></div>
+          <div class="actions"><button class="btn primary" data-act="newGrant"><i data-lucide="key-round"></i>發出授權請求</button></div></div>
+        <div class="card" style="margin-bottom:16px"><div class="hint">平台人員預設看不到租戶業務資料。需由租戶管理者同意限時授權後才能進入協助，授權期間所有操作同步寫入租戶可查閱的稽核日誌（P-OPS-04）。</div></div>
+        <div class="tbl-wrap"><table><thead><tr><th>編號</th><th>租戶</th><th>申請人</th><th>原因</th><th>時數</th><th>期間</th><th>狀態</th><th class="num">操作筆數</th><th></th></tr></thead><tbody id="gRows"></tbody></table></div>
+      </section>
+
+      <section class="screen" id="s-plans">
+        <div class="page-head"><div><div class="crumb">方案與帳務</div><h1>方案與價格</h1></div>
+          <div class="actions"><button class="btn" data-act="newQuote"><i data-lucide="file-pen-line"></i>個別報價</button><button class="btn primary" data-act="newPriceVer"><i data-lucide="plus"></i>新增價格版本</button></div></div>
+        <div class="tbl-wrap"><table><thead><tr><th>方案</th><th>社區數</th><th class="num">月費</th><th class="num">年費（九折）</th><th>可用模組</th><th>配額</th><th class="num">租戶數</th><th>銷售狀態</th><th></th></tr></thead><tbody id="pRows"></tbody></table></div>
+        <div class="grid g-2" style="margin-top:16px">
+          <div class="card"><h3><span class="l"><i data-lucide="history"></i>價格版本（P-SUB-10）</span></h3><div class="tbl-wrap"><table><thead><tr><th>方案</th><th>版本</th><th class="num">月費</th><th>生效日</th><th>既有租戶</th><th>狀態</th><th></th></tr></thead><tbody id="pvRows"></tbody></table></div></div>
+          <div class="card"><h3><span class="l"><i data-lucide="file-pen-line"></i>個別報價（P-SUB-12）</span></h3><div class="tbl-wrap"><table><thead><tr><th>租戶</th><th>方案</th><th class="num">月費</th><th>原因</th><th>狀態</th><th></th></tr></thead><tbody id="qRows"></tbody></table></div></div>
+        </div>
+      </section>
+
+      <section class="screen" id="s-coupons">
+        <div class="page-head"><div><div class="crumb">方案與帳務</div><h1>優惠碼</h1></div>
+          <div class="actions"><button class="btn primary" data-act="newCoupon"><i data-lucide="plus"></i>建立優惠碼</button></div></div>
+        <div class="tbl-wrap"><table><thead><tr><th>代碼</th><th>折扣</th><th>適用方案</th><th>有效期</th><th class="num">使用 / 上限</th><th>狀態</th><th></th></tr></thead><tbody id="cRows"></tbody></table></div>
+      </section>
+
+      <section class="screen" id="s-billing">
+        <div class="page-head"><div><div class="crumb">方案與帳務</div><h1>帳單與收款對帳</h1></div>
+          <div class="actions"><button class="btn" data-act="importBank"><i data-lucide="file-spreadsheet"></i>匯入銀行明細</button><button class="btn" data-act="newCharge"><i data-lucide="plus"></i>新增一次性費用</button><button class="btn primary" data-act="regPay"><i data-lucide="banknote"></i>登記收款</button></div></div>
+        <div class="grid g-4" id="bKpi"></div>
+        <div class="toolbar" style="margin-top:16px" id="bChips"></div>
+        <div class="tbl-wrap"><table><thead><tr><th>帳單號碼</th><th>租戶</th><th>期間</th><th>項目</th><th class="num">金額</th><th>到期日</th><th>狀態</th><th>收款日</th><th>發票</th></tr></thead><tbody id="bRows"></tbody></table></div>
+      </section>
+
+      <section class="screen" id="s-dunning">
+        <div class="page-head"><div><div class="crumb">方案與帳務</div><h1>逾期催收</h1></div></div>
+        <div class="card" style="margin-bottom:16px"><div class="hint" id="dunRule"></div></div>
+        <div class="tbl-wrap"><table><thead><tr><th>租戶</th><th class="num">逾期帳單</th><th class="num">逾期金額</th><th class="num">最久逾期天數</th><th>目前狀態</th><th>依規則應為</th><th>最近催收</th><th></th></tr></thead><tbody id="dunRows"></tbody></table></div>
+      </section>
+
+      <section class="screen" id="s-partners">
+        <div class="page-head"><div><div class="crumb">推薦夥伴</div><h1>夥伴列表</h1></div>
+          <div class="actions"><button class="btn primary" data-act="newPartner"><i data-lucide="plus"></i>新增夥伴</button></div></div>
+        <div class="tbl-wrap"><table><thead><tr><th>夥伴</th><th>合作模式</th><th>佣金規則</th><th>推薦碼</th><th class="num">推薦數</th><th class="num">成交數</th><th class="num">成交率</th><th class="num">帶來 MRR</th><th class="num">累計佣金</th></tr></thead><tbody id="ptRows"></tbody></table></div>
+        <p class="hint" style="margin-top:8px">點選列查看夥伴詳情、推薦客戶與佣金規則（P-PTN-01～03、07）</p>
+      </section>
+
+      <section class="screen" id="s-comms">
+        <div class="page-head"><div><div class="crumb">推薦夥伴</div><h1>佣金與撥付</h1></div>
+          <div class="actions"><button class="btn primary" data-act="payout"><i data-lucide="send"></i>批次撥付</button></div></div>
+        <div class="grid g-4" id="cmKpi"></div>
+        <div class="toolbar" style="margin-top:16px" id="cmChips"></div>
+        <div class="tbl-wrap"><table><thead><tr><th>佣金編號</th><th>夥伴</th><th>租戶</th><th>帳單</th><th>付款日</th><th class="num">計佣基礎</th><th class="num">比例</th><th class="num">佣金</th><th>狀態</th><th></th></tr></thead><tbody id="cmRows"></tbody></table></div>
+        <div class="card" style="margin-top:16px"><h3><span class="l"><i data-lucide="send"></i>撥付紀錄（P-PTN-05）</span></h3><div class="tbl-wrap"><table><thead><tr><th>撥付編號</th><th>夥伴</th><th>撥付日</th><th class="num">金額</th><th>匯款憑證</th><th>夥伴單據</th></tr></thead><tbody id="poRows"></tbody></table></div></div>
+      </section>
+
+      <section class="screen" id="s-portal">
+        <div class="banner"><i data-lucide="eye"></i><div style="flex:1">以夥伴身分預覽「夥伴入口」（P-PTN-06）。夥伴只看得到推薦客戶的名稱、階段與付費狀態，看不到租戶業務資料。</div><select class="input" style="width:auto;height:34px" data-change="portalPtn" id="portalPtn"></select></div>
+        <div class="page-head"><div><div class="crumb">夥伴入口</div><h1 id="poTitle"></h1></div>
+          <div class="actions"><button class="btn" data-act="copyRef" id="poCopy"><i data-lucide="link"></i>複製推薦連結</button><button class="btn" data-act="material" data-f="產品簡介簡報.pdf"><i data-lucide="presentation"></i>產品簡介</button><button class="btn" data-act="material" data-f="一頁式 DM.pdf"><i data-lucide="file-text"></i>一頁式 DM</button></div></div>
+        <div class="grid g-4" id="poKpi"></div>
+        <div class="grid g-2" style="margin-top:16px">
+          <div class="card"><h3><span class="l"><i data-lucide="users"></i>我推薦的客戶</span></h3><div class="tbl-wrap"><table><thead><tr><th>客戶</th><th>階段</th><th>付費狀態</th><th>推薦日</th></tr></thead><tbody id="poCust"></tbody></table></div></div>
+          <div class="card"><h3><span class="l"><i data-lucide="coins"></i>佣金明細與撥付</span></h3><div class="tbl-wrap"><table><thead><tr><th>月份</th><th>客戶</th><th class="num">佣金</th><th>狀態</th></tr></thead><tbody id="poComm"></tbody></table></div></div>
+        </div>
+      </section>
+
+      <section class="screen" id="s-support">
+        <div class="page-head"><div><div class="crumb">服務</div><h1>客服中心</h1></div>
+          <div class="actions"><button class="btn" data-act="sugList"><i data-lucide="lightbulb"></i>功能建議彙整</button><button class="btn primary" data-act="newTicket"><i data-lucide="plus"></i>新增問題</button></div></div>
+        <div class="toolbar" id="sChips"></div>
+        <div class="tbl-wrap"><table><thead><tr><th>編號</th><th>租戶</th><th>提問人</th><th>來源</th><th>類別</th><th>優先級</th><th>狀態</th><th>處理人</th><th>首次回應時限</th></tr></thead><tbody id="sRows"></tbody></table></div>
+      </section>
+
+      <section class="screen" id="s-announce">
+        <div class="page-head"><div><div class="crumb">內容管理</div><h1>平台公告</h1></div>
+          <div class="actions"><button class="btn primary" data-act="newAnn"><i data-lucide="plus"></i>新增公告</button></div></div>
+        <div class="tbl-wrap"><table><thead><tr><th>編號</th><th>標題</th><th>類型</th><th>對象</th><th>管道</th><th>發布時間</th><th>狀態</th><th></th></tr></thead><tbody id="anRows"></tbody></table></div>
+      </section>
+
+      <section class="screen" id="s-templates">
+        <div class="page-head"><div><div class="crumb">內容管理</div><h1>平台範本庫</h1></div></div>
+        <div class="card" style="margin-bottom:16px"><div class="hint">新租戶建立時自動帶入以下範本（P-ONB-03）。修改範本只影響之後建立的租戶，不會覆蓋既有租戶已調整的設定（P-CMS-01）。</div></div>
+        <div class="grid g-4" id="tplCards"></div>
+      </section>
+
+      <section class="screen" id="s-content">
+        <div class="page-head"><div><div class="crumb">內容管理</div><h1>教學與說明</h1></div>
+          <div class="actions"><button class="btn" data-act="newDoc"><i data-lucide="file-plus"></i>新增說明文件</button><button class="btn primary" data-act="newVideo"><i data-lucide="upload"></i>上傳教學影片</button></div></div>
+        <div class="card"><h3><span class="l"><i data-lucide="clapperboard"></i>教學影片（P-CMS-02）</span><span class="legend"><span>語系：繁 / 英 / 印 / 越 / 泰</span></span></h3>
+          <div class="tbl-wrap"><table><thead><tr><th>標題</th><th>對應功能頁</th><th>長度</th><th>語系</th><th>狀態</th><th></th></tr></thead><tbody id="vRows"></tbody></table></div></div>
+        <div class="card" style="margin-top:16px"><h3><span class="l"><i data-lucide="book-open"></i>說明文件與常見問題（P-CMS-03）</span><input class="input" style="max-width:240px;height:32px" id="docQ" placeholder="搜尋…"></h3>
+          <div class="tbl-wrap"><table><thead><tr><th>標題</th><th>分類</th><th class="num">瀏覽數</th><th>更新日</th><th>狀態</th><th></th></tr></thead><tbody id="docRows"></tbody></table></div></div>
+      </section>
+
+      <section class="screen" id="s-releases">
+        <div class="page-head"><div><div class="crumb">內容管理</div><h1>版本更新說明</h1></div>
+          <div class="actions"><button class="btn primary" data-act="newRelease"><i data-lucide="plus"></i>新增版本說明</button></div></div>
+        <div id="relList"></div>
+      </section>
+
+      <section class="screen" id="s-terms">
+        <div class="page-head"><div><div class="crumb">內容管理</div><h1>服務條款版本</h1></div>
+          <div class="actions"><button class="btn primary" data-act="newTerm"><i data-lucide="plus"></i>發布新版本</button></div></div>
+        <div class="tbl-wrap"><table><thead><tr><th>文件</th><th>版本</th><th>生效日</th><th>變更摘要</th><th>狀態</th><th class="num">租戶擁有者同意</th><th></th></tr></thead><tbody id="trRows"></tbody></table></div>
+        <p class="hint" style="margin-top:8px">新版本生效後，租戶擁有者下次登入需重新同意，並留存同意紀錄（P-CMS-05）。</p>
+      </section>
+
+      <section class="screen" id="s-monitor">
+        <div class="page-head"><div><div class="crumb">系統</div><h1>系統監控</h1></div>
+          <div class="actions"><select class="input" data-change="monT" id="monT"></select></div></div>
+        <div class="tabs" id="mTabs"></div>
+        <div id="mBody2"></div>
+      </section>
+
+      <section class="screen" id="s-staff">
+        <div class="page-head"><div><div class="crumb">平台設定</div><h1>平台人員與權限</h1></div>
+          <div class="actions"><button class="btn primary" data-act="newStaff"><i data-lucide="user-plus"></i>新增平台人員</button></div></div>
+        <div class="tbl-wrap"><table><thead><tr><th>姓名</th><th>Email</th><th>角色</th><th>雙因子驗證</th><th>狀態</th><th>上次登入</th><th></th></tr></thead><tbody id="stRows"></tbody></table></div>
+        <div class="card" style="margin-top:16px"><h3><span class="l"><i data-lucide="shield"></i>角色權限（P-ADM-02）</span><span class="hint">點選格子切換：全 → 讀 → —</span></h3>
+          <div class="tbl-wrap"><table><thead id="rpHead"></thead><tbody id="rpRows"></tbody></table></div>
+          <div style="margin-top:12px;text-align:right"><button class="btn primary" data-act="savePerm">儲存權限</button></div></div>
+      </section>
+
+      <section class="screen" id="s-flags">
+        <div class="page-head"><div><div class="crumb">平台設定</div><h1>功能開關</h1></div>
+          <div class="actions"><button class="btn primary" data-act="newFlag"><i data-lucide="plus"></i>新增功能開關</button></div></div>
+        <div class="tbl-wrap"><table><thead><tr><th>代碼</th><th>功能</th><th>模式</th><th>開放租戶</th><th>更新</th><th></th></tr></thead><tbody id="flRows"></tbody></table></div>
+      </section>
+
+      <section class="screen" id="s-params">
+        <div class="page-head"><div><div class="crumb">平台設定</div><h1>平台參數</h1></div>
+          <div class="actions"><button class="btn primary" data-act="saveParams"><i data-lucide="save"></i>儲存</button></div></div>
+        <div class="grid g-2" id="paramBox"></div>
+      </section>
+
+      <section class="screen" id="s-audit">
+        <div class="page-head"><div><div class="crumb">平台設定</div><h1>平台稽核日誌</h1></div>
+          <div class="actions"><input class="input" id="auQ" placeholder="搜尋對象或動作…" style="width:220px"><button class="btn" data-act="exportJob" data-name="平台稽核日誌"><i data-lucide="download"></i>匯出</button></div></div>
+        <div class="toolbar" id="auChips"></div>
+        <div class="tbl-wrap"><table><thead><tr><th>時間</th><th>人員</th><th>類別</th><th>對象</th><th>動作</th><th>原因</th><th>授權編號</th></tr></thead><tbody id="auRows"></tbody></table></div>
+        <p class="hint" style="margin-top:8px">保存至少 2 年（P-ADM-03）。</p>
+      </section>
+    </main>
+  </div>
+</div>
+
+<div class="ov" id="ov" data-act="closeAll"></div>
+<div class="modal" id="modal" role="dialog" aria-modal="true"><div class="m-head"><h2 id="mTitle"></h2><button class="iconbtn" data-act="closeAll" aria-label="關閉"><i data-lucide="x"></i></button></div><div class="m-body" id="mBody"></div><div class="m-foot" id="mFoot"></div></div>
+<div class="drawer" id="drawer" role="dialog"><div class="m-head"><h2 id="dTitle"></h2><button class="iconbtn" data-act="closeAll" aria-label="關閉"><i data-lucide="x"></i></button></div><div class="m-body" id="dBody"></div><div class="m-foot" id="dFoot"></div></div>
+<div class="pop" id="pop"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* =====================================================================
+   常數與假資料
+   ===================================================================== */
+const TODAY="2026/11/06";
+const ME={n:"張子豪",role:"平台管理員",mail:"zihao@pcmp.example"};
+const EDS=["基本","專業","旗艦"],TIERN=["入門","標準","進階"];
+const PRICE={基本:{入門:3500,標準:8000,進階:16000},專業:{入門:5000,標準:12000,進階:25000},旗艦:{入門:8000,標準:18000,進階:36000}};
+const TIER_RANGE={入門:"1～10",標準:"11～30",進階:"31～60",企業:"60 以上"};
+const TIER_MAX={入門:10,標準:30,進階:60,企業:999};
+const QUOTA={入門:{gb:20,line:3000,sup:"線上回報",sla:24},標準:{gb:60,line:8000,sup:"線上回報＋電話",sla:8},進階:{gb:150,line:15000,sup:"專人窗口",sla:4}};
+const MOD_BASE=["社區／合約／到期提醒","員工／證照／派駐","排班請假","交接日誌","報修工單","事件通報","包裹／訪客","公告","LINE 前台","使用率監控","基本報表"];
+const MOD_PRO=["督導稽核與改善單","巡邏打點","設備保養／清潔檢核","公設預約","廠商管理","進階報表"];
+const MOD_FLAG=["住戶完整資料","管理費收繳","社區財務與管委會月報","公司經營分析"];
+const ALLMODS=[...MOD_BASE,...MOD_PRO,...MOD_FLAG,"打卡（加購）"];
+let PLANS=[];EDS.forEach(e=>TIERN.forEach(t=>PLANS.push({id:e+"-"+t,ed:e,tier:t,mods:e==="基本"?[...MOD_BASE]:e==="專業"?[...MOD_BASE,...MOD_PRO]:[...MOD_BASE,...MOD_PRO,...MOD_FLAG],gb:QUOTA[t].gb,line:QUOTA[t].line,sale:true})));
+let PVERS=PLANS.map(p=>({pid:p.id,v:1,m:PRICE[p.ed][p.tier],eff:"2026/01/01",policy:"—",st:"適用中"}));
+const ONB_ITEMS=["公司與法人資料","組織架構","建立社區","匯入員工","角色與帳號","LINE 綁定","第一筆交接日誌","教育訓練"];
+
+function T(id,code,n,s,ed,tier,sites,users,st,cycle,since,trialEnd,act,use,line,push,gb,sales,ptn,ents,ct,onb){return{id,code,n,s,ed,tier,sites,users,st,cycle,since,trialEnd,act,use,line,push,gb,sales,ptn,ents:ents.map(([n,tax])=>({n,tax})),ct:{n:ct[0],tel:ct[1],mail:ct[2]},onb,custom:null,locked:null,coupon:null,hist:[{d:since,txt:st==="試用中"?"建立試用租戶":"建立租戶並開通"}],logs:[],next:null};}
+let TENANTS=[
+ T("T001","yongxin","永信物業管理股份有限公司","永信物業","旗艦","入門",8,64,"正式","月繳","2026/08/01",null,"今天 09:12",88,92,1420,6.2,"林育成","P01",[["永信物業管理(股)","53120488"],["永信保全(股)","53120511"]],["陳經理","02-2701-5566","ops@yongxin.example"],8),
+ T("T002","daan","大安居物業管理顧問有限公司","大安居","專業","標準",22,151,"正式","年繳","2026/03/01",null,"今天 08:40",61,74,3980,21.5,"吳佩珊","P02",[["大安居物業管理顧問有限公司","24781133"]],["李主任","02-2755-1020","it@daanju.example"],7),
+ T("T003","risun","日昇保全股份有限公司","日昇保全","基本","進階",41,298,"正式","年繳","2025/12/01",null,"今天 10:02",82,90,7210,48.3,"林育成",null,[["日昇保全股份有限公司","70451288"],["日昇物業管理有限公司","70451302"]],["黃協理","04-2328-8800","admin@risun.example"],8),
+ T("T004","jiahe","嘉禾物業管理有限公司","嘉禾物業","專業","入門",6,38,"試用中","月繳","2026/10/21","2026/11/20","昨天 17:30",55,48,610,1.1,"林育成","P01",[["嘉禾物業管理有限公司","83920145"]],["周總經理","03-358-2211","boss@jiahe.example"],4),
+ T("T005","yijia","宜家社區管理有限公司","宜家社區","基本","入門",4,22,"試用中","月繳","2026/10/13","2026/11/12","今天 07:55",79,86,280,0.6,"吳佩珊",null,[["宜家社區管理有限公司","42210987"]],["許小姐","02-8952-3300","hsu@yijia.example"],6),
+ T("T006","dingfeng","鼎峰物業管理股份有限公司","鼎峰物業","旗艦","標準",18,132,"付款逾期","月繳","2026/05/01",null,"3 天前",42,58,2450,17.9,"林育成",null,[["鼎峰物業管理股份有限公司","56330021"],["鼎峰保全股份有限公司","56330045"]],["蔡財務長","07-334-6600","fin@dingfeng.example"],8),
+ T("T007","anhe","安和保全股份有限公司","安和保全","專業","標準",27,205,"正式","月繳","2026/03/15",null,"今天 09:48",86,91,4890,25.4,"林育成","P01",[["安和保全股份有限公司","28660713"]],["林副總","02-2999-0011","ops@anhe.example"],8),
+ T("T008","jincheng","金城物業管理有限公司","金城物業","基本","入門",3,15,"唯讀","月繳","2026/06/01",null,"12 天前",18,40,0,0.8,"吳佩珊",null,[["金城物業管理有限公司","90112234"]],["金先生","06-221-0909","kim@jincheng.example"],5),
+ T("T009","taihe","泰和公寓大廈管理維護有限公司","泰和公寓","專業","入門",9,51,"停權","月繳","2026/04/01",null,"41 天前",0,66,0,4.4,"吳佩珊",null,[["泰和公寓大廈管理維護有限公司","61237788"]],["王經理","04-2471-5050","wang@taihe.example"],8),
+ T("T010","jiafu","家福物業有限公司","家福物業","基本","入門",5,0,"已終止","月繳","2026/02/01",null,"2026/09/30",0,0,0,0,"吳佩珊",null,[["家福物業有限公司","35667721"]],["鄭小姐","02-2630-4411","cheng@jiafu.example"],8),
+ T("T011","guolian","國聯保全股份有限公司","國聯保全","旗艦","進階",52,410,"正式","年繳","2026/01/01",null,"今天 10:15",64,71,9870,112.6,"林育成",null,[["國聯保全股份有限公司","12873345"],["國聯物業管理股份有限公司","12873361"],["國聯機電工程有限公司","12873388"]],["趙資訊長","02-8780-1234","cio@guolian.example"],8),
+ T("T012","xinhe","新禾物業管理顧問股份有限公司","新禾物業","專業","標準",15,98,"正式","月繳","2026/09/01",null,"今天 08:05",90,95,2730,9.8,"吳佩珊","P03",[["新禾物業管理顧問股份有限公司","66218840"]],["高經理","03-542-7788","kao@xinhe.example"],8),
+ T("T013","qunying","群英社區服務有限公司","群英社區","基本","入門",7,41,"試用中","月繳","2026/10/30","2026/11/29","今天 09:30",66,52,450,0.9,"林育成","P01",[["群英社區服務有限公司","77120056"]],["劉主任","02-2911-6688","liu@qunying.example"],3),
+];
+TENANTS[5].hist.push({d:"2026/10/17",txt:"10 月帳單逾期 7 天，狀態改為「付款逾期」"});
+TENANTS[7].hist.push({d:"2026/10/10",txt:"帳單逾期 30 天，狀態改為「唯讀」"});
+TENANTS[8].hist.push({d:"2026/10/09",txt:"帳單逾期 60 天，狀態改為「停權」"});
+TENANTS[9].hist.push({d:"2026/09/30",txt:"租戶申請終止，資料唯讀保留 90 天"});
+TENANTS[0].logs.push({d:"2026/10/28",way:"拜訪",who:"林育成",txt:"到總公司說明使用率儀表板，陳經理希望增加交接日誌語音輸入。",next:"2026/11/20"});
+TENANTS[1].logs.push({d:"2026/10/20",way:"電話",who:"陳怡君",txt:"使用率下降，督導反映夜班保全未綁定 LINE，安排 11/12 線上教育訓練。",next:"2026/11/12"});TENANTS[1].next="2026/11/12";
+TENANTS[5].logs.push({d:"2026/11/03",way:"電話",who:"黃美華",txt:"財務長表示月底付款，需要補寄 10 月發票。",next:"2026/11/07"});TENANTS[5].next="2026/11/07";
+
+let PARTNERS=[
+ {id:"P01",n:"宏遠物業 陳董",type:"公司",ct:"陳宏遠",tel:"0912-345-678",bank:"台灣銀行 敦化分行 ****5521",model:"推薦佣金",kind:"比例",rate:15,fixed:0,months:12,inclOT:false,claw:6,code:"HY-CHEN",since:"2026/07/15"},
+ {id:"P02",n:"北市物業管理協進會",type:"公司",ct:"葉秘書長",tel:"02-2531-7070",bank:"合作金庫 中山分行 ****0187",model:"推薦佣金",kind:"比例",rate:10,fixed:0,months:12,inclOT:false,claw:6,code:"TPA-01",since:"2026/02/10"},
+ {id:"P03",n:"安捷保全設備有限公司",type:"公司",ct:"許經理",tel:"03-427-6600",bank:"玉山銀行 中壢分行 ****3390",model:"經銷",kind:"經銷折扣",rate:25,fixed:0,months:0,inclOT:false,claw:0,code:"AJ-SEC",since:"2026/08/01"},
+ {id:"P04",n:"誠信聯合會計師事務所",type:"公司",ct:"林會計師",tel:"02-2701-9900",bank:"兆豐銀行 復興分行 ****7612",model:"推薦佣金",kind:"固定金額",rate:0,fixed:5000,months:12,inclOT:false,claw:6,code:"CX-CPA",since:"2026/10/01"},
+];
+
+const STAGES=["新名單","已聯繫","已展示","試用中","議價","成交","未成交"];
+const SRCS=["官網","推薦夥伴","展覽","電話開發"];
+let LEADS=[
+ {id:"L01",n:"嘉禾物業管理有限公司",ct:"周總經理",tel:"03-358-2211",src:"推薦夥伴",pid:"P01",stage:"試用中",sales:"林育成",est:6,next:"2026/11/10",tid:"T004",lost:null,d:"2026/10/02",logs:[{d:"2026/10/02",way:"電話",txt:"陳董介紹，約 10/08 展示。"},{d:"2026/10/08",way:"線上展示",txt:"老闆最在意總幹事能不能用 LINE 操作。"}]},
+ {id:"L02",n:"宜家社區管理有限公司",ct:"許小姐",tel:"02-8952-3300",src:"官網",pid:null,stage:"試用中",sales:"吳佩珊",est:4,next:"2026/11/06",tid:"T005",lost:null,d:"2026/10/10",logs:[{d:"2026/10/10",way:"電話",txt:"官網申請試用，已開通。"}]},
+ {id:"L03",n:"群英社區服務有限公司",ct:"劉主任",tel:"02-2911-6688",src:"推薦夥伴",pid:"P01",stage:"試用中",sales:"林育成",est:7,next:"2026/11/13",tid:"T013",lost:null,d:"2026/10/25",logs:[{d:"2026/10/25",way:"拜訪",txt:"與陳董一起拜訪，當場申請試用。"}]},
+ {id:"L04",n:"冠宇物業管理有限公司",ct:"簡協理",tel:"02-2378-4455",src:"展覽",pid:null,stage:"已展示",sales:"吳佩珊",est:14,next:"2026/11/06",tid:null,lost:null,d:"2026/10/18",logs:[{d:"2026/10/18",way:"展覽",txt:"物業管理展攤位留名片。"},{d:"2026/10/30",way:"線上展示",txt:"對管委會月報有興趣，考慮旗艦版。"}]},
+ {id:"L05",n:"長青公寓大廈管理維護有限公司",ct:"謝先生",tel:"04-2201-3377",src:"官網",pid:null,stage:"已聯繫",sales:"吳佩珊",est:6,next:"2026/11/08",tid:null,lost:null,d:"2026/11/01",logs:[{d:"2026/11/02",way:"電話",txt:"約下週線上展示。"}]},
+ {id:"L06",n:"聯安保全股份有限公司",ct:"鍾副總",tel:"02-2655-0808",src:"推薦夥伴",pid:"P02",stage:"議價",sales:"林育成",est:35,next:"2026/11/09",tid:null,lost:null,d:"2026/09/12",logs:[{d:"2026/09/20",way:"拜訪",txt:"需求為專業版進階級距，希望年繳再優惠。"},{d:"2026/10/31",way:"Email",txt:"已提供報價，等待董事會決議。"}]},
+ {id:"L07",n:"大德物業有限公司",ct:"張老闆",tel:"07-551-2020",src:"電話開發",pid:null,stage:"新名單",sales:"吳佩珊",est:8,next:"2026/11/07",tid:null,lost:null,d:"2026/11/04",logs:[]},
+ {id:"L08",n:"和興社區服務有限公司",ct:"楊經理",tel:"02-2788-1515",src:"推薦夥伴",pid:"P04",stage:"新名單",sales:"林育成",est:12,next:"2026/11/06",tid:null,lost:null,d:"2026/11/05",logs:[]},
+ {id:"L09",n:"百川物業管理顧問有限公司",ct:"羅經理",tel:"03-332-9090",src:"官網",pid:null,stage:"未成交",sales:"吳佩珊",est:10,next:null,tid:null,lost:"員工不會用",d:"2026/08/20",logs:[{d:"2026/09/30",way:"電話",txt:"試用後總幹事反映太複雜，暫不導入。"}]},
+ {id:"L10",n:"東昇保全股份有限公司",ct:"潘協理",tel:"06-298-1100",src:"展覽",pid:null,stage:"未成交",sales:"林育成",est:20,next:null,tid:null,lost:"價格",d:"2026/07/30",logs:[]},
+ {id:"L11",n:"永信物業管理股份有限公司",ct:"陳經理",tel:"02-2701-5566",src:"推薦夥伴",pid:"P01",stage:"成交",sales:"林育成",est:8,next:null,tid:"T001",lost:null,d:"2026/07/20",logs:[{d:"2026/07/31",way:"簽約",txt:"簽約旗艦版入門級距，月繳。"}]},
+ {id:"L12",n:"安和保全股份有限公司",ct:"林副總",tel:"02-2999-0011",src:"推薦夥伴",pid:"P01",stage:"成交",sales:"林育成",est:27,next:null,tid:"T007",lost:null,d:"2026/02/20",logs:[]},
+];
+const LOST_HIST={"價格":4,"員工不會用":6,"功能不足":2,"已有系統":3,"其他":1};
+const LOST_REASONS=Object.keys(LOST_HIST);
+let APPS=[
+ {id:"AP-1106-01",d:"2026/11/06",n:"立德物業管理有限公司",tax:"48812230",ct:"林小姐",tel:"02-2365-7788",mail:"lin@lide.example",sites:"1～10",tool:"Excel＋LINE 群組",ref:"HY-CHEN",st:"待審核"},
+ {id:"AP-1105-02",d:"2026/11/05",n:"瑞展公寓大廈管理維護有限公司",tax:"50923311",ct:"王先生",tel:"04-2652-1100",mail:"wang@ruizhan.example",sites:"11～30",tool:"紙本",ref:"",st:"待審核"},
+ {id:"AP-1103-03",d:"2026/11/03",n:"測試公司",tax:"12345678",ct:"test",tel:"0900-000-000",mail:"test@test.example",sites:"1～10",tool:"",ref:"",st:"已婉拒",reason:"疑似測試資料"},
+];
+
+let INVS=[];let invSeq=1;
+function inv(id,tid,period,kind,amt,issued,due,st,paidOn,method){INVS.push({id,tid,period,kind,amt,credit:0,issued,due,st,paidOn:paidOn||null,method:method||null,einv:st==="已付"?"AB-"+(10000000+invSeq++*137):null,dun:[]});}
+inv("INV-2512-03","T003","2025/12～2026/11","年費",16000*12*.9,"2025/12/01","2025/12/10","已付","2025/12/08","銀行轉帳");
+inv("INV-2601-11","T011","2026/01～2026/12","年費",36000*12*.9,"2026/01/01","2026/01/10","已付","2026/01/09","銀行轉帳");
+inv("INV-2603-02","T002","2026/03～2027/02","年費",12000*12*.9,"2026/03/01","2026/03/10","已付","2026/03/05","銀行轉帳");
+inv("INV-2608-09","T009","2026/08","月費",5000,"2026/08/01","2026/08/10","未付");
+inv("INV-2608-01","T001","2026/08","月費",8000,"2026/08/01","2026/08/10","已付","2026/08/07","銀行轉帳");
+inv("INV-2609-01","T001","2026/09","月費",8000,"2026/09/01","2026/09/10","已付","2026/09/08","銀行轉帳");
+inv("INV-2609-08","T008","2026/09","月費",3500,"2026/09/01","2026/09/10","未付");
+inv("INV-2609-09","T009","2026/09","月費",5000,"2026/09/01","2026/09/10","未付");
+inv("INV-2609-OT1","T012","一次性","導入費",20000,"2026/09/01","2026/09/10","已付","2026/09/05","銀行轉帳");
+[["T001",8000],["T006",18000],["T007",12000],["T008",3500],["T009",5000],["T012",12000]].forEach(([t,a])=>{const late=["T006","T008","T009"].includes(t);inv("INV-2610-"+t.slice(2),t,"2026/10","月費",a,"2026/10/01","2026/10/10",late?"未付":"已付",late?null:"2026/10/0"+(3+Number(t.slice(3))%5),late?null:"銀行轉帳");});
+[["T001",8000,"已付","2026/11/03"],["T006",18000,"未付"],["T007",12000,"未付"],["T012",12000,"已付","2026/11/04"]].forEach(([t,a,s,p])=>inv("INV-2611-"+t.slice(2),t,"2026/11","月費",a,"2026/11/01","2026/11/10",s,p,p?"銀行轉帳":null));
+inv("INV-2611-OT2","T004","一次性","導入費",20000,"2026/11/01","2026/11/20","未付");
+INVS.find(i=>i.id==="INV-2610-06").dun.push({d:"2026/10/20",way:"Email",txt:"系統自動提醒（逾期 10 天）"},{d:"2026/11/03",way:"電話",txt:"財務長承諾月底付款"});
+INVS.find(i=>i.id==="INV-2609-08").dun.push({d:"2026/10/15",way:"電話",txt:"無人接聽"});
+
+let COMMS=[];let cmSeq=1;
+function cm(pid,tid,invId,paidOn,base,rate,amt,st,po){COMMS.push({id:"CM-"+String(cmSeq++).padStart(4,"0"),pid,tid,inv:invId,paidOn,base,rate,amt,st,po:po||null});}
+cm("P02","T002","INV-2603-02","2026/03/05",12000*12*.9,10,12000*12*.9*.1,"已撥付","PO-2604");
+["04","05","06","07","08","09"].forEach(m=>cm("P01","T007","INV-26"+m+"-07","2026/"+m+"/06",12000,15,1800,"已撥付",Number(m)<=8?"PO-2609":"PO-2610"));
+cm("P01","T001","INV-2608-01","2026/08/07",8000,15,1200,"已撥付","PO-2609");
+cm("P01","T001","INV-2609-01","2026/09/08",8000,15,1200,"已撥付","PO-2610");
+cm("P01","T001","INV-2610-01","2026/10/04",8000,15,1200,"待撥付");
+cm("P01","T007","INV-2610-07","2026/10/05",12000,15,1800,"待撥付");
+cm("P01","T001","INV-2611-01","2026/11/03",8000,15,1200,"待撥付");
+let PAYOUTS=[{id:"PO-2604",pid:"P02",d:"2026/04/15",voucher:"匯款單 0415-01.pdf",pinv:"收據 TPA-115-031"},{id:"PO-2609",pid:"P01",d:"2026/09/15",voucher:"匯款單 0915-03.pdf",pinv:"發票 QZ-21883410"},{id:"PO-2610",pid:"P01",d:"2026/10/15",voucher:"匯款單 1015-02.pdf",pinv:"發票 QZ-21884552"}];
+
+let QUOTES=[{tid:"T011",plan:"旗艦-進階",m:33000,reason:"52 社區、年繳三年，另加打卡模組試行",st:"已核准",by:"張子豪"},{tid:"L06",plan:"專業-進階",m:22500,reason:"聯安保全 35 社區，年繳再 9 折",st:"待核准",by:"林育成"}];
+TENANTS.find(t=>t.id==="T011").custom=33000;
+let COUPONS=[
+ {code:"LAUNCH2026",kind:"百分比",val:20,plans:"全部",from:"2026/07/01",to:"2026/12/31",used:3,max:20,on:true},
+ {code:"PARTNER-1M",kind:"免費月數",val:1,plans:"全部",from:"2026/08/01",to:"2027/07/31",used:2,max:50,on:true},
+ {code:"EXPO-3000",kind:"固定金額",val:3000,plans:"專業、旗艦",from:"2026/10/15",to:"2026/11/30",used:1,max:30,on:true},
+ {code:"SUMMER26",kind:"百分比",val:10,plans:"基本",from:"2026/06/01",to:"2026/08/31",used:4,max:10,on:false},
+];
+TENANTS.find(t=>t.id==="T004").coupon="PARTNER-1M";
+
+let TICKETS=[
+ {id:"S-2041",tid:"T006",by:"蔡財務長",src:"租戶後台",cat:"帳務",pri:"中",st:"新進",who:"—",created:"2026/11/06 08:10",resp:null,msgs:[{f:"c",n:"蔡財務長",t:"11/06 08:10",x:"10 月帳單金額與合約不符，請協助確認。"}]},
+ {id:"S-2039",tid:"T001",by:"陳經理",src:"LIFF",cat:"操作問題",pri:"高",st:"處理中",who:"陳怡君",created:"2026/11/05 16:20",resp:"2026/11/05 16:45",msgs:[{f:"c",n:"陳經理",t:"11/05 16:20",x:"外籍保全 Budi 掃邀請碼後顯示「綁定失敗」。"},{f:"s",n:"陳怡君",t:"11/05 16:45",x:"已收到，請提供截圖，我們申請授權協助查看。"},{f:"n",n:"陳怡君",t:"11/05 17:02",x:"疑似邀請碼已過期，待租戶同意授權後確認。"}]},
+ {id:"S-2035",tid:"T002",by:"李主任",src:"Email",cat:"資料匯入",pri:"中",st:"待客戶回覆",who:"吳家瑋",created:"2026/11/03 10:05",resp:"2026/11/03 11:20",msgs:[{f:"c",n:"李主任",t:"11/03 10:05",x:"員工匯入檢核報告第 12～18 列錯誤看不懂。"},{f:"s",n:"吳家瑋",t:"11/03 11:20",x:"身分證欄位格式不符，已附修正範例，請重新上傳。"}]},
+ {id:"S-2030",tid:"T011",by:"趙資訊長",src:"電話",cat:"錯誤回報",pri:"高",st:"處理中",who:"吳家瑋",created:"2026/11/06 07:30",resp:null,msgs:[{f:"c",n:"趙資訊長",t:"11/06 07:30",x:"年度報表匯出逾時失敗。"}]},
+ {id:"S-2022",tid:"T007",by:"林副總",src:"租戶後台",cat:"功能建議",pri:"低",st:"已解決",who:"陳怡君",created:"2026/10/28 14:00",resp:"2026/10/28 15:10",msgs:[{f:"c",n:"林副總",t:"10/28 14:00",x:"希望巡邏點支援 NFC 標籤。"},{f:"s",n:"陳怡君",t:"10/28 15:10",x:"已納入功能建議彙整，謝謝。"}]},
+ {id:"S-2018",tid:"T003",by:"黃協理",src:"LIFF",cat:"功能建議",pri:"低",st:"結案",who:"陳怡君",created:"2026/10/20 09:00",resp:"2026/10/20 09:40",msgs:[{f:"c",n:"黃協理",t:"10/20 09:00",x:"交接日誌希望可以語音輸入。"}]},
+];
+let SUGS=[{topic:"交接日誌語音輸入",cnt:4,tenants:["日昇保全","永信物業","安和保全","新禾物業"]},{topic:"巡邏點支援 NFC",cnt:2,tenants:["安和保全","國聯保全"]},{topic:"管委會唯讀入口",cnt:3,tenants:["國聯保全","大安居","鼎峰物業"]}];
+let GRANTS=[
+ {id:"G-0301",tid:"T001",by:"陳怡君",reason:"S-2039 協助排查 LINE 綁定失敗",h:24,from:"2026/11/06 08:30",to:"2026/11/07 08:30",st:"有效中",ops:[{t:"08:41",x:"查看員工 Budi Santoso 的 LINE 綁定狀態"},{t:"08:44",x:"重新產生邀請碼（原碼已過期）"}]},
+ {id:"G-0298",tid:"T002",by:"吳家瑋",reason:"S-2035 協助員工資料匯入",h:4,from:"2026/11/03 13:00",to:"2026/11/03 17:00",st:"已到期",ops:[{t:"13:12",x:"查看匯入批次 IMP-0042 檢核報告"}]},
+ {id:"G-0295",tid:"T011",by:"吳家瑋",reason:"報表效能排查",h:24,from:"2026/10/30 10:00",to:"2026/10/30 11:20",st:"已撤銷",ops:[]},
+];
+let ANNS=[
+ {id:"AN-012",title:"v1.8 版本更新：使用率儀表板上線",type:"版本更新",target:"全部租戶",ch:["後台","LINE"],at:"2026/11/01 09:00",st:"已發布",body:"租戶後台新增使用率儀表板，可依社區、員工查看活躍狀況。"},
+ {id:"AN-013",title:"11/15（日）02:00–04:00 系統維護",type:"維護",target:"全部租戶",ch:["後台","LINE"],at:"2026/11/12 18:00",st:"已排程",body:"維護期間後台與 LINE 前台暫停服務，緊急事件請以電話通報。"},
+ {id:"AN-014",title:"旗艦版：管委會月報新增公告版",type:"一般",target:"方案：旗艦",ch:["後台"],at:"—",st:"草稿",body:"管委會月報可輸出去除個資的公告版。"},
+];
+let TPLS=[
+ {k:"班別",v:3,d:"2026/09/10",items:["早班 07:00–15:00","中班 15:00–23:00","大夜 23:00–07:00","日班 12H 07:00–19:00","夜班 12H 19:00–07:00"]},
+ {k:"報修類別",v:2,d:"2026/08/01",items:["水電","電梯","門禁","消防","清潔","其他"]},
+ {k:"事件類別",v:2,d:"2026/08/01",items:["治安","火警","漏水","停電","糾紛","人員受傷","客訴"]},
+ {k:"證照類別",v:4,d:"2026/10/02",items:["保全人員資格核備","甲級電匠","乙級電匠","消防設備士","防火管理人","急救證照"]},
+ {k:"稽核範本",v:5,d:"2026/10/20",items:["物業總幹事月度稽核","保全勤務稽核","清潔品質稽核","機電設備稽核"]},
+ {k:"會計科目表",v:2,d:"2026/07/15",items:["管理費收入","車位清潔費","利息收入","物業管理服務費","保全費","清潔費","水電費","電梯保養","修繕費","公共基金提撥"]},
+ {k:"職位標準成本",v:2,d:"2026/01/05",items:["總幹事 NT$58,000","秘書 NT$38,000","保全日班 NT$42,000","保全夜班 NT$45,000","清潔 NT$33,000","機電 NT$50,000"]},
+ {k:"角色權限",v:3,d:"2026/09/01",items:["系統管理員","高階主管","區域督導","人資","財務","工務","總幹事","秘書","保全","清潔","機電"]},
+];
+const LANGS=["繁","英","印","越","泰"];
+let VIDEOS=[
+ {title:"30 秒學會寫交接日誌",page:"交接日誌",dur:"0:30",langs:["繁","英","印","越","泰"],on:true},
+ {title:"拍照報修三步驟",page:"報修",dur:"0:25",langs:["繁","英","印","越"],on:true},
+ {title:"緊急事件怎麼通報",page:"事件通報",dur:"0:28",langs:["繁","英","印","越","泰"],on:true},
+ {title:"用 LINE 請假",page:"請假",dur:"0:22",langs:["繁","印"],on:true},
+ {title:"巡邏掃碼打點",page:"巡邏打點",dur:"0:30",langs:["繁"],on:false},
+ {title:"回覆督導改善單",page:"改善單回覆",dur:"0:26",langs:["繁","英"],on:true},
+];
+let DOCS=[
+ {title:"如何匯入員工資料",cat:"導入",views:412,d:"2026/10/20",on:true},
+ {title:"員工 LINE 綁定失敗怎麼辦",cat:"LINE 前台",views:388,d:"2026/11/02",on:true},
+ {title:"方案升級與帳單說明",cat:"帳務",views:96,d:"2026/09/15",on:true},
+ {title:"如何授權平台客服協助",cat:"資安",views:57,d:"2026/08/30",on:true},
+ {title:"管委會月報常見問題",cat:"旗艦版",views:140,d:"2026/10/05",on:false},
+];
+let RELS=[
+ {v:"v1.8",d:"2026/11/01",items:["租戶後台新增使用率儀表板","LINE 綁定率統計","匯入檢核報告改為逐列說明"],ann:"AN-012"},
+ {v:"v1.7",d:"2026/10/15",items:["LIFF 報修支援多張照片","平台公告可排程","修正：班表匯出跨月錯誤"],ann:null},
+];
+let TERMS=[
+ {kind:"服務條款",v:"v1.1",eff:"2026/07/01",sum:"新增退租資料保留 90 天說明",st:"生效中",acc:{}},
+ {kind:"隱私權政策",v:"v1.0",eff:"2026/01/01",sum:"初版",st:"生效中",acc:{}},
+ {kind:"資料處理約定",v:"v1.0",eff:"2026/01/01",sum:"初版：受託處理個資之安全措施與外洩通報",st:"生效中",acc:{}},
+];
+TERMS.forEach(tm=>TENANTS.forEach((t,i)=>{if(t.st!=="已終止"&&(i%5!==2||tm.kind!=="服務條款"))tm.acc[t.id]="2026/"+(tm.kind==="服務條款"?"07/0":"01/1")+(1+i%8)+" "+t.ct.n;}));
+let JOBS=[
+ {id:"J-88121",type:"帳單批次",tid:null,st:"完成",at:"11/01 00:05",dur:"2 分 14 秒",msg:"產生 9 張帳單"},
+ {id:"J-88130",type:"報表匯出",tid:"T011",st:"失敗",at:"11/06 07:28",dur:"10 分 00 秒",msg:"逾時：年度工單報表資料量過大"},
+ {id:"J-88133",type:"員工匯入",tid:"T002",st:"失敗",at:"11/06 09:02",dur:"12 秒",msg:"第 12 列身分證格式錯誤"},
+ {id:"J-88140",type:"推播排程（每日摘要）",tid:null,st:"執行中",at:"11/06 10:00",dur:"—",msg:"已送出 1,204 / 1,890 則"},
+ {id:"J-88141",type:"資料匯出（退租）",tid:"T010",st:"排隊",at:"11/06 10:05",dur:"—",msg:"等待中"},
+];
+let MALERTS=[{t:"11/06 07:31",lv:"重要",x:"國聯保全 報表工作逾時（J-88130）",done:false},{t:"11/05 22:10",lv:"一般",x:"LINE API 失敗率 1.2%（門檻 5%，已恢復）",done:true}];
+let MTHR={err:2,queue:50,linefail:5};
+let STAFF=[
+ {n:"張子豪",mail:"zihao@pcmp.example",role:"平台管理員",tfa:true,on:true,last:"今天 08:02"},
+ {n:"林育成",mail:"yucheng@pcmp.example",role:"業務",tfa:true,on:true,last:"今天 08:50"},
+ {n:"吳佩珊",mail:"peishan@pcmp.example",role:"業務",tfa:true,on:true,last:"昨天 18:12"},
+ {n:"陳怡君",mail:"yijun@pcmp.example",role:"客服",tfa:true,on:true,last:"今天 08:30"},
+ {n:"吳家瑋",mail:"jiawei@pcmp.example",role:"客服",tfa:true,on:true,last:"今天 07:25"},
+ {n:"黃美華",mail:"meihua@pcmp.example",role:"平台財務",tfa:true,on:true,last:"今天 09:10"},
+ {n:"李承恩",mail:"chengen@pcmp.example",role:"客服",tfa:true,on:false,last:"2026/09/30"},
+];
+const ROLES=["平台管理員","業務","客服","平台財務"];
+const FUNCS=["營運儀表板","客戶開發","租戶管理","方案與帳務","推薦夥伴","客服中心","內容管理","系統監控","平台設定"];
+let PERM={平台管理員:Array(9).fill("全"),業務:["讀","全","讀","讀","讀","讀","—","—","—"],客服:["讀","—","讀","—","—","全","全","讀","—"],平台財務:["讀","—","讀","全","全","—","—","—","—"]};
+let FLAGS=[
+ {key:"voice_input",name:"交接日誌語音輸入",mode:"指定租戶",tids:["T001","T007"],d:"2026/10/30"},
+ {key:"liff_offline_patrol",name:"LIFF 巡邏離線暫存",mode:"關閉",tids:[],d:"2026/10/12"},
+ {key:"new_dashboard",name:"新版租戶儀表板",mode:"全部開啟",tids:[],d:"2026/11/01"},
+ {key:"own_line_oa",name:"租戶自有 LINE 官方帳號",mode:"指定租戶",tids:["T011"],d:"2026/10/05"},
+];
+let PARAMS={trial:30,remind:7,late:7,ro:30,susp:60,keep:90,claw:6,lineName:"物業管理小幫手",lineId:"@pcmp-ops",lineChannel:"2001234567",mailFrom:"no-reply@pcmp.example",pay:"國內金流服務（信用卡定期定額）",einv:"電子發票加值服務中心"};
+let AUDIT=[
+ {t:"2026/11/06 08:44",who:"陳怡君",cat:"授權存取",obj:"永信物業",act:"重新產生員工 LINE 邀請碼",reason:"S-2039",g:"G-0301"},
+ {t:"2026/11/06 08:30",who:"陳怡君",cat:"授權存取",obj:"永信物業",act:"開始授權存取（租戶同意 24 小時）",reason:"S-2039 協助排查 LINE 綁定失敗",g:"G-0301"},
+ {t:"2026/11/04 15:20",who:"黃美華",cat:"帳務",obj:"INV-2611-12",act:"登記收款 NT$12,000",reason:"銀行轉帳入帳",g:""},
+ {t:"2026/11/01 09:00",who:"張子豪",cat:"內容",obj:"AN-012",act:"發布平台公告",reason:"v1.8 版本更新",g:""},
+ {t:"2026/10/17 00:10",who:"系統",cat:"租戶狀態",obj:"鼎峰物業",act:"正式 → 付款逾期",reason:"依逾期規則（逾期 7 天）",g:""},
+ {t:"2026/10/10 00:10",who:"系統",cat:"租戶狀態",obj:"金城物業",act:"付款逾期 → 唯讀",reason:"依逾期規則（逾期 30 天）",g:""},
+];
+let NOTIS=[
+ {i:"inbox",c:"t-info",b:"新的試用申請：立德物業（推薦碼 HY-CHEN）",s:"今天 07:42",go:"apps"},
+ {i:"alarm-clock",c:"t-warn",b:"宜家社區試用將於 6 天後到期",s:"今天 07:00",go:"tenants"},
+ {i:"server-crash",c:"t-bad",b:"背景工作失敗：國聯保全報表匯出",s:"今天 07:31",go:"monitor"},
+];
+
+/* =====================================================================
+   工具
+   ===================================================================== */
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const fmt=n=>Number(n).toLocaleString("zh-TW",{maximumFractionDigits:1});
+const money=n=>"NT$"+Number(Math.round(n)).toLocaleString("zh-TW");
+const tag=(t,c)=>`<span class="tag ${c}">${t}</span>`;
+const ST_C={"正式":"t-ok","試用中":"t-info","付款逾期":"t-warn","唯讀":"t-warn","停權":"t-bad","已終止":"t-mute","已付":"t-ok","未付":"t-info","逾期":"t-bad","已折讓":"t-mute","待撥付":"t-warn","已撥付":"t-ok","追回":"t-bad","待審核":"t-warn","已建立":"t-ok","已婉拒":"t-mute","新進":"t-bad","處理中":"t-info","待客戶回覆":"t-warn","已解決":"t-ok","結案":"t-mute","有效中":"t-ok","待同意":"t-warn","已到期":"t-mute","已撤銷":"t-mute","已發布":"t-ok","已排程":"t-info","草稿":"t-mute","生效中":"t-ok","待生效":"t-warn","已停用":"t-mute","適用中":"t-ok","完成":"t-ok","失敗":"t-bad","執行中":"t-info","排隊":"t-mute","待核准":"t-warn","已核准":"t-ok","已駁回":"t-mute","良好":"t-ok","注意":"t-warn","危險":"t-bad","上架":"t-ok","下架":"t-mute","啟用":"t-ok","停用":"t-mute","成交":"t-ok","未成交":"t-mute"};
+const stTag=s=>tag(s,ST_C[s]||"t-mute");
+const icons=()=>lucide.createIcons();
+let tt;function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("on");clearTimeout(tt);tt=setTimeout(()=>t.classList.remove("on"),2800);}
+const F=(label,inner,full)=>`<label class="field ${full?"full":""}"><span>${label}</span>${inner}</label>`;
+const I=(id,v="",ph="",type="text")=>`<input class="input" id="${id}" value="${v}" placeholder="${ph}" type="${type}">`;
+const S=(id,opts,v)=>`<select class="input" id="${id}">${opts.map(o=>Array.isArray(o)?`<option value="${o[0]}" ${o[0]===v?"selected":""}>${o[1]}</option>`:`<option ${o===v?"selected":""}>${o}</option>`).join("")}</select>`;
+const TA=(id,v="",ph="")=>`<textarea class="input" id="${id}" placeholder="${ph}">${v}</textarea>`;
+const val=id=>($("#"+id)?.value||"").trim();
+const chk=id=>!!$("#"+id)?.checked;
+const dd=s=>{const [y,m,d]=s.slice(0,10).split("/").map(Number);return new Date(y,m-1,d);};
+const diff=(a,b)=>Math.round((dd(a)-dd(b))/864e5);
+const ymd=x=>x.getFullYear()+"/"+String(x.getMonth()+1).padStart(2,"0")+"/"+String(x.getDate()).padStart(2,"0");
+const addDays=(s,n)=>{const x=dd(s);x.setDate(x.getDate()+n);return ymd(x);};
+const now=()=>{const d=new Date();return TODAY+" "+String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");};
+const tById=id=>TENANTS.find(t=>t.id===id);
+const pById=id=>PARTNERS.find(p=>p.id===id);
+const tName=id=>{const t=tById(id);if(t)return t.s;const l=LEADS.find(x=>x.id===id);return l?l.n:"—";};
+const planOf=t=>PLANS.find(p=>p.id===t.ed+"-"+t.tier);
+const listPrice=(ed,tier)=>{const v=PVERS.filter(x=>x.pid===ed+"-"+tier&&x.st==="適用中");return v.length?v[v.length-1].m:PRICE[ed][tier];};
+const tPrice=t=>t.custom||t.locked||listPrice(t.ed,t.tier);
+const tMRR=t=>["正式","付款逾期"].includes(t.st)?(t.cycle==="年繳"?tPrice(t)*.9:tPrice(t)):0;
+const overdueInvs=t=>INVS.filter(i=>i.tid===t.id&&i.st==="未付"&&diff(TODAY,i.due)>0);
+const overdueDays=t=>Math.max(0,...overdueInvs(t).map(i=>diff(TODAY,i.due)));
+const openTickets=t=>TICKETS.filter(x=>x.tid===t.id&&!["已解決","結案"].includes(x.st)).length;
+function healthScore(t){let s=0;if(t.use<50)s+=2;else if(t.use<70)s+=1;if(t.line<60)s+=1;const od=overdueDays(t);if(od>30)s+=2;else if(od>0)s+=1;if(openTickets(t)>=2)s+=1;return s;}
+const health=t=>t.st==="已終止"?"—":healthScore(t)>=3?"危險":healthScore(t)>=1?"注意":"良好";
+const hTag=t=>health(t)==="—"?tag("—","t-mute"):stTag(health(t));
+const PTN_DESC=p=>p.model==="經銷"?`經銷折扣 ${p.rate}%`:p.kind==="比例"?`首 ${p.months} 個月訂閱費 ${p.rate}%${p.inclOT?"（含導入費）":""}`:p.kind==="固定金額"?`每成交一家 ${money(p.fixed)}`:`持續分潤 ${p.rate}%`;
+function audit(cat,obj,act,reason,g){AUDIT.unshift({t:now(),who:ME.n,cat,obj,act,reason:reason||"",g:g||""});}
+function nextBillDate(t){if(t.st==="試用中")return "試用至 "+t.trialEnd;if(t.st==="已終止")return "—";if(t.cycle==="年繳"){const x=dd(t.since);while(ymd(x)<=TODAY)x.setFullYear(x.getFullYear()+1);return ymd(x);}return "2026/12/01";}
+
+/* modal / drawer */
+let FOOT={};
+function foot(el,btns){FOOT={};el.innerHTML=btns.map((b,i)=>{FOOT[i]=b.fn;return `<button class="btn ${b.cls||""}" data-foot="${i}">${b.label}</button>`}).join("");}
+function modal(title,body,btns=[{label:"關閉"}],wide){closeAll(true);$("#mTitle").textContent=title;$("#mBody").innerHTML=body;foot($("#mFoot"),btns);$("#modal").classList.toggle("wide",!!wide);$("#modal").classList.add("on");$("#ov").classList.add("on");icons();}
+function drawer(title,body,btns=[]){closeAll(true);$("#dTitle").textContent=title;$("#dBody").innerHTML=body;foot($("#dFoot"),btns);$("#drawer").classList.add("on");$("#ov").classList.add("on");icons();}
+function closeAll(keepOv){["#modal","#drawer","#pop"].forEach(s=>$(s).classList.remove("on"));if(!keepOv)$("#ov").classList.remove("on");}
+function confirmBox(title,msg,okLabel,fn,danger){modal(title,`<p style="margin:0">${msg}</p>`,[{label:"取消"},{label:okLabel,cls:danger?"danger":"primary",fn}]);}
+function required(ids){for(const id of ids){if(!val(id)){$("#"+id).focus();$("#"+id).style.borderColor="var(--bad)";toast("請填寫必填欄位");return false;}}return true;}
+function reasonBox(title,msg,okLabel,fn,danger,extra=""){modal(title,`<p style="margin-top:0">${msg}</p><div class="form-grid">${extra}${F("原因（必填，寫入稽核日誌）",TA("rsn","","請說明原因"),1)}</div>`,[{label:"取消"},{label:okLabel,cls:danger?"danger":"primary",fn:()=>{if(!required(["rsn"]))return;fn(val("rsn"));}}]);}
+const kpi=(icon,lbl,v,delta,go)=>`<div class="card kpi ${go?"click":""}" ${go?`data-act="go" data-go="${go}"`:""}><div class="lbl"><span class="ico"><i data-lucide="${icon}"></i></span>${lbl}</div><div class="val">${v}</div>${delta?`<div class="delta">${delta}</div>`:""}</div>`;
+const chips=(arr,cur,act)=>arr.map(c=>`<button class="chip ${c===cur?"on":""}" data-act="${act}" data-v="${c}">${c}</button>`).join("");
+const empty=(n,txt)=>`<tr><td colspan="${n}" style="text-align:center;color:var(--muted);padding:24px">${txt}</td></tr>`;
+
+/* =====================================================================
+   畫面渲染
+   ===================================================================== */
+function bars(vals,labels,line){const W=640,H=220,P=28,bw=(W-P*2)/vals.length;const mx=Math.max(...vals)*1.15;const lmx=line?Math.max(...line)*1.2:1;
+ let s=`<svg viewBox="0 0 ${W} ${H}">`;[0,.25,.5,.75,1].forEach(f=>{const y=H-P-(H-P*2)*f;s+=`<line x1="${P}" x2="${W-P}" y1="${y}" y2="${y}" stroke="var(--border)"/><text x="2" y="${y+4}" font-size="10" fill="var(--muted)">${(mx*f/10000).toFixed(0)}</text>`;});
+ vals.forEach((v,i)=>{const h=(H-P*2)*v/mx;const x=P+i*bw+bw*.18;s+=`<rect x="${x}" y="${H-P-h}" width="${bw*.64}" height="${h}" rx="4" fill="url(#g1)"/><text x="${x+bw*.32}" y="${H-8}" font-size="10" text-anchor="middle" fill="var(--muted)">${labels[i]}</text>`;});
+ if(line){s+=`<polyline fill="none" stroke="#f59e0b" stroke-width="2.5" points="${line.map((v,i)=>`${P+i*bw+bw/2},${H-P-(H-P*2)*v/lmx}`).join(" ")}"/>`;line.forEach((v,i)=>{s+=`<circle cx="${P+i*bw+bw/2}" cy="${H-P-(H-P*2)*v/lmx}" r="3" fill="#f59e0b"/>`;});}
+ return s+`<defs><linearGradient id="g1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0ea5e9"/><stop offset="1" stop-color="#6366f1"/></linearGradient></defs></svg><div class="legend" style="margin-top:6px"><span><i style="background:var(--accent)"></i>MRR（萬元）</span>${line?'<span><i style="background:#f59e0b"></i>服務社區數</span>':""}</div>`;}
+const mrrTotal=()=>TENANTS.reduce((a,t)=>a+tMRR(t),0);
+const paying=()=>TENANTS.filter(t=>["正式","付款逾期"].includes(t.st));
+function todos(){const L=[];
+ TENANTS.filter(t=>t.st==="試用中"&&diff(t.trialEnd,TODAY)<=14).forEach(t=>L.push({i:"alarm-clock",c:"t-warn",b:`${t.s} 試用 ${diff(t.trialEnd,TODAY)} 天後到期`,s:"試用到期 "+t.trialEnd,act:"tenantOpen",d:t.id}));
+ TENANTS.filter(t=>overdueInvs(t).length&&t.st!=="已終止").forEach(t=>L.push({i:"receipt",c:"t-bad",b:`${t.s} 帳款逾期 ${overdueDays(t)} 天`,s:money(overdueInvs(t).reduce((a,i)=>a+i.amt-i.credit,0)),act:"go",go:"dunning"}));
+ TENANTS.filter(t=>health(t)==="危險"&&!overdueInvs(t).length).forEach(t=>L.push({i:"heart-pulse",c:"t-bad",b:`${t.s} 健康度危險`,s:"使用率 "+t.use+"%",act:"go",go:"health"}));
+ const ot=TICKETS.filter(x=>["新進","處理中"].includes(x.st)).length;if(ot)L.push({i:"life-buoy",c:"t-info",b:`${ot} 筆客服問題未結`,s:"客服中心",act:"go",go:"support"});
+ const ap=APPS.filter(a=>a.st==="待審核").length;if(ap)L.push({i:"inbox",c:"t-info",b:`${ap} 筆試用申請待審核`,s:"試用申請",act:"go",go:"apps"});
+ return L;}
+function renderDash(){const mrr=mrrTotal();const pay=paying();const trial=TENANTS.filter(t=>t.st==="試用中");const sites=TENANTS.filter(t=>!["已終止"].includes(t.st)).reduce((a,t)=>a+t.sites,0);
+ $("#dKpi").innerHTML=kpi("wallet","MRR",money(mrr),'<span class="up">▲ 較上月 +8.4%</span>',"reports")+kpi("calendar-range","ARR",money(mrr*12),"MRR × 12","reports")+kpi("building-2","付費租戶",pay.length,`共 ${TENANTS.length} 個租戶`,"tenants")+kpi("flask-conical","試用中",trial.length,"本月新增 2","tenants")+kpi("map-pin","服務社區總數",sites,"不含已終止","tenants")+kpi("user-plus","本月新增／流失",`+1 / −0`,'<span class="hint">新增：新禾物業轉正式（9 月）</span>',"reports");
+ const ratio=[.18,.25,.33,.4,.46,.52,.58,.63,.72,.84,.93,1];const lbl=["12月","1月","2月","3月","4月","5月","6月","7月","8月","9月","10月","11月"];
+ $("#dChart").innerHTML=bars(ratio.map(r=>Math.round(mrr*r)),lbl,ratio.map(r=>Math.round(sites*r)));
+ const td=todos();$("#todoCnt").textContent=td.length;
+ $("#dTodo").innerHTML=td.map(x=>`<button class="alert" data-act="${x.act}" ${x.d?`data-t="${x.d}"`:""} ${x.go?`data-go="${x.go}"`:""}><span class="tag ${x.c} i"><i data-lucide="${x.i}"></i></span><span><b>${x.b}</b><small>${x.s}</small></span></button>`).join("");
+ const conv=LEADS.filter(l=>["成交"].includes(l.stage)).length+6,tr=LEADS.filter(l=>["試用中","議價","成交"].includes(l.stage)||l.lost==="員工不會用").length+8;
+ $("#dConv").innerHTML=`<div class="stat3"><div><b>${Math.round(conv/tr*100)}%</b><small>試用轉付費率（累計 ${conv}/${tr}）</small></div><div><b>11 天</b><small>平均導入天數</small></div></div><p class="hint">導入天數：建立租戶到第一個社區正式使用（P-DASH-04）</p>`;
+ const dist={};paying().forEach(t=>{dist[t.ed]=(dist[t.ed]||0)+1;});
+ $("#dPlan").innerHTML=EDS.map(e=>`<div class="bar-row"><span>${e}版</span><div class="bar"><i style="width:${(dist[e]||0)/Math.max(1,pay.length)*100}%"></i></div><span class="num">${dist[e]||0} 家</span></div>`).join("");
+ const fl=LEADS.filter(l=>l.next&&l.next<=TODAY&&!["成交","未成交"].includes(l.stage));
+ $("#dFollow").innerHTML=fl.length?fl.map(l=>`<div class="row"><span><b>${l.n}</b><br><small class="hint">${l.stage} · ${l.sales}</small></span><button class="btn sm" data-act="leadOpen" data-l="${l.id}">跟進</button></div>`).join(""):'<p class="hint">今天沒有需要跟進的客戶</p>';}
+function renderReports(){const mv=[["新增（試用轉正式）","—",0],["升級","安和保全 基本→專業（10/01）",4000],["降級","—",0],["流失","—",0]];
+ $("#rMove").innerHTML=`<div class="tbl-wrap"><table><thead><tr><th>類型</th><th>租戶</th><th class="num">MRR 影響</th></tr></thead><tbody>${mv.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td class="num">${r[2]?"+"+money(r[2]):"—"}</td></tr>`).join("")}<tr><td><b>本月 MRR</b></td><td></td><td class="num"><b>${money(mrrTotal())}</b></td></tr></tbody></table></div><p class="hint">上月已終止：家福物業（−NT$3,500，9/30）</p>`;
+ const tot=mrrTotal();$("#rDist").innerHTML=`<div class="tbl-wrap"><table><thead><tr><th></th>${TIERN.map(t=>`<th class="num">${t}</th>`).join("")}<th class="num">營收占比</th></tr></thead><tbody>${EDS.map(e=>{const ts=paying().filter(t=>t.ed===e);const m=ts.reduce((a,t)=>a+tMRR(t),0);return `<tr><td>${e}版</td>${TIERN.map(ti=>`<td class="num">${ts.filter(t=>t.tier===ti).length}</td>`).join("")}<td class="num">${tot?Math.round(m/tot*100):0}%</td></tr>`}).join("")}</tbody></table></div>`;
+ $("#rUse").innerHTML=TENANTS.filter(t=>t.st!=="已終止").map(t=>`<tr class="click" data-act="tenantOpen" data-t="${t.id}"><td>${t.s}</td><td>${t.ed}・${t.tier}</td><td class="num">${fmt(t.push)}</td><td class="num">${fmt(planOf(t).line)}</td><td class="num">${t.gb}</td><td class="num">${planOf(t).gb}</td></tr>`).join("");}
+
+let leadView="kb";
+function renderLeads(){$("#lvKb").className=leadView==="kb"?"on okb":"";$("#lvList").className=leadView==="list"?"on okb":"";
+ if(leadView==="kb"){$("#leadBox").innerHTML=`<div class="kb">${STAGES.map((s,si)=>{const ls=LEADS.filter(l=>l.stage===s);return `<div class="kcol"><h4><span>${s}</span><span class="hint">${ls.length}</span></h4>${ls.map(l=>`<div class="kcard" data-act="leadOpen" data-l="${l.id}"><b>${l.n}</b><small>${l.src}${l.pid?" · "+pById(l.pid).n:""}</small><small>約 ${l.est} 社區 · ${l.sales}</small>${l.next?`<small>下次跟進 ${l.next}${l.next<=TODAY?" "+tag("今天","t-warn"):""}</small>`:""}${l.lost?`<small>${tag(l.lost,"t-mute")}</small>`:""}${s!=="成交"&&s!=="未成交"?`<div class="kmove">${si>0?`<button data-act="leadMove" data-l="${l.id}" data-dir="-1">◀</button>`:""}<button data-act="leadMove" data-l="${l.id}" data-dir="1">${STAGES[si+1]} ▶</button></div>`:""}</div>`).join("")}</div>`}).join("")}</div>`;}
+ else $("#leadBox").innerHTML=`<div class="tbl-wrap"><table><thead><tr><th>公司</th><th>聯絡人</th><th>來源</th><th>推薦夥伴</th><th>階段</th><th class="num">預估社區</th><th>負責業務</th><th>下次跟進</th></tr></thead><tbody>${LEADS.map(l=>`<tr class="click" data-act="leadOpen" data-l="${l.id}"><td>${l.n}</td><td>${l.ct}</td><td>${l.src}</td><td>${l.pid?pById(l.pid).n:"—"}</td><td>${stTag(l.stage)}</td><td class="num">${l.est}</td><td>${l.sales}</td><td>${l.next||"—"}</td></tr>`).join("")}</tbody></table></div>`;}
+let appF="全部";
+function renderApps(){$("#appChips").innerHTML=chips(["全部","待審核","已建立","已婉拒"],appF,"appF");const ls=APPS.filter(a=>appF==="全部"||a.st===appF);
+ $("#appRows").innerHTML=ls.length?ls.map(a=>{const p=PARTNERS.find(p=>p.code===a.ref);return `<tr class="click" data-act="appOpen" data-a="${a.id}"><td>${a.id}</td><td>${a.d}</td><td>${a.n}</td><td>${a.ct}</td><td class="num">${a.sites}</td><td>${a.ref?a.ref+(p?` <span class="hint">${p.n}</span>`:""):"—"}</td><td>${stTag(a.st)}</td><td>${a.st==="待審核"?`<button class="btn sm primary" data-act="appApprove" data-a="${a.id}">核准開通</button>`:""}</td></tr>`}).join(""):empty(8,"沒有符合的申請");}
+function renderFunnel(){const fs=val("fSrc")||"全部來源",fp=val("fPtn")||"全部夥伴",fsl=val("fSales")||"全部業務";
+ if(!$("#fSrc").options.length){$("#fSrc").innerHTML=["全部來源",...SRCS].map(o=>`<option>${o}</option>`).join("");$("#fPtn").innerHTML=["全部夥伴",...PARTNERS.map(p=>p.n)].map(o=>`<option>${o}</option>`).join("");$("#fSales").innerHTML=["全部業務","林育成","吳佩珊"].map(o=>`<option>${o}</option>`).join("");}
+ const ls=LEADS.filter(l=>(fs==="全部來源"||l.src===fs)&&(fp==="全部夥伴"||(l.pid&&pById(l.pid).n===fp))&&(fsl==="全部業務"||l.sales===fsl));
+ const order=STAGES.slice(0,6);const reached=s=>ls.filter(l=>l.stage!=="未成交"?STAGES.indexOf(l.stage)>=STAGES.indexOf(s):s==="新名單"||s==="已聯繫"||(s==="已展示")||(s==="試用中"&&l.lost==="員工不會用")).length;
+ const top=Math.max(1,reached("新名單"));
+ $("#fBars").innerHTML=order.map((s,i)=>{const n=reached(s),prev=i?reached(order[i-1]):n;return `<div class="bar-row" style="grid-template-columns:80px 1fr 110px"><span>${s}</span><div class="bar"><i style="width:${n/top*100}%"></i></div><span class="num">${n} 家${i?` · ${prev?Math.round(n/prev*100):0}%`:""}</span></div>`}).join("")+`<p class="hint">百分比為相對上一階段的轉換率</p>`;
+ const cnt={...LOST_HIST};ls.filter(l=>l.lost).forEach(l=>cnt[l.lost]=(cnt[l.lost]||0)+1);const mx=Math.max(...Object.values(cnt));
+ $("#fLost").innerHTML=Object.entries(cnt).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<div class="bar-row" style="grid-template-columns:90px 1fr 50px"><span>${k}</span><div class="bar"><i style="width:${v/mx*100}%"></i></div><span class="num">${v}</span></div>`).join("")+`<p class="hint">「員工不會用」是最大流失原因，對應產品設計：LINE 入口與使用率監控。</p>`;}
+
+let tF="全部",tQ="";
+function renderTenants(){const sts=["全部","試用中","正式","付款逾期","唯讀","停權","已終止"];$("#tChips").innerHTML=chips(sts,tF,"tF")+(tQ?`<button class="chip on" data-act="clearQ">搜尋：${tQ} ✕</button>`:"");
+ const ls=TENANTS.filter(t=>(tF==="全部"||t.st===tF)&&(!tQ||t.n.includes(tQ)||t.code.includes(tQ)||t.s.includes(tQ)));
+ $("#tRows").innerHTML=ls.length?ls.map(t=>`<tr class="click" data-act="tenantOpen" data-t="${t.id}"><td><b>${t.s}</b><br><small class="hint">${t.n}</small></td><td>${t.code}</td><td>${t.ed}・${t.tier}${t.custom?" "+tag("個別報價","t-info"):""}</td><td>${stTag(t.st)}</td><td class="num">${t.sites}</td><td class="num">${t.users}</td><td class="num">${tMRR(t)?money(tMRR(t)):"—"}</td><td>${nextBillDate(t)}</td><td>${t.act}</td><td>${hTag(t)}</td></tr>`).join(""):empty(10,"沒有符合的租戶");}
+let curT="T001",tTab="info";
+const TTABS=[["info","基本資料與法人"],["plan","方案"],["bill","帳單"],["usage","用量"],["adopt","使用率"],["onb","導入進度"],["sup","客服"],["log","聯繫紀錄"],["ptn","推薦夥伴"],["hist","異動紀錄"]];
+const SITE_NAMES={T001:["春暉苑","青山大境","河畔晴空","森林綠園","星河廣場","雲頂閱","翠堤灣","和平新城"]};
+function siteUsage(t){const names=SITE_NAMES[t.id]||Array.from({length:Math.min(t.sites,8)},(_,i)=>`${t.s.slice(0,2)}${["一","二","三","四","五","六","七","八"][i]}號社區`);return names.map((n,i)=>{const a=Math.max(0,Math.min(100,t.use+((i*37)%30)-15));return{n,a,line:Math.max(0,Math.min(100,t.line+((i*23)%20)-10)),days:Math.round(a/100*7)};});}
+function renderTenant(){const t=tById(curT)||TENANTS[0];const p=planOf(t);
+ $("#tTitle").innerHTML=`${t.n} ${stTag(t.st)}`;
+ const acts=[];if(t.st==="試用中")acts.push(["extendTrial","延長試用","calendar-plus"],["toFormal","轉正式","badge-check"]);if(["付款逾期","唯讀","停權"].includes(t.st))acts.push(["toFormal","恢復正式","rotate-ccw"]);if(["正式","付款逾期","唯讀"].includes(t.st))acts.push(["suspend","暫停（停權）","pause-circle"]);if(t.st!=="已終止")acts.push(["changePlan","調整方案","layers"],["requestGrant","發出授權請求","key-round"],["terminate","終止","x-octagon"]);else acts.push(["reopen","重新開通","rotate-ccw"]);
+ $("#tActs").innerHTML=acts.map(([a,l,i])=>`<button class="btn ${a==="terminate"?"":a==="toFormal"?"primary":""}" data-act="${a}"><i data-lucide="${i}"></i>${l}</button>`).join("");
+ $("#tKpi").innerHTML=kpi("layers","方案",`${t.ed}・${t.tier}`,`月費 ${money(tPrice(t))}${t.cycle==="年繳"?"（年繳九折）":""}`)+kpi("map-pin","服務社區",`${t.sites} / ${TIER_MAX[t.tier]}`,`使用者 ${t.users}（不限）`)+kpi("activity","使用率",t.use+"%",`LINE 綁定率 ${t.line}%`)+kpi("heart-pulse","健康度",health(t),`逾期 ${overdueDays(t)} 天 · 未結客服 ${openTickets(t)}`);
+ $("#tTabs").innerHTML=TTABS.map(([k,l])=>`<button data-act="tTab" data-tab="${k}" class="${k===tTab?"on":""}">${l}</button>`).join("");
+ let h="";
+ if(tTab==="info")h=`<div class="grid g-2"><div class="card"><h3><span class="l"><i data-lucide="building-2"></i>基本資料</span><button class="btn sm" data-act="editTenant">編輯</button></h3><dl class="dl"><dt>租戶代碼</dt><dd>${t.code}</dd><dt>聯絡人</dt><dd>${t.ct.n} · ${t.ct.tel}</dd><dt>Email</dt><dd>${t.ct.mail}</dd><dt>建立日</dt><dd>${t.since}</dd><dt>負責業務</dt><dd>${t.sales}</dd><dt>推薦夥伴</dt><dd>${t.ptn?pById(t.ptn).n:"—"}</dd><dt>計費週期</dt><dd>${t.cycle}</dd><dt>優惠碼</dt><dd>${t.coupon||"—"}</dd></dl></div><div class="card"><h3><span class="l"><i data-lucide="landmark"></i>法人（${t.ents.length}）</span><span class="hint">由租戶自行維護</span></h3>${t.ents.map(e=>`<div class="row"><span>${e.n}</span><span class="hint">統編 ${e.tax}</span></div>`).join("")}</div></div>`;
+ if(tTab==="plan"){const vs=PVERS.filter(v=>v.pid===p.id);h=`<div class="grid g-2"><div class="card"><h3><span class="l"><i data-lucide="layers"></i>目前方案</span><span class="actions"><button class="btn sm" data-act="applyCoupon">套用優惠碼</button><button class="btn sm primary" data-act="changePlan">調整方案</button></span></h3><dl class="dl"><dt>版本／級距</dt><dd>${t.ed}版・${t.tier}（${TIER_RANGE[t.tier]} 社區）</dd><dt>月費</dt><dd>${money(tPrice(t))} ${t.custom?tag("個別報價","t-info"):t.locked?tag("保留原價","t-info"):""}</dd><dt>表定價格</dt><dd>${money(listPrice(t.ed,t.tier))}（價格版本 v${vs.length?vs[vs.length-1].v:1}）</dd><dt>可用模組</dt><dd style="white-space:normal">${p.mods.join("、")}</dd><dt>配額</dt><dd>儲存 ${p.gb} GB · LINE 推播 ${fmt(p.line)} 則／月 · 客服：${QUOTA[t.tier].sup}</dd></dl></div><div class="card"><h3><span class="l"><i data-lucide="history"></i>方案異動歷史（P-SUB-08）</span></h3><ul class="timeline">${t.hist.filter(x=>/方案|開通|建立/.test(x.txt)).map(x=>`<li><b>${x.txt}</b><small>${x.d}</small></li>`).join("")}</ul></div></div>`;}
+ if(tTab==="bill"){const ls=INVS.filter(i=>i.tid===t.id);h=`<div class="toolbar"><button class="btn" data-act="newCharge" data-t="${t.id}"><i data-lucide="plus"></i>新增一次性費用</button></div><div class="tbl-wrap"><table><thead><tr><th>帳單</th><th>期間</th><th>項目</th><th class="num">金額</th><th>到期日</th><th>狀態</th><th>收款日</th></tr></thead><tbody>${ls.length?ls.map(i=>`<tr class="click" data-act="invOpen" data-i="${i.id}"><td>${i.id}</td><td>${i.period}</td><td>${i.kind}</td><td class="num">${money(i.amt-i.credit)}</td><td>${i.due}</td><td>${invTag(i)}</td><td>${i.paidOn||"—"}</td></tr>`).join(""):empty(7,"尚無帳單（試用中不計費）")}</tbody></table></div>`;}
+ if(tTab==="usage"){const u=[["LINE 推播（本月）",t.push,p.line,"則"],["儲存空間",t.gb,p.gb,"GB"],["服務社區",t.sites,TIER_MAX[t.tier],"個"]];h=`<div class="card">${u.map(([l,v,q,un])=>`<div class="bar-row" style="grid-template-columns:150px 1fr 160px"><span>${l}</span><div class="bar"><i style="width:${Math.min(100,v/q*100)}%;${v/q>.9?"background:var(--bad)":""}"></i></div><span class="num">${fmt(v)} / ${fmt(q)} ${un}</span></div>`).join("")}<p class="hint">使用者帳號數不限。推播接近配額 90% 時自動通知租戶擁有者（P-LINE-09）。</p></div>`;}
+ if(tTab==="adopt"){const su=siteUsage(t);h=`<div class="card"><h3><span class="l"><i data-lucide="activity"></i>各社區近 7 天使用狀況</span><span class="hint">資料來源：租戶使用率彙總（P-ADOPT）</span></h3><div class="tbl-wrap"><table><thead><tr><th>社區</th><th>活躍天數</th><th>使用率</th><th>LINE 綁定率</th></tr></thead><tbody>${su.map(s=>`<tr><td>${s.n}</td><td>${s.days} / 7 天</td><td><div class="progress"><div class="bar"><i style="width:${s.a}%"></i></div>${s.a}%</div></td><td>${s.line}%</td></tr>`).join("")}</tbody></table></div></div>`;}
+ if(tTab==="onb")h=`<div class="card"><h3><span class="l"><i data-lucide="list-checks"></i>導入檢查清單（P-ONB-05）</span><span>${t.onb} / ${ONB_ITEMS.length}</span></h3>${ONB_ITEMS.map((x,i)=>`<div class="row"><span>${i<t.onb?tag("完成","t-ok"):tag("未完成","t-warn")} ${x}</span>${i>=t.onb?`<button class="btn sm" data-act="onbAssist" data-x="${x}">安排協助</button>`:""}</div>`).join("")}</div>`;
+ if(tTab==="sup"){const ls=TICKETS.filter(x=>x.tid===t.id);h=`<div class="toolbar"><button class="btn" data-act="newTicket" data-t="${t.id}"><i data-lucide="plus"></i>新增問題</button></div><div class="tbl-wrap"><table><thead><tr><th>編號</th><th>類別</th><th>優先級</th><th>狀態</th><th>處理人</th></tr></thead><tbody>${ls.length?ls.map(x=>`<tr class="click" data-act="ticketOpen" data-s="${x.id}"><td>${x.id}</td><td>${x.cat}</td><td>${x.pri}</td><td>${stTag(x.st)}</td><td>${x.who}</td></tr>`).join(""):empty(5,"沒有客服問題")}</tbody></table></div>`;}
+ if(tTab==="log")h=`<div class="toolbar"><button class="btn primary" data-act="addTLog"><i data-lucide="plus"></i>新增聯繫紀錄</button></div><div class="card">${t.logs.length?`<ul class="timeline">${t.logs.map(l=>`<li><b>${l.way} · ${l.who}</b><small>${l.d}${l.next?" · 下次跟進 "+l.next:""}</small>${l.txt}</li>`).join("")}</ul>`:'<p class="hint">尚無聯繫紀錄</p>'}</div>`;
+ if(tTab==="ptn"){const pp=t.ptn?pById(t.ptn):null;const cs=COMMS.filter(c=>c.tid===t.id);h=pp?`<div class="card"><h3><span class="l"><i data-lucide="handshake"></i>${pp.n}</span><button class="btn sm" data-act="partnerOpen" data-p="${pp.id}">夥伴詳情</button></h3><dl class="dl"><dt>推薦碼</dt><dd>${pp.code}</dd><dt>佣金規則</dt><dd>${PTN_DESC(pp)}</dd><dt>此租戶佣金</dt><dd>${money(cs.reduce((a,c)=>a+c.amt,0))}（${cs.length} 筆）</dd></dl></div>`:`<div class="card"><p class="hint">此租戶沒有推薦夥伴</p><button class="btn" data-act="setPartner">指定推薦夥伴</button></div>`;}
+ if(tTab==="hist")h=`<div class="card"><ul class="timeline">${[...t.hist].reverse().map(x=>`<li><b>${x.txt}</b><small>${x.d}${x.by?" · "+x.by:""}</small></li>`).join("")}</ul></div>`;
+ $("#tBody").innerHTML=h;}
+function renderHealth(){const ls=TENANTS.filter(t=>t.st!=="已終止").sort((a,b)=>healthScore(b)-healthScore(a));
+ $("#hRows").innerHTML=ls.map(t=>`<tr><td><b>${t.s}</b> ${stTag(t.st)}</td><td>${hTag(t)} <span class="hint">${healthScore(t)} 分</span></td><td class="num">${t.use}%</td><td class="num">${t.line}%</td><td class="num">${overdueDays(t)||"—"}</td><td class="num">${openTickets(t)}</td><td>${t.next||"—"}</td><td><button class="btn sm" data-act="healthTask" data-t="${t.id}">建立跟進</button> <button class="btn sm" data-act="tenantOpen" data-t="${t.id}">詳情</button></td></tr>`).join("");}
+function renderGrants(){$("#gRows").innerHTML=GRANTS.map(g=>`<tr><td>${g.id}</td><td>${tName(g.tid)}</td><td>${g.by}</td><td>${g.reason}</td><td>${g.h} 小時</td><td>${g.from}<br><small class="hint">至 ${g.to}</small></td><td>${stTag(g.st)}</td><td class="num">${g.ops.length}</td><td><button class="btn sm" data-act="grantOpen" data-g="${g.id}">明細</button>${g.st==="待同意"?` <button class="btn sm primary" data-act="grantApprove" data-g="${g.id}">模擬租戶同意</button>`:""}${g.st==="有效中"?` <button class="btn sm primary" data-act="grantEnter" data-g="${g.id}">進入租戶</button> <button class="btn sm" data-act="grantRevoke" data-g="${g.id}">撤銷</button>`:""}</td></tr>`).join("");}
+function renderPlans(){$("#pRows").innerHTML=PLANS.map(p=>{const n=TENANTS.filter(t=>t.ed===p.ed&&t.tier===p.tier&&t.st!=="已終止").length;const m=listPrice(p.ed,p.tier);return `<tr><td><b>${p.ed}版・${p.tier}</b></td><td>${TIER_RANGE[p.tier]}</td><td class="num">${money(m)}</td><td class="num">${money(m*12*.9)}</td><td>${p.mods.length} 項</td><td>${p.gb} GB · ${fmt(p.line)} 則</td><td class="num">${n}</td><td>${p.sale?tag("銷售中","t-ok"):tag("停售","t-mute")}</td><td><button class="btn sm" data-act="planEdit" data-p="${p.id}">編輯</button></td></tr>`}).join("")+`<tr><td><b>企業方案</b></td><td>60 以上</td><td class="num">另行報價</td><td class="num">—</td><td>依合約</td><td>依合約</td><td class="num">0</td><td>${tag("報價制","t-info")}</td><td><button class="btn sm" data-act="newQuote">報價</button></td></tr>`;
+ $("#pvRows").innerHTML=PVERS.filter(v=>v.v>1||v.st!=="適用中").concat(PVERS.filter(v=>v.v===1&&v.st==="適用中").slice(0,3)).map(v=>{const i=PVERS.indexOf(v);return `<tr><td>${v.pid.replace("-","版・")}</td><td>v${v.v}</td><td class="num">${money(v.m)}</td><td>${v.eff}</td><td>${v.policy}</td><td>${stTag(v.st)}</td><td>${v.st==="待生效"?`<button class="btn sm primary" data-act="pvApply" data-i="${i}">立即生效</button> <button class="btn sm" data-act="pvCancel" data-i="${i}">取消</button>`:""}</td></tr>`}).join("")+`<tr><td colspan="7" class="hint">僅列出最近版本；其餘方案皆為 v1（2026/01/01 生效）</td></tr>`;
+ $("#qRows").innerHTML=QUOTES.map((q,i)=>`<tr><td>${tName(q.tid)}</td><td>${q.plan.replace("-","版・")}</td><td class="num">${money(q.m)}</td><td style="white-space:normal">${q.reason}</td><td>${stTag(q.st)}</td><td>${q.st==="待核准"?`<button class="btn sm primary" data-act="quoteOk" data-i="${i}">核准</button> <button class="btn sm" data-act="quoteNo" data-i="${i}">駁回</button>`:`<span class="hint">${q.by}</span>`}</td></tr>`).join("");}
+function renderCoupons(){$("#cRows").innerHTML=COUPONS.map((c,i)=>`<tr><td><b>${c.code}</b></td><td>${c.kind==="百分比"?c.val+"% off":c.kind==="固定金額"?"折 "+money(c.val):"免費 "+c.val+" 個月"}</td><td>${c.plans}</td><td>${c.from} ～ ${c.to}</td><td class="num">${c.used} / ${c.max}</td><td>${c.on?stTag("啟用"):stTag("停用")}</td><td><button class="btn sm" data-act="couponUse" data-i="${i}">使用紀錄</button> <button class="btn sm" data-act="couponToggle" data-i="${i}">${c.on?"停用":"啟用"}</button></td></tr>`).join("");}
+const invState=i=>i.st==="未付"&&diff(TODAY,i.due)>0?"逾期":i.st;
+const invTag=i=>stTag(invState(i));
+let bF="全部";
+function renderBilling(){const nov=INVS.filter(i=>i.issued.startsWith("2026/11"));const due=nov.reduce((a,i)=>a+i.amt-i.credit,0),got=nov.filter(i=>i.st==="已付").reduce((a,i)=>a+i.amt-i.credit,0);const od=INVS.filter(i=>invState(i)==="逾期");
+ $("#bKpi").innerHTML=kpi("file-text","本月應收",money(due),`${nov.length} 張帳單`)+kpi("check-circle","本月已收",money(got),`收款率 ${due?Math.round(got/due*100):0}%`)+kpi("alert-triangle","逾期帳款",money(od.reduce((a,i)=>a+i.amt-i.credit,0)),`${od.length} 張`,"dunning")+kpi("coins","待撥佣金",money(COMMS.filter(c=>c.st==="待撥付").reduce((a,c)=>a+c.amt,0)),"推薦夥伴","comms");
+ $("#bChips").innerHTML=chips(["全部","未付","逾期","已付","已折讓"],bF,"bF");
+ const ls=INVS.filter(i=>bF==="全部"||invState(i)===bF).sort((a,b)=>b.issued.localeCompare(a.issued));
+ $("#bRows").innerHTML=ls.length?ls.map(i=>`<tr class="click" data-act="invOpen" data-i="${i.id}"><td>${i.id}</td><td>${tName(i.tid)}</td><td>${i.period}</td><td>${i.kind}</td><td class="num">${money(i.amt-i.credit)}</td><td>${i.due}</td><td>${invTag(i)}</td><td>${i.paidOn||"—"}</td><td>${i.einv||"—"}</td></tr>`).join(""):empty(9,"沒有符合的帳單");}
+const ruleStage=d=>d>=PARAMS.susp?"停權":d>=PARAMS.ro?"唯讀":d>=PARAMS.late?"付款逾期":d>0?"提醒中":"正常";
+function renderDunning(){$("#dunRule").innerHTML=`逾期處理規則（P-BILL-04，天數可於平台參數調整）：到期前 ${PARAMS.remind} 天提醒 → 逾期 ${PARAMS.late} 天「付款逾期」並每日提醒 → 逾期 ${PARAMS.ro} 天「唯讀」 → 逾期 ${PARAMS.susp} 天「停權」。`;
+ const ts=TENANTS.filter(t=>overdueInvs(t).length&&t.st!=="已終止");
+ $("#dunRows").innerHTML=ts.length?ts.map(t=>{const iv=overdueInvs(t);const d=overdueDays(t);const rs=ruleStage(d);const logs=iv.flatMap(i=>i.dun).sort((a,b)=>b.d.localeCompare(a.d));const mism=["付款逾期","唯讀","停權"].includes(rs)&&rs!==t.st;return `<tr><td><b>${t.s}</b></td><td class="num">${iv.length}</td><td class="num">${money(iv.reduce((a,i)=>a+i.amt-i.credit,0))}</td><td class="num">${d}</td><td>${stTag(t.st)}</td><td>${tag(rs,mism?"t-bad":"t-mute")}</td><td>${logs[0]?logs[0].d+" "+logs[0].way:"—"}</td><td><button class="btn sm" data-act="dunRemind" data-t="${t.id}">寄送提醒</button> <button class="btn sm" data-act="dunLog" data-t="${t.id}">催收紀錄</button>${mism?` <button class="btn sm danger" data-act="dunApply" data-t="${t.id}">套用規則</button>`:""}</td></tr>`}).join(""):empty(8,"目前沒有逾期帳款 🎉");}
+const ptnStats=p=>{const ls=LEADS.filter(l=>l.pid===p.id);const ts=TENANTS.filter(t=>t.ptn===p.id);const won=ts.filter(t=>["正式","付款逾期"].includes(t.st));return{ref:Math.max(ls.length,ts.length),won:won.length,mrr:won.reduce((a,t)=>a+tMRR(t),0),comm:COMMS.filter(c=>c.pid===p.id&&c.st!=="追回").reduce((a,c)=>a+c.amt,0)};};
+function renderPartners(){$("#ptRows").innerHTML=PARTNERS.map(p=>{const s=ptnStats(p);return `<tr class="click" data-act="partnerOpen" data-p="${p.id}"><td><b>${p.n}</b><br><small class="hint">${p.ct} · ${p.tel}</small></td><td>${p.model}</td><td>${PTN_DESC(p)}</td><td><code>${p.code}</code></td><td class="num">${s.ref}</td><td class="num">${s.won}</td><td class="num">${s.ref?Math.round(s.won/s.ref*100):0}%</td><td class="num">${money(s.mrr)}</td><td class="num">${money(s.comm)}</td></tr>`}).join("");}
+let cmF="待撥付";
+function renderComms(){const sum=s=>COMMS.filter(c=>c.st===s).reduce((a,c)=>a+c.amt,0);
+ $("#cmKpi").innerHTML=kpi("hourglass","待撥付",money(sum("待撥付")),COMMS.filter(c=>c.st==="待撥付").length+" 筆")+kpi("send","已撥付",money(sum("已撥付")),PAYOUTS.length+" 次撥付")+kpi("undo-2","追回",money(Math.abs(sum("追回"))),"退租於追回期間內")+kpi("handshake","有佣金的夥伴",new Set(COMMS.map(c=>c.pid)).size,"");
+ $("#cmChips").innerHTML=chips(["全部","待撥付","已撥付","追回"],cmF,"cmF");
+ const ls=COMMS.filter(c=>cmF==="全部"||c.st===cmF);
+ $("#cmRows").innerHTML=ls.length?ls.map(c=>`<tr><td>${c.id}</td><td>${pById(c.pid).n}</td><td>${tName(c.tid)}</td><td>${c.inv}</td><td>${c.paidOn}</td><td class="num">${money(c.base)}</td><td class="num">${c.rate?c.rate+"%":"固定"}</td><td class="num">${money(c.amt)}</td><td>${stTag(c.st)}${c.po?` <span class="hint">${c.po}</span>`:""}</td><td>${c.st==="待撥付"?`<button class="btn sm" data-act="commClaw" data-c="${c.id}">不予撥付</button>`:""}</td></tr>`).join(""):empty(10,"沒有符合的佣金");
+ $("#poRows").innerHTML=PAYOUTS.map(p=>`<tr><td>${p.id}</td><td>${pById(p.pid).n}</td><td>${p.d}</td><td class="num">${money(COMMS.filter(c=>c.po===p.id).reduce((a,c)=>a+c.amt,0))}</td><td>${p.voucher}</td><td>${p.pinv||"—"}</td></tr>`).join("");}
+let portalP="P01";
+function renderPortal(){if(!$("#portalPtn").options.length)$("#portalPtn").innerHTML=PARTNERS.map(p=>`<option value="${p.id}">${p.n}</option>`).join("");$("#portalPtn").value=portalP;const p=pById(portalP);const s=ptnStats(p);
+ $("#poTitle").textContent=`您好，${p.n}`;
+ $("#poKpi").innerHTML=kpi("users","推薦客戶",s.ref,"")+kpi("badge-check","已成交",s.won,"")+kpi("coins","累計佣金",money(s.comm),PTN_DESC(p))+kpi("hourglass","待撥付",money(COMMS.filter(c=>c.pid===p.id&&c.st==="待撥付").reduce((a,c)=>a+c.amt,0)),"每月 15 日撥付");
+ const cust=LEADS.filter(l=>l.pid===p.id).map(l=>{const t=l.tid?tById(l.tid):null;return{n:l.n,stage:t&&t.st!=="試用中"?(t.st==="已終止"?"已終止":"已成交"):l.stage,paid:t&&["正式","付款逾期"].includes(t.st)?(t.st==="正式"?"正常付款":"付款逾期"):"尚未付費",d:l.d};});
+ $("#poCust").innerHTML=cust.length?cust.map(c=>`<tr><td>${c.n}</td><td>${c.stage}</td><td>${c.paid}</td><td>${c.d}</td></tr>`).join(""):empty(4,"尚無推薦客戶");
+ const cs=COMMS.filter(c=>c.pid===p.id);$("#poComm").innerHTML=cs.length?cs.map(c=>`<tr><td>${c.paidOn.slice(0,7)}</td><td>${tName(c.tid)}</td><td class="num">${money(c.amt)}</td><td>${stTag(c.st)}</td></tr>`).join(""):empty(4,"尚無佣金");}
+let sF="未結";
+const slaLeft=x=>{if(x.resp)return null;const t=tById(x.tid);const lim=QUOTA[t.tier]?.sla||24;const [d,h]=x.created.split(" ");const hours=(new Date(dd(d).getTime()+Number(h.split(":")[0])*36e5+lim*36e5)-new Date(dd(TODAY).getTime()+10*36e5))/36e5;return Math.round(hours);};
+function renderSupport(){$("#sChips").innerHTML=chips(["未結","全部","新進","處理中","待客戶回覆","已解決","結案"],sF,"sF");
+ const ls=TICKETS.filter(x=>sF==="全部"||(sF==="未結"?!["已解決","結案"].includes(x.st):x.st===sF));
+ $("#sRows").innerHTML=ls.length?ls.map(x=>{const l=slaLeft(x);return `<tr class="click" data-act="ticketOpen" data-s="${x.id}"><td>${x.id}</td><td>${tName(x.tid)}</td><td>${x.by}</td><td>${x.src}</td><td>${x.cat}</td><td>${tag(x.pri,x.pri==="高"?"t-bad":x.pri==="中"?"t-warn":"t-mute")}</td><td>${stTag(x.st)}</td><td>${x.who}</td><td>${l===null?tag("已回應","t-ok"):l<0?tag("逾時 "+(-l)+" 小時","t-bad"):tag("剩 "+l+" 小時","t-warn")}</td></tr>`}).join(""):empty(9,"沒有符合的問題");}
+function renderAnn(){$("#anRows").innerHTML=ANNS.map((a,i)=>`<tr><td>${a.id}</td><td>${a.title}</td><td>${a.type}</td><td>${a.target}</td><td>${a.ch.join("、")}</td><td>${a.at}</td><td>${stTag(a.st)}</td><td><button class="btn sm" data-act="annEdit" data-i="${i}">${a.st==="已發布"?"檢視":"編輯"}</button>${a.st!=="已發布"?` <button class="btn sm primary" data-act="annPublish" data-i="${i}">立即發布</button>`:""}${a.st==="已排程"?` <button class="btn sm" data-act="annUnsched" data-i="${i}">取消排程</button>`:""}</td></tr>`).join("");}
+function renderTpl(){$("#tplCards").innerHTML=TPLS.map((t,i)=>`<div class="card click" data-act="tplEdit" data-i="${i}"><h3><span class="l"><i data-lucide="library"></i>${t.k}</span>${tag("v"+t.v,"t-info")}</h3><div class="hint">${t.items.length} 項 · 更新 ${t.d}</div><div style="margin-top:8px;font-size:12.5px;color:var(--muted);white-space:normal">${t.items.slice(0,3).join("、")}…</div></div>`).join("");}
+let docQ="";
+function renderContent(){$("#vRows").innerHTML=VIDEOS.map((v,i)=>`<tr><td>${v.title}</td><td>${v.page}</td><td>${v.dur}</td><td>${LANGS.map(l=>`<span class="lang ${v.langs.includes(l)?"on":""}">${l}</span>`).join("")}</td><td>${stTag(v.on?"上架":"下架")}</td><td><button class="btn sm" data-act="videoEdit" data-i="${i}">編輯</button> <button class="btn sm" data-act="videoToggle" data-i="${i}">${v.on?"下架":"上架"}</button></td></tr>`).join("");
+ const ds=DOCS.filter(d=>!docQ||d.title.includes(docQ)||d.cat.includes(docQ));
+ $("#docRows").innerHTML=ds.length?ds.map(d=>{const i=DOCS.indexOf(d);return `<tr><td>${d.title}</td><td>${d.cat}</td><td class="num">${d.views}</td><td>${d.d}</td><td>${stTag(d.on?"上架":"下架")}</td><td><button class="btn sm" data-act="docEdit" data-i="${i}">編輯</button> <button class="btn sm" data-act="docToggle" data-i="${i}">${d.on?"下架":"上架"}</button></td></tr>`}).join(""):empty(6,"找不到符合的文件");}
+function renderReleases(){$("#relList").innerHTML=RELS.map((r,i)=>`<div class="card" style="margin-bottom:12px"><h3><span class="l"><i data-lucide="rocket"></i>${r.v} · ${r.d}</span>${r.ann?`<button class="btn sm" data-act="go" data-go="announce">已產生公告 ${r.ann}</button>`:`<button class="btn sm primary" data-act="relAnn" data-i="${i}">產生公告草稿</button>`}</h3><ul style="margin:0;padding-left:20px">${r.items.map(x=>`<li>${x}</li>`).join("")}</ul></div>`).join("");}
+function renderTerms(){const owners=TENANTS.filter(t=>t.st!=="已終止").length;$("#trRows").innerHTML=TERMS.map((t,i)=>`<tr><td>${t.kind}</td><td>${t.v}</td><td>${t.eff}</td><td style="white-space:normal">${t.sum}</td><td>${stTag(t.st)}</td><td class="num">${t.st==="已停用"?"—":Object.keys(t.acc).length+" / "+owners}</td><td><button class="btn sm" data-act="termAcc" data-i="${i}">同意紀錄</button>${t.st==="待生效"?` <button class="btn sm primary" data-act="termActivate" data-i="${i}">立即生效</button>`:""}</td></tr>`).join("");}
+let mTab="status",monT="";
+const MTABS=[["status","服務狀態"],["jobs","背景工作"],["line","LINE 用量"],["storage","儲存用量"],["alerts","異常告警"]];
+function renderMonitor(){if(!$("#monT").options.length)$("#monT").innerHTML=`<option value="">全部租戶</option>`+TENANTS.filter(t=>t.st!=="已終止").map(t=>`<option value="${t.id}">${t.s}</option>`).join("");
+ $("#mTabs").innerHTML=MTABS.map(([k,l])=>`<button data-act="mTab" data-tab="${k}" class="${k===mTab?"on":""}">${l}</button>`).join("");let h="";
+ const sel=monT?[tById(monT)]:TENANTS.filter(t=>t.st!=="已終止");
+ if(mTab==="status"){const k=monT?Number(monT.slice(1)):0;h=`<div class="grid g-4">${kpi("gauge","API 回應時間 p95",(380+k*17)+" ms","目標 < 2,000 ms")}${kpi("bug","錯誤率",(0.3+k*.05).toFixed(2)+"%","告警門檻 "+MTHR.err+"%")}${kpi("shield-check","本月可用率","99.97%","目標 ≥ 99.5%")}${kpi("list","佇列待處理",JOBS.filter(j=>["排隊","執行中"].includes(j.st)).length,"告警門檻 "+MTHR.queue)}</div><div class="card" style="margin-top:16px"><h3><span class="l"><i data-lucide="activity"></i>${monT?tName(monT):"全平台"} 近 12 小時錯誤率（%）</span></h3>${bars([.2,.3,.25,.4,.35,.3,.6,1.2,.5,.3,.28,.31].map(v=>v*10000),["23","00","01","02","03","04","05","06","07","08","09","10"])}<p class="hint">原型：縱軸以 ×10,000 顯示</p></div>`;}
+ if(mTab==="jobs"){const js=JOBS.filter(j=>!monT||j.tid===monT||!j.tid);h=`<div class="tbl-wrap"><table><thead><tr><th>工作</th><th>類型</th><th>租戶</th><th>開始</th><th>耗時</th><th>狀態</th><th>訊息</th><th></th></tr></thead><tbody>${js.map(j=>`<tr><td>${j.id}</td><td>${j.type}</td><td>${j.tid?tName(j.tid):"全平台"}</td><td>${j.at}</td><td>${j.dur}</td><td>${stTag(j.st)}</td><td style="white-space:normal">${j.msg}</td><td>${j.st==="失敗"?`<button class="btn sm primary" data-act="jobRetry" data-j="${j.id}">重試</button>`:""}${j.st==="排隊"?`<button class="btn sm" data-act="jobCancel" data-j="${j.id}">取消</button>`:""}</td></tr>`).join("")}</tbody></table></div>`;}
+ if(mTab==="line"){const tot=TENANTS.reduce((a,t)=>a+t.push,0);const proj=Math.round(tot/6*30);const cost=proj<=3000?800:proj<=6000?4000:4000+(proj-6000)*.2;h=`<div class="grid g-4">${kpi("message-circle","本月累計推播",fmt(tot)+" 則","全平台共用官方帳號")}${kpi("trending-up","預估月底",fmt(proj)+" 則","依前 6 天推估")}${kpi("wallet","預估訊息費",money(cost),"依 LINE 官方方案試算，以官方公告為準")}${kpi("x-circle","LINE API 失敗率","0.4%","門檻 "+MTHR.linefail+"%")}</div><div class="tbl-wrap" style="margin-top:16px"><table><thead><tr><th>租戶</th><th class="num">今日</th><th class="num">本月</th><th class="num">配額</th><th>使用比例</th><th class="num">預估月底</th></tr></thead><tbody>${sel.map(t=>{const q=planOf(t).line;const pr=Math.round(t.push/6*30);return `<tr><td>${t.s}</td><td class="num">${fmt(Math.round(t.push/6))}</td><td class="num">${fmt(t.push)}</td><td class="num">${fmt(q)}</td><td><div class="progress"><div class="bar"><i style="width:${Math.min(100,t.push/q*100)}%"></i></div>${Math.round(t.push/q*100)}%</div></td><td class="num">${fmt(pr)} ${pr>q?tag("將超出","t-bad"):""}</td></tr>`}).join("")}</tbody></table></div>`;}
+ if(mTab==="storage")h=`<div class="tbl-wrap"><table><thead><tr><th>租戶</th><th class="num">使用量（GB）</th><th class="num">配額</th><th>使用比例</th></tr></thead><tbody>${sel.map(t=>{const q=planOf(t).gb;return `<tr><td>${t.s}</td><td class="num">${t.gb}</td><td class="num">${q}</td><td><div class="progress"><div class="bar"><i style="width:${Math.min(100,t.gb/q*100)}%;${t.gb/q>.9?"background:var(--bad)":""}"></i></div>${Math.round(t.gb/q*100)}%${t.gb>q?" "+tag("超出","t-bad"):""}</div></td></tr>`}).join("")}</tbody></table></div>`;
+ if(mTab==="alerts")h=`<div class="grid g-2"><div class="card"><h3><span class="l"><i data-lucide="bell-ring"></i>告警紀錄</span></h3>${MALERTS.map((a,i)=>`<div class="row"><span>${tag(a.lv,a.lv==="重要"?"t-bad":"t-mute")} ${a.x}<br><small class="hint">${a.t}</small></span>${a.done?tag("已處理","t-ok"):`<button class="btn sm" data-act="alertDone" data-i="${i}">標記已處理</button>`}</div>`).join("")}</div><div class="card"><h3><span class="l"><i data-lucide="sliders-horizontal"></i>告警門檻（P-MON-05）</span></h3><div class="form-grid">${F("錯誤率（%）",I("thErr",MTHR.err,"","number"))}${F("佇列堆積（筆）",I("thQ",MTHR.queue,"","number"))}${F("LINE API 失敗率（%）",I("thL",MTHR.linefail,"","number"))}${F("通知對象",S("thTo",["平台管理員","平台管理員＋客服"],"平台管理員"))}</div><div style="margin-top:12px;text-align:right"><button class="btn primary" data-act="saveThr">儲存門檻</button></div></div></div>`;
+ $("#mBody2").innerHTML=h;}
+function renderStaff(){$("#stRows").innerHTML=STAFF.map((s,i)=>`<tr><td>${s.n}</td><td>${s.mail}</td><td>${s.role}</td><td>${s.tfa?tag("已啟用（強制）","t-ok"):tag("待設定","t-warn")}</td><td>${stTag(s.on?"啟用":"停用")}</td><td>${s.last}</td><td><button class="btn sm" data-act="staffEdit" data-i="${i}">編輯</button> <button class="btn sm" data-act="staffReset" data-i="${i}">重設密碼／2FA</button> <button class="btn sm" data-act="staffToggle" data-i="${i}">${s.on?"停用":"啟用"}</button></td></tr>`).join("");
+ $("#rpHead").innerHTML=`<tr><th>功能</th>${ROLES.map(r=>`<th>${r}</th>`).join("")}</tr>`;
+ $("#rpRows").innerHTML=FUNCS.map((f,fi)=>`<tr><td>${f}</td>${ROLES.map(r=>`<td><button class="perm" data-act="permCycle" data-r="${r}" data-f="${fi}">${tag(PERM[r][fi],PERM[r][fi]==="全"?"t-ok":PERM[r][fi]==="讀"?"t-info":"t-mute")}</button></td>`).join("")}</tr>`).join("");}
+function renderFlags(){$("#flRows").innerHTML=FLAGS.map((f,i)=>`<tr><td><code>${f.key}</code></td><td>${f.name}</td><td>${tag(f.mode,f.mode==="全部開啟"?"t-ok":f.mode==="指定租戶"?"t-info":"t-mute")}</td><td>${f.mode==="指定租戶"?f.tids.map(tName).join("、")||"（尚未指定）":f.mode==="全部開啟"?"全部租戶":"—"}</td><td>${f.d}</td><td><button class="btn sm" data-act="flagEdit" data-i="${i}">設定</button></td></tr>`).join("");}
+function renderParams(){const P=PARAMS;$("#paramBox").innerHTML=`<div class="card"><h3><span class="l"><i data-lucide="calendar-clock"></i>試用與逾期（天）</span></h3><div class="form-grid">${F("試用天數",I("pmTrial",P.trial,"","number"))}${F("到期前提醒",I("pmRemind",P.remind,"","number"))}${F("逾期轉「付款逾期」",I("pmLate",P.late,"","number"))}${F("逾期轉「唯讀」",I("pmRo",P.ro,"","number"))}${F("逾期轉「停權」",I("pmSusp",P.susp,"","number"))}${F("退租唯讀保留",I("pmKeep",P.keep,"","number"))}${F("佣金追回期間（月）",I("pmClaw",P.claw,"","number"))}</div></div>
+ <div class="card"><h3><span class="l"><i data-lucide="message-circle"></i>LINE 官方帳號</span></h3><div class="form-grid">${F("帳號名稱",I("pmLineName",P.lineName))}${F("LINE ID",I("pmLineId",P.lineId))}${F("Channel ID",I("pmLineCh",P.lineChannel),1)}${F("Channel Secret",I("pmLineSec","••••••••••••","","password"),1)}</div></div>
+ <div class="card"><h3><span class="l"><i data-lucide="mail"></i>Email 寄件</span></h3><div class="form-grid">${F("寄件地址",I("pmMail",P.mailFrom),1)}${F("SMTP 主機",I("pmSmtp","smtp.example.com"))}${F("連接埠",I("pmPort","587","","number"))}</div></div>
+ <div class="card"><h3><span class="l"><i data-lucide="credit-card"></i>金流與電子發票</span></h3><div class="form-grid">${F("金流服務",I("pmPay",P.pay),1)}${F("電子發票",I("pmEinv",P.einv),1)}${F("發票字軌",I("pmTrack","AB"))}</div></div>`;}
+let auF="全部",auQ="";
+function renderAudit(){const cats=["全部",...new Set(AUDIT.map(a=>a.cat))];$("#auChips").innerHTML=chips(cats,auF,"auF");
+ const ls=AUDIT.filter(a=>(auF==="全部"||a.cat===auF)&&(!auQ||(a.obj+a.act+a.who).includes(auQ)));
+ $("#auRows").innerHTML=ls.length?ls.map(a=>`<tr><td>${a.t}</td><td>${a.who}</td><td>${a.cat}</td><td>${a.obj}</td><td style="white-space:normal">${a.act}</td><td style="white-space:normal">${a.reason||"—"}</td><td>${a.g||"—"}</td></tr>`).join(""):empty(7,"沒有符合的紀錄");}
+
+/* =====================================================================
+   業務邏輯
+   ===================================================================== */
+function setStatus(t,st,reason,txt){const old=t.st;t.st=st;t.hist.push({d:TODAY,txt:txt||`狀態：${old} → ${st}（${reason}）`,by:ME.n});audit("租戶狀態",t.s,`${old} → ${st}`,reason);
+ if(st==="已終止"&&t.ptn){const p=pById(t.ptn);if(p.claw&&diff(TODAY,t.since)<=p.claw*30){COMMS.filter(c=>c.tid===t.id&&c.st==="待撥付").forEach(c=>c.st="追回");const paid=COMMS.filter(c=>c.tid===t.id&&c.st==="已撥付").reduce((a,c)=>a+c.amt,0);if(paid)cm(p.id,t.id,"—",TODAY,0,0,-paid,"追回");toast(`已依佣金規則追回 ${p.n} 的佣金`);}}
+ renderAll();}
+function createTrialTenant(o){const id="T"+String(TENANTS.length+1).padStart(3,"0");const t=T(id,o.code,o.n,o.n.replace(/(股份)?有限公司|管理顧問|公寓大廈管理維護|社區服務|物業管理/g,"").slice(0,4)||o.n.slice(0,4),o.ed,o.tier,0,1,"試用中","月繳",TODAY,addDays(TODAY,o.days),"剛剛",0,0,0,0,o.sales,o.pid,[[o.n,o.tax||"—"]],[o.ct,o.tel||"—",o.mail||"—"],1);TENANTS.push(t);audit("租戶狀態",t.s,"建立試用租戶（"+o.days+" 天）",o.reason||"由潛在客戶建立");return t;}
+function markPaid(i,date,method,silent){i.st="已付";i.paidOn=date;i.method=method;i.einv="AB-"+(10000000+Math.floor(Math.random()*8999999));const t=tById(i.tid);audit("帳務",i.id,"登記收款 "+money(i.amt-i.credit),method);
+ let msg=`${i.id} 已收款，電子發票 ${i.einv} 已開立`;
+ if(t.ptn){const p=pById(t.ptn);const inPeriod=diff(date,t.since)<=p.months*30.5;const okKind=i.kind==="月費"||i.kind==="年費"||(p.inclOT&&i.kind==="導入費");if(p.model==="推薦佣金"&&inPeriod&&okKind){const amt=p.kind==="固定金額"?(COMMS.some(c=>c.pid===p.id&&c.tid===t.id)?0:p.fixed):(i.amt-i.credit)*p.rate/100;if(amt){cm(p.id,t.id,i.id,date,i.amt-i.credit,p.kind==="固定金額"?0:p.rate,amt,"待撥付");msg+=`；產生 ${p.n} 佣金 ${money(amt)}`;}}}
+ if(["付款逾期","唯讀","停權"].includes(t.st)&&!overdueInvs(t).length){const old=t.st;t.st="正式";t.hist.push({d:TODAY,txt:`付款完成，${old} → 正式`,by:"系統"});audit("租戶狀態",t.s,`${old} → 正式`,"付款完成自動恢復");msg+="；租戶已自動恢復正式";}
+ if(!silent)toast(msg);renderAll();return msg;}
+
+/* =====================================================================
+   動作
+   ===================================================================== */
+const A={
+ loginNext(){if(!val("lgUser")||!val("lgPwd")){$("#lgErr").style.display="block";return;}$("#lgErr").style.display="none";$("#step1").style.display="none";$("#step2").style.display="";$("#otp input").focus();},
+ loginBack(){$("#step1").style.display="";$("#step2").style.display="none";},
+ loginOtp(){const v=$$("#otp input").map(i=>i.value).join("");if(v.length<6){$("#otpErr").style.display="block";return;}$("#otpErr").style.display="none";$("#login").style.display="none";try{sessionStorage.setItem("pcmp-ops","1")}catch(e){}route();toast("登入成功");},
+ forgotPwd(){modal("忘記密碼",`<p style="margin-top:0">平台人員密碼與 2FA 需由平台管理員重設。</p>${F("您的 Email",I("fpId","","name@pcmp.example"))}`,[{label:"取消"},{label:"送出重設申請",cls:"primary",fn:()=>{if(!required(["fpId"]))return;closeAll();toast("已通知平台管理員");}}]);},
+ openMenu(){$("#side").classList.add("open");$("#drawerBg").classList.add("on");},
+ closeMenu(){$("#side").classList.remove("open");$("#drawerBg").classList.remove("on");},
+ theme(){const r=document.documentElement;const dark=r.dataset.theme?r.dataset.theme==="dark":matchMedia("(prefers-color-scheme: dark)").matches;r.dataset.theme=dark?"light":"dark";},
+ closeAll(){closeAll();},
+ bell(){const p=$("#pop");if(p.classList.contains("on")){closeAll();return;}closeAll();
+  p.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 10px"><b>通知</b><button class="linkbtn" data-act="readAll">全部標為已讀</button></div>`+NOTIS.map(n=>`<button class="pi" data-act="go" data-go="${n.go}"><span class="tag ${n.c}" style="padding:6px"><i data-lucide="${n.i}"></i></span><span><b>${n.b}</b><small>${n.s}</small></span></button>`).join("");
+  p.classList.add("on");$("#ov").classList.add("on");$("#ov").style.background="transparent";icons();},
+ readAll(){$("#bellDot").style.display="none";closeAll();toast("已全部標為已讀");},
+ go(el){closeAll();location.hash=el.dataset.go;},
+ goMonitor(el){mTab=el.dataset.tab;location.hash="monitor";renderMonitor();icons();},
+ userMenu(){modal(`${ME.n} · ${ME.role}`,`<dl class="dl"><dt>Email</dt><dd>${ME.mail}</dd><dt>角色</dt><dd>平台管理員（PLAT-ADMIN）</dd><dt>雙因子驗證</dt><dd>${tag("已啟用（強制）","t-ok")}</dd><dt>上次登入</dt><dd>2026/11/06 08:02</dd></dl><p class="hint">平台帳號無法登入租戶後台；協助租戶需透過限時授權。</p>`,[{label:"變更密碼",fn:()=>A.changePwd()},{label:"登出",cls:"danger",fn:()=>{closeAll();try{sessionStorage.removeItem("pcmp-ops")}catch(e){}A.loginBack();$$("#otp input").forEach(i=>i.value="");$("#login").style.display="";}}]);},
+ changePwd(){modal("變更密碼",`<div class="form-grid">${F("目前密碼",I("p0","","","password"),1)}${F("新密碼（至少 12 碼）",I("p1","","","password"),1)}${F("再次輸入",I("p2","","","password"),1)}</div>`,[{label:"取消"},{label:"儲存",cls:"primary",fn:()=>{if(!required(["p0","p1","p2"]))return;if(val("p1")!==val("p2")){toast("兩次輸入不一致");return;}closeAll();audit("平台人員",ME.n,"變更密碼");toast("密碼已更新");}}]);},
+ exportJob(el){const id="J-"+(88142+JOBS.length);JOBS.unshift({id,type:"匯出："+(el.dataset.name||"報表"),tid:null,st:"排隊",at:now().slice(5),dur:"—",msg:"等待中"});audit("系統",id,"建立匯出工作："+(el.dataset.name||"報表"));toast(`「${el.dataset.name}」已加入背景工作 ${id}，可在系統監控查看`);setTimeout(()=>{const j=JOBS.find(x=>x.id===id);if(j){j.st="完成";j.dur="8 秒";j.msg="檔案已產生，下載連結 7 天有效";if(location.hash==="#monitor")renderMonitor();}},1500);},
+
+ /* 潛在客戶 */
+ leadView(el){leadView=el.dataset.v;renderLeads();icons();},
+ newLead(){modal("新增潛在客戶",`<div class="form-grid">${F("公司名稱 *",I("ln"),1)}${F("聯絡人 *",I("lc"))}${F("電話",I("lt"))}${F("來源",S("ls",SRCS,"官網"))}${F("推薦夥伴",S("lp",[["","—"],...PARTNERS.map(p=>[p.id,p.n])],""))}${F("預估社區數",I("le","5","","number"))}${F("負責業務",S("lsl",["林育成","吳佩珊"],"林育成"))}${F("下次跟進日",I("lnx",addDays(TODAY,2)))}</div>`,[{label:"取消"},{label:"建立",cls:"primary",fn:()=>{if(!required(["ln","lc"]))return;const id="L"+String(LEADS.length+1).padStart(2,"0");LEADS.unshift({id,n:val("ln"),ct:val("lc"),tel:val("lt"),src:val("ls"),pid:val("lp")||null,stage:"新名單",sales:val("lsl"),est:Number(val("le"))||1,next:val("lnx"),tid:null,lost:null,d:TODAY,logs:[]});closeAll();renderAll();toast("已新增潛在客戶");}}]);},
+ leadOpen(el){const l=LEADS.find(x=>x.id===el.dataset.l);if(!l)return;const p=l.pid?pById(l.pid):null;const t=l.tid?tById(l.tid):null;const si=STAGES.indexOf(l.stage);
+  const btns=[];if(!["成交","未成交"].includes(l.stage)){btns.push({label:"標記未成交",fn:()=>A.leadLost({dataset:{l:l.id}})});if(si<5)btns.push({label:"推進到「"+STAGES[si+1]+"」",cls:"primary",fn:()=>A.leadMove({dataset:{l:l.id,dir:"1"}})});}
+  if(!t&&!["成交","未成交"].includes(l.stage))btns.unshift({label:"建立試用租戶",fn:()=>A.leadTrial({dataset:{l:l.id}})});
+  if(t)btns.unshift({label:"開啟租戶",fn:()=>A.tenantOpen({dataset:{t:t.id}})});
+  drawer(l.n,`<dl class="dl"><dt>階段</dt><dd>${stTag(l.stage)}${l.lost?" "+tag(l.lost,"t-mute"):""}</dd><dt>聯絡人</dt><dd>${l.ct} · ${l.tel||"—"}</dd><dt>來源</dt><dd>${l.src}${p?" · "+p.n+"（"+p.code+"）":""}</dd><dt>預估</dt><dd>${l.est} 社區 · 約 ${money(listPrice("專業",l.est<=10?"入門":l.est<=30?"標準":"進階"))}／月（以專業版估）</dd><dt>負責業務</dt><dd>${l.sales}</dd><dt>試用租戶</dt><dd>${t?t.code+" "+stTag(t.st):"—"}</dd><dt>下次跟進</dt><dd>${l.next||"—"}</dd></dl>
+  <h3 style="font-size:14px;margin:18px 0 8px">聯繫紀錄（P-CRM-03）</h3>${l.logs.length?`<ul class="timeline">${l.logs.map(x=>`<li><b>${x.way}</b><small>${x.d}</small>${x.txt}</li>`).join("")}</ul>`:'<p class="hint">尚無紀錄</p>'}
+  <div class="card" style="margin-top:12px"><div class="form-grid">${F("日期",I("lgD",TODAY))}${F("方式",S("lgW",["電話","拜訪","線上展示","Email","展覽"],"電話"))}${F("內容",TA("lgT"),1)}${F("下次跟進日",I("lgN",addDays(TODAY,7)))}</div><div style="margin-top:10px;text-align:right"><button class="btn sm primary" data-act="leadLog" data-l="${l.id}">新增聯繫紀錄</button></div></div>`,btns);},
+ leadLog(el){const l=LEADS.find(x=>x.id===el.dataset.l);if(!required(["lgT"]))return;l.logs.push({d:val("lgD"),way:val("lgW"),txt:val("lgT")});l.next=val("lgN")||null;renderAll();A.leadOpen({dataset:{l:l.id}});toast("已新增聯繫紀錄，將於 "+(l.next||"—")+" 提醒 "+l.sales);},
+ leadMove(el){const l=LEADS.find(x=>x.id===el.dataset.l);const ni=STAGES.indexOf(l.stage)+Number(el.dataset.dir);if(ni<0||ni>5)return;const to=STAGES[ni];
+  if(to==="試用中"&&!l.tid){A.leadTrial({dataset:{l:l.id}});return;}
+  if(to==="成交"){A.leadWin({dataset:{l:l.id}});return;}
+  l.stage=to;closeAll();renderAll();toast(`${l.n} → ${to}`);},
+ leadTrial(el){const l=LEADS.find(x=>x.id===el.dataset.l);const code=("t"+Date.now().toString(36)).slice(-7);
+  modal("建立試用租戶（P-CRM-04）",`<p style="margin-top:0">由「${l.n}」建立試用租戶，帶入公司資料與推薦夥伴，並寄送開通通知。</p><div class="form-grid">${F("租戶代碼 *",I("ttCode",code))}${F("統編",I("ttTax",""))}${F("試用版本",S("ttEd",EDS,"旗艦"))}${F("級距",S("ttTier",TIERN,l.est<=10?"入門":l.est<=30?"標準":"進階"))}${F("試用天數",I("ttDays",PARAMS.trial,"","number"))}${F("開通通知寄送至",I("ttMail",l.ct+"@example.com"))}</div><p class="hint">試用期滿未付款轉為唯讀（P-SUB-03）</p>`,[{label:"取消"},{label:"建立並寄送通知",cls:"primary",fn:()=>{if(!required(["ttCode"]))return;const t=createTrialTenant({code:val("ttCode"),n:l.n,ed:val("ttEd"),tier:val("ttTier"),days:Number(val("ttDays"))||30,sales:l.sales,pid:l.pid,ct:l.ct,tel:l.tel,mail:val("ttMail"),tax:val("ttTax")});l.tid=t.id;l.stage="試用中";l.logs.push({d:TODAY,way:"系統",txt:"建立試用租戶 "+t.code});closeAll();renderAll();toast(`已建立試用租戶 ${t.code}，試用至 ${t.trialEnd}`);}}]);},
+ leadWin(el){const l=LEADS.find(x=>x.id===el.dataset.l);
+  if(!l.tid){modal("無法成交",`<p style="margin:0">「${l.n}」尚未建立租戶，請先建立試用租戶或直接建立正式租戶。</p>`,[{label:"取消"},{label:"建立試用租戶",cls:"primary",fn:()=>A.leadTrial({dataset:{l:l.id}})}]);return;}
+  const t=tById(l.tid);modal("成交：轉為正式租戶",`<div class="form-grid">${F("版本",S("wEd",EDS,t.ed))}${F("級距",S("wTier",TIERN,t.tier))}${F("計費週期",S("wCyc",["月繳","年繳"],"月繳"))}${F("優惠碼",S("wCp",["",...COUPONS.filter(c=>c.on).map(c=>c.code)],t.coupon||""))}</div><p class="hint">轉正式後次月 1 日開始計費並產生帳單。</p>`,[{label:"取消"},{label:"確認成交",cls:"primary",fn:()=>{t.ed=val("wEd");t.tier=val("wTier");t.cycle=val("wCyc");if(val("wCp")){t.coupon=val("wCp");COUPONS.find(c=>c.code===t.coupon).used++;}l.stage="成交";l.next=null;l.logs.push({d:TODAY,way:"系統",txt:`成交：${t.ed}・${t.tier}・${t.cycle}`});t.hist.push({d:TODAY,txt:`方案：試用轉正式 ${t.ed}・${t.tier}（${t.cycle}）`,by:ME.n});closeAll();setStatus(t,"正式","潛在客戶成交",`試用中 → 正式（成交）`);toast(`${l.n} 已成交，轉為正式租戶`);}}]);},
+ leadLost(el){const l=LEADS.find(x=>x.id===el.dataset.l);modal("標記未成交",`<div class="form-grid">${F("未成交原因 *",S("lr",LOST_REASONS,"價格"),1)}${F("補充說明",TA("lrx"),1)}</div>`,[{label:"取消"},{label:"確認",cls:"danger",fn:()=>{l.stage="未成交";l.lost=val("lr");l.next=null;l.logs.push({d:TODAY,way:"系統",txt:"未成交："+val("lr")+(val("lrx")?"，"+val("lrx"):"")});closeAll();renderAll();toast("已標記未成交，原因列入統計");}}]);},
+ /* 試用申請 */
+ appF(el){appF=el.dataset.v;renderApps();icons();},
+ openSignup(){modal("官網試用申請頁",`<p style="margin-top:0">公開頁面 <code>signup.html</code>，推薦夥伴可使用帶推薦碼的連結（例：<code>signup.html?ref=HY-CHEN</code>），申請後自動歸屬夥伴（P-PTN-02）。</p><p><a href="signup.html?ref=HY-CHEN" target="_blank">以推薦碼 HY-CHEN 開啟申請頁 ↗</a></p>`);},
+ appOpen(el){const a=APPS.find(x=>x.id===el.dataset.a);const p=PARTNERS.find(p=>p.code===a.ref);const btns=[{label:"關閉"}];if(a.st==="待審核")btns.push({label:"婉拒",cls:"danger",fn:()=>A.appReject({dataset:{a:a.id}})},{label:"只轉為潛在客戶",fn:()=>A.appToLead({dataset:{a:a.id}})},{label:"核准並開通試用",cls:"primary",fn:()=>A.appApprove({dataset:{a:a.id}})});
+  drawer(a.id,`<dl class="dl"><dt>申請日</dt><dd>${a.d}</dd><dt>公司</dt><dd>${a.n}</dd><dt>統編</dt><dd>${a.tax}</dd><dt>聯絡人</dt><dd>${a.ct} · ${a.tel}</dd><dt>Email</dt><dd>${a.mail}</dd><dt>服務社區數</dt><dd>${a.sites}</dd><dt>目前工具</dt><dd>${a.tool||"—"}</dd><dt>推薦碼</dt><dd>${a.ref?a.ref+(p?"（"+p.n+"）":"（查無此碼）"):"—"}</dd><dt>狀態</dt><dd>${stTag(a.st)}${a.reason?" "+a.reason:""}</dd></dl>`,btns);},
+ appToLead(el,withTrial){const a=APPS.find(x=>x.id===el.dataset.a);const p=PARTNERS.find(p=>p.code===a.ref);const id="L"+String(LEADS.length+1).padStart(2,"0");const l={id,n:a.n,ct:a.ct,tel:a.tel,src:p?"推薦夥伴":"官網",pid:p?p.id:null,stage:"已聯繫",sales:"吳佩珊",est:a.sites==="1～10"?6:a.sites==="11～30"?20:40,next:addDays(TODAY,1),tid:null,lost:null,d:a.d,logs:[{d:TODAY,way:"系統",txt:"由試用申請 "+a.id+" 建立"}]};LEADS.unshift(l);a.st="已建立";a.lead=id;
+  if(withTrial){const t=createTrialTenant({code:a.mail.split("@")[1].split(".")[0].slice(0,10),n:a.n,ed:"旗艦",tier:l.est<=10?"入門":l.est<=30?"標準":"進階",days:PARAMS.trial,sales:l.sales,pid:l.pid,ct:a.ct,tel:a.tel,mail:a.mail,tax:a.tax,reason:"核准試用申請 "+a.id});l.tid=t.id;l.stage="試用中";closeAll();renderAll();toast(`已開通試用租戶 ${t.code}，通知已寄至 ${a.mail}`);}
+  else{closeAll();renderAll();toast("已轉為潛在客戶，指派給 "+l.sales);}},
+ appApprove(el){A.appToLead(el,true);},
+ appReject(el){const a=APPS.find(x=>x.id===el.dataset.a);reasonBox("婉拒試用申請",`婉拒「${a.n}」的申請。`,"婉拒",r=>{a.st="已婉拒";a.reason=r;audit("客戶開發",a.id,"婉拒試用申請",r);closeAll();renderAll();toast("已婉拒");},true);},
+ /* 漏斗 */
+ /* 租戶 */
+ tF(el){tF=el.dataset.v;renderTenants();icons();},
+ clearQ(){tQ="";$("#q").value="";renderTenants();icons();},
+ tenantOpen(el){curT=el.dataset.t;tTab="info";closeAll();if(location.hash==="#tenant")renderTenant();else location.hash="tenant";icons();},
+ tTab(el){tTab=el.dataset.tab;renderTenant();icons();},
+ newTenant(){modal("建立租戶",`<p class="hint" style="margin-top:0">一般由潛在客戶或試用申請建立；此處供直接簽約的客戶使用。</p><div class="form-grid">${F("公司名稱 *",I("ntN"),1)}${F("租戶代碼 *",I("ntC","","英數小寫"))}${F("統編",I("ntTax"))}${F("聯絡人 *",I("ntCt"))}${F("Email",I("ntM"))}${F("狀態",S("ntSt",["試用中","正式"],"試用中"))}${F("版本",S("ntEd",EDS,"專業"))}${F("級距",S("ntTier",TIERN,"入門"))}${F("推薦夥伴",S("ntP",[["","—"],...PARTNERS.map(p=>[p.id,p.n])],""))}</div>`,[{label:"取消"},{label:"建立",cls:"primary",fn:()=>{if(!required(["ntN","ntC","ntCt"]))return;if(TENANTS.some(t=>t.code===val("ntC"))){toast("租戶代碼已存在");return;}const t=createTrialTenant({code:val("ntC"),n:val("ntN"),ed:val("ntEd"),tier:val("ntTier"),days:PARAMS.trial,sales:"林育成",pid:val("ntP")||null,ct:val("ntCt"),mail:val("ntM"),tax:val("ntTax"),reason:"直接建立"});if(val("ntSt")==="正式"){t.st="正式";t.trialEnd=null;}closeAll();renderAll();A.tenantOpen({dataset:{t:t.id}});toast("已建立租戶 "+t.code+"，已寄送開通通知");}}]);},
+ editTenant(){const t=tById(curT);modal("編輯租戶資料",`<div class="form-grid">${F("公司名稱",I("etN",t.n),1)}${F("簡稱",I("etS",t.s))}${F("聯絡人",I("etC",t.ct.n))}${F("電話",I("etT",t.ct.tel))}${F("Email",I("etM",t.ct.mail))}${F("負責業務",S("etSl",["林育成","吳佩珊"],t.sales))}</div>`,[{label:"取消"},{label:"儲存",cls:"primary",fn:()=>{t.n=val("etN");t.s=val("etS");t.ct={n:val("etC"),tel:val("etT"),mail:val("etM")};t.sales=val("etSl");audit("租戶資料",t.s,"編輯基本資料");closeAll();renderAll();toast("已儲存");}}]);},
+ extendTrial(){const t=tById(curT);reasonBox("延長試用",`目前試用至 ${t.trialEnd}。`,"延長",r=>{const n=Number(val("exD"))||14;const old=t.trialEnd;t.trialEnd=addDays(t.trialEnd,n);t.hist.push({d:TODAY,txt:`延長試用 ${n} 天（${old} → ${t.trialEnd}）：${r}`,by:ME.n});audit("租戶狀態",t.s,`延長試用 ${n} 天`,r);closeAll();renderAll();toast("試用已延長至 "+t.trialEnd);},false,F("延長天數",S("exD",["7","14","30"],"14")));},
+ toFormal(){const t=tById(curT);if(t.st==="試用中"){const l=LEADS.find(x=>x.tid===t.id);if(l){A.leadWin({dataset:{l:l.id}});return;}}
+  const od=overdueInvs(t);reasonBox(t.st==="試用中"?"轉為正式":"恢復正式",od.length?`此租戶仍有 ${od.length} 張逾期帳單（${money(od.reduce((a,i)=>a+i.amt,0))}）。手動恢復需說明原因。`:"將租戶狀態改為「正式」。","確認",r=>{closeAll();if(t.st==="試用中")t.trialEnd=null;setStatus(t,"正式",r);toast("已改為正式");});},
+ suspend(){const t=tById(curT);reasonBox("暫停租戶（停權）","停權後租戶所有人員無法登入後台與 LINE 前台，資料保留。","停權",r=>{closeAll();setStatus(t,"停權",r);toast("已停權");},true);},
+ reopen(){const t=tById(curT);reasonBox("重新開通","重新開通已終止的租戶（限保留期內）。","重新開通",r=>{closeAll();setStatus(t,"正式",r);});},
+ terminate(){const t=tById(curT);reasonBox("終止租戶",`終止後租戶唯讀保留 ${PARAMS.keep} 天供匯出，期滿刪除全部資料並提供刪除證明（P-EXIT-02）。${t.ptn?"<br>若在佣金追回期間內，推薦佣金將追回。":""}`,"終止租戶",r=>{if(val("tmC")!==t.code){toast("請輸入正確的租戶代碼以確認");$("#tmC").style.borderColor="var(--bad)";return;}closeAll();JOBS.unshift({id:"J-"+(88142+JOBS.length),type:"資料匯出（退租）",tid:t.id,st:"排隊",at:now().slice(5),dur:"—",msg:"產生完整匯出檔供租戶下載"});setStatus(t,"已終止",r);toast("已終止，並排入退租資料匯出工作");},true,F(`請輸入租戶代碼「${t.code}」確認`,I("tmC"),1));},
+ changePlan(){const t=tById(curT);modal("調整方案",`<div class="form-grid">${F("版本",S("cpEd",EDS,t.ed))}${F("級距",S("cpTier",TIERN,t.tier))}${F("計費週期",S("cpCyc",["月繳","年繳"],t.cycle))}${F("生效",S("cpWhen",["升級立即生效（按日補差額）","下一計費週期生效"],"升級立即生效（按日補差額）"))}${F("原因（必填）",TA("cpR"),1)}</div><p class="hint" id="cpHint">目前 ${t.ed}・${t.tier}，社區 ${t.sites} 個。</p>`,[{label:"取消"},{label:"確認調整",cls:"primary",fn:()=>{if(!required(["cpR"]))return;const ed=val("cpEd"),ti=val("cpTier");if(t.sites>TIER_MAX[ti]){toast(`社區數 ${t.sites} 超過「${ti}」上限 ${TIER_MAX[ti]}，無法降級`);return;}const lost=planOf(t).mods.filter(m=>!PLANS.find(p=>p.id===ed+"-"+ti).mods.includes(m));const old=`${t.ed}・${t.tier}`;const up=listPrice(ed,ti)>listPrice(t.ed,t.tier);t.ed=ed;t.tier=ti;t.cycle=val("cpCyc");t.locked=null;const diffAmt=up&&val("cpWhen").startsWith("升級")?Math.round((listPrice(ed,ti)-listPrice(...old.split("・")))*24/30):0;if(diffAmt>0)INVS.push({id:"INV-2611-UP"+t.id.slice(2),tid:t.id,period:"2026/11/07～11/30",kind:"其他",amt:diffAmt,credit:0,issued:TODAY,due:addDays(TODAY,10),st:"未付",paidOn:null,method:null,einv:null,dun:[]});t.hist.push({d:TODAY,txt:`方案：${old} → ${ed}・${ti}（${val("cpWhen")}）`,by:ME.n});audit("方案",t.s,`方案 ${old} → ${ed}・${ti}`,val("cpR"));closeAll();renderAll();toast(`方案已調整${diffAmt?"，已產生補差額帳單 "+money(diffAmt):""}${lost.length?"；將停用模組："+lost.join("、"):""}`);}}]);},
+ applyCoupon(){const t=tById(curT);modal("套用優惠碼",`${F("優惠碼",S("acC",COUPONS.filter(c=>c.on).map(c=>c.code),COUPONS[0].code))}`,[{label:"取消"},{label:"套用",cls:"primary",fn:()=>{const c=COUPONS.find(x=>x.code===val("acC"));if(c.used>=c.max){toast("此優惠碼已達使用上限");return;}c.used++;t.coupon=c.code;t.hist.push({d:TODAY,txt:"方案：套用優惠碼 "+c.code,by:ME.n});audit("方案",t.s,"套用優惠碼 "+c.code);closeAll();renderAll();toast("已套用 "+c.code);}}]);},
+ requestGrant(el){const tid=el?.dataset?.t||curT;const t=tById(tid);modal("發出授權請求",`<p style="margin-top:0">請求「${t.s}」的租戶管理者同意限時授權。對方同意前無法查看任何業務資料。</p><div class="form-grid">${F("時數",S("grH",["4","24","72"],"24"))}${F("關聯客服問題",S("grS",["—",...TICKETS.filter(x=>x.tid===tid).map(x=>x.id)],"—"))}${F("原因（必填，租戶可見）",TA("grR"),1)}</div>`,[{label:"取消"},{label:"送出請求",cls:"primary",fn:()=>{if(!required(["grR"]))return;const id="G-0"+(302+GRANTS.length);GRANTS.unshift({id,tid,by:ME.n,reason:(val("grS")!=="—"?val("grS")+" ":"")+val("grR"),h:Number(val("grH")),from:"—",to:"—",st:"待同意",ops:[]});audit("授權存取",t.s,"發出授權請求 "+id,val("grR"),id);closeAll();renderAll();toast("已通知租戶管理者，同意後即可進入");}}]);},
+ newGrant(){modal("發出授權請求",F("租戶",S("ngT",TENANTS.filter(t=>t.st!=="已終止").map(t=>[t.id,t.s]),"T001")),[{label:"取消"},{label:"下一步",cls:"primary",fn:()=>A.requestGrant({dataset:{t:val("ngT")}})}]);},
+ grantOpen(el){const g=GRANTS.find(x=>x.id===el.dataset.g);drawer(g.id+" 授權明細",`<dl class="dl"><dt>租戶</dt><dd>${tName(g.tid)}</dd><dt>申請人</dt><dd>${g.by}</dd><dt>原因</dt><dd>${g.reason}</dd><dt>期間</dt><dd>${g.from} ～ ${g.to}</dd><dt>狀態</dt><dd>${stTag(g.st)}</dd></dl><h3 style="font-size:14px;margin:18px 0 8px">授權期間操作（同步至租戶稽核日誌）</h3>${g.ops.length?`<ul class="timeline">${g.ops.map(o=>`<li>${o.x}<small>${o.t}</small></li>`).join("")}</ul>`:'<p class="hint">尚無操作</p>'}`,[{label:"關閉"}]);},
+ grantApprove(el){const g=GRANTS.find(x=>x.id===el.dataset.g);g.st="有效中";g.from=now();const e=new Date();e.setHours(e.getHours()+g.h);g.to=addDays(TODAY,Math.floor((new Date().getHours()+g.h)/24))+" "+String(e.getHours()).padStart(2,"0")+":"+String(e.getMinutes()).padStart(2,"0");audit("授權存取",tName(g.tid),"租戶同意授權 "+g.h+" 小時（模擬）","",g.id);renderAll();toast("租戶已同意（模擬），授權至 "+g.to);},
+ grantRevoke(el){const g=GRANTS.find(x=>x.id===el.dataset.g);confirmBox("撤銷授權",`提前結束 ${g.id} 的授權？`,"撤銷",()=>{g.st="已撤銷";g.to=now();audit("授權存取",tName(g.tid),"撤銷授權","",g.id);closeAll();renderAll();toast("已撤銷");},true);},
+ grantEnter(el){const g=GRANTS.find(x=>x.id===el.dataset.g);const t=tById(g.tid);modal(`以客服身分檢視：${t.s}`,`<div class="banner"><i data-lucide="key-round"></i><span>授權 ${g.id} 有效至 ${g.to}。以下操作都會寫入租戶與平台稽核日誌。</span></div><div class="grid g-2">${["查看員工 LINE 綁定狀態","查看匯入批次與檢核報告","查看社區模組開關","重新產生員工邀請碼"].map((x,i)=>`<button class="btn" data-act="grantOp" data-g="${g.id}" data-x="${x}">${x}</button>`).join("")}</div>`,[{label:"結束檢視"}]);},
+ grantOp(el){const g=GRANTS.find(x=>x.id===el.dataset.g);const d=new Date();g.ops.push({t:String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0"),x:el.dataset.x});audit("授權存取",tName(g.tid),el.dataset.x,"",g.id);renderGrants();toast("已執行並記錄："+el.dataset.x);},
+ onbAssist(el){const t=tById(curT);t.logs.unshift({d:TODAY,way:"導入協助",who:ME.n,txt:"安排協助：「"+el.dataset.x+"」",next:addDays(TODAY,3)});t.next=addDays(TODAY,3);renderTenant();icons();toast("已建立導入協助任務，3 天後跟進");},
+ addTLog(){const t=tById(curT);modal("新增聯繫紀錄（P-OPS-10）",`<div class="form-grid">${F("日期",I("tlD",TODAY))}${F("方式",S("tlW",["電話","拜訪","線上會議","教育訓練","Email"],"電話"))}${F("內容 *",TA("tlT"),1)}${F("下次跟進日",I("tlN",addDays(TODAY,14)))}</div>`,[{label:"取消"},{label:"儲存",cls:"primary",fn:()=>{if(!required(["tlT"]))return;t.logs.unshift({d:val("tlD"),way:val("tlW"),who:ME.n,txt:val("tlT"),next:val("tlN")});t.next=val("tlN")||null;closeAll();renderAll();toast("已新增聯繫紀錄");}}]);},
+ setPartner(){const t=tById(curT);modal("指定推薦夥伴",F("夥伴",S("spP",PARTNERS.map(p=>[p.id,p.n]),"P01")),[{label:"取消"},{label:"儲存",cls:"primary",fn:()=>{t.ptn=val("spP");audit("推薦夥伴",t.s,"指定推薦夥伴 "+pById(t.ptn).n);closeAll();renderAll();toast("已指定，之後的付款將計算佣金");}}]);},
+ healthTask(el){curT=el.dataset.t;A.addTLog();},
+ /* 方案 */
+ planEdit(el){const p=PLANS.find(x=>x.id===el.dataset.p);modal(`編輯方案：${p.ed}版・${p.tier}`,`<div class="form-grid">${F("儲存空間（GB）",I("peGb",p.gb,"","number"))}${F("LINE 推播配額（則／月）",I("peLine",p.line,"","number"))}<div class="full"><span class="hint">可用模組</span><div class="grid g-2" style="gap:4px;margin-top:6px">${ALLMODS.map((m,i)=>`<label class="check"><input type="checkbox" id="pm${i}" ${p.mods.includes(m)?"checked":""}>${m}</label>`).join("")}</div></div><label class="check full"><input type="checkbox" id="peSale" ${p.sale?"":"checked"}>停售（不再提供新客戶，既有租戶續用）</label></div><p class="hint">價格請用「新增價格版本」調整。</p>`,[{label:"取消"},{label:"儲存",cls:"primary",fn:()=>{p.gb=Number(val("peGb"));p.line=Number(val("peLine"));p.mods=ALLMODS.filter((m,i)=>chk("pm"+i));p.sale=!chk("peSale");audit("方案",p.id,"編輯方案模組與配額");closeAll();renderAll();toast("方案已更新");}}],true);},
+ newPriceVer(){modal("新增價格版本（P-SUB-10）",`<div class="form-grid">${F("方案",S("pvP",PLANS.map(p=>[p.id,p.ed+"版・"+p.tier]),"專業-入門"))}${F("新月費 *",I("pvM","","例：5500","number"))}${F("生效日",I("pvE","2027/01/01"))}${F("既有租戶",S("pvPol",["保留原價","指定日期起適用新價"],"保留原價"))}${F("既有租戶適用日（選「指定日期」時）",I("pvD","2027/04/01"),1)}</div>`,[{label:"取消"},{label:"建立",cls:"primary",fn:()=>{if(!required(["pvM"]))return;const pid=val("pvP");const v=PVERS.filter(x=>x.pid===pid).length+1;PVERS.push({pid,v,m:Number(val("pvM")),eff:val("pvE"),policy:val("pvPol")==="保留原價"?"保留原價":"自 "+val("pvD")+" 起適用",st:"待生效"});audit("方案",pid,`建立價格版本 v${v} ${money(val("pvM"))}`);closeAll();renderAll();toast("已建立價格版本，待生效");}}]);},
+ pvApply(el){const v=PVERS[Number(el.dataset.i)];confirmBox("價格版本生效",`${v.pid.replace("-","版・")} v${v.v} ${money(v.m)} 立即生效（原型模擬到達生效日）？`,"生效",()=>{const old=PVERS.filter(x=>x.pid===v.pid&&x.st==="適用中");const oldM=old.length?old[old.length-1].m:0;old.forEach(x=>x.st="已停用");v.st="適用中";let n=0;TENANTS.filter(t=>t.ed+"-"+t.tier===v.pid&&!t.custom&&t.st!=="已終止").forEach(t=>{if(v.policy==="保留原價"){t.locked=oldM;n++;t.hist.push({d:TODAY,txt:`方案：價格調整，保留原價 ${money(oldM)}`,by:"系統"});}});audit("方案",v.pid,`價格版本 v${v.v} 生效`,v.policy);closeAll();renderAll();toast(`已生效；${n} 個既有租戶保留原價`);});},
+ pvCancel(el){const v=PVERS[Number(el.dataset.i)];v.st="已停用";audit("方案",v.pid,`取消價格版本 v${v.v}`);renderAll();toast("已取消");},
+ newQuote(){modal("個別報價（P-SUB-12）",`<div class="form-grid">${F("對象",S("qT",[...TENANTS.filter(t=>t.st!=="已終止").map(t=>[t.id,t.s]),...LEADS.filter(l=>!l.tid&&!["未成交"].includes(l.stage)).map(l=>[l.id,l.n+"（潛在客戶）"])],"L06"))}${F("方案",S("qP",[...PLANS.map(p=>[p.id,p.ed+"版・"+p.tier]),["企業","企業方案"]],"專業-進階"))}${F("專屬月費 *",I("qM","","","number"))}${F("原因 *",TA("qR"),1)}</div><p class="hint">送出後需平台管理員核准才會生效。</p>`,[{label:"取消"},{label:"送出核准",cls:"primary",fn:()=>{if(!required(["qM","qR"]))return;QUOTES.unshift({tid:val("qT"),plan:val("qP"),m:Number(val("qM")),reason:val("qR"),st:"待核准",by:ME.n});audit("方案",tName(val("qT")),"建立個別報價 "+money(val("qM")),val("qR"));closeAll();renderAll();toast("已送出，待核准");}}]);},
+ quoteOk(el){const q=QUOTES[Number(el.dataset.i)];q.st="已核准";const t=tById(q.tid);if(t){t.custom=q.m;t.hist.push({d:TODAY,txt:`方案：個別報價 ${money(q.m)} 核准`,by:ME.n});}audit("方案",tName(q.tid),"核准個別報價 "+money(q.m),q.reason);renderAll();toast(t?"已核准並套用到租戶":"已核准，成交時套用");},
+ quoteNo(el){const q=QUOTES[Number(el.dataset.i)];reasonBox("駁回報價",`${tName(q.tid)} ${money(q.m)}`,"駁回",r=>{q.st="已駁回";audit("方案",tName(q.tid),"駁回個別報價",r);closeAll();renderAll();},true);},
+ newCoupon(){modal("建立優惠碼（P-SUB-11）",`<div class="form-grid">${F("代碼 *",I("cpC","","英數大寫"))}${F("折扣方式",S("cpK",["百分比","固定金額","免費月數"],"百分比"))}${F("折扣值 *",I("cpV","","% / 元 / 月數","number"))}${F("適用方案",S("cpP",["全部","基本","專業","旗艦","專業、旗艦"],"全部"))}${F("開始",I("cpF",TODAY))}${F("結束",I("cpT","2026/12/31"))}${F("使用上限",I("cpM","20","","number"))}</div>`,[{label:"取消"},{label:"建立",cls:"primary",fn:()=>{if(!required(["cpC","cpV"]))return;const code=val("cpC").toUpperCase();if(COUPONS.some(c=>c.code===code)){toast("代碼已存在");return;}COUPONS.unshift({code,kind:val("cpK"),val:Number(val("cpV")),plans:val("cpP"),from:val("cpF"),to:val("cpT"),used:0,max:Number(val("cpM"))||1,on:true});audit("方案",code,"建立優惠碼");closeAll();renderAll();toast("已建立優惠碼 "+code);}}]);},
+ couponToggle(el){const c=COUPONS[Number(el.dataset.i)];c.on=!c.on;audit("方案",c.code,c.on?"啟用優惠碼":"停用優惠碼");renderCoupons();icons();toast(c.on?"已啟用":"已停用");},
+ couponUse(el){const c=COUPONS[Number(el.dataset.i)];const ts=TENANTS.filter(t=>t.coupon===c.code);modal(`${c.code} 使用紀錄`,`<p class="hint" style="margin-top:0">已使用 ${c.used} / ${c.max}</p>${ts.length?ts.map(t=>`<div class="row"><span>${t.s}</span>${stTag(t.st)}</div>`).join(""):'<p class="hint">目前在用的租戶：無（歷史使用已結束）</p>'}`);},
+ /* 帳務 */
+ bF(el){bF=el.dataset.v;renderBilling();icons();},
+ invOpen(el){const i=INVS.find(x=>x.id===el.dataset.i);const t=tById(i.tid);const btns=[{label:"關閉"}];if(i.st==="未付"){btns.push({label:"開立折讓",fn:()=>A.invCredit({dataset:{i:i.id}})},{label:"登記收款",cls:"primary",fn:()=>A.regPay({dataset:{i:i.id}})});}else if(i.st==="已付")btns.push({label:"開立折讓／退款",fn:()=>A.invCredit({dataset:{i:i.id}})});
+  drawer(i.id,`<dl class="dl"><dt>租戶</dt><dd>${t.n}</dd><dt>期間</dt><dd>${i.period}</dd><dt>項目</dt><dd>${i.kind}</dd><dt>金額</dt><dd>${money(i.amt)}${i.credit?`（折讓 −${money(i.credit)}，淨額 ${money(i.amt-i.credit)}）`:""}</dd><dt>開立／到期</dt><dd>${i.issued} / ${i.due}</dd><dt>狀態</dt><dd>${invTag(i)}${invState(i)==="逾期"?" 逾期 "+diff(TODAY,i.due)+" 天":""}</dd><dt>收款</dt><dd>${i.paidOn?i.paidOn+" · "+i.method:"—"}</dd><dt>電子發票</dt><dd>${i.einv||"收款後自動開立"}</dd></dl><h3 style="font-size:14px;margin:18px 0 8px">催收紀錄</h3>${i.dun.length?`<ul class="timeline">${i.dun.map(d=>`<li><b>${d.way}</b><small>${d.d}</small>${d.txt}</li>`).join("")}</ul>`:'<p class="hint">無</p>'}`,btns);},
+ regPay(el){const pre=el?.dataset?.i;const un=INVS.filter(i=>i.st==="未付");if(!un.length){toast("沒有未付帳單");return;}modal("登記收款（P-BILL-08）",`<div class="form-grid">${F("帳單",S("rpI",un.map(i=>[i.id,`${i.id} · ${tName(i.tid)} · ${money(i.amt-i.credit)}`]),pre||un[0].id),1)}${F("收款日",I("rpD",TODAY))}${F("方式",S("rpM",["銀行轉帳","信用卡","支票"],"銀行轉帳"))}${F("收款金額",I("rpA","","依帳單金額","number"))}${F("帳號後五碼",I("rpL"))}</div>`,[{label:"取消"},{label:"確認收款",cls:"primary",fn:()=>{const i=INVS.find(x=>x.id===val("rpI"));const a=Number(val("rpA"))||i.amt-i.credit;if(a<i.amt-i.credit){toast(`金額不足（應收 ${money(i.amt-i.credit)}），請確認或開立折讓`);return;}closeAll();markPaid(i,val("rpD"),val("rpM"));}}]);},
+ importBank(){const un=INVS.filter(i=>i.st==="未付");const rows=[{d:"11/05",amt:18000,memo:"鼎峰物業管理 轉帳 33021"},{d:"11/05",amt:12000,memo:"安和保全（股） 匯款"},{d:"11/04",amt:7777,memo:"不明款項 88120"}];
+  const match=r=>un.find(i=>i.amt-i.credit===r.amt&&r.memo.includes(tName(i.tid).slice(0,2)));
+  modal("匯入銀行明細（自動比對）",`<div class="drop done"><i data-lucide="file-check-2"></i> 已讀取：存摺明細_2026-11-05.csv（3 筆入帳）</div><div class="tbl-wrap" style="margin-top:12px"><table><thead><tr><th>日期</th><th class="num">金額</th><th>摘要</th><th>比對帳單</th></tr></thead><tbody>${rows.map((r,k)=>{const m=match(r);return `<tr><td>${r.d}</td><td class="num">${money(r.amt)}</td><td>${r.memo}</td><td>${S("bm"+k,[["","不入帳（人工處理）"],...un.map(i=>[i.id,i.id+" "+tName(i.tid)])],m?m.id:"")}</td></tr>`}).join("")}</tbody></table></div><p class="hint">依金額與戶名自動建議；可手動調整。</p>`,[{label:"取消"},{label:"確認入帳",cls:"primary",fn:()=>{let n=0;const used=new Set();rows.forEach((r,k)=>{const id=val("bm"+k);if(id&&!used.has(id)){used.add(id);markPaid(INVS.find(i=>i.id===id),"2026/"+r.d,"銀行轉帳",true);n++;}});closeAll();renderAll();toast(`已入帳 ${n} 筆，佣金與租戶狀態已更新`);}}],true);},
+ newCharge(el){modal("新增一次性費用",`<div class="form-grid">${F("租戶",S("ncT",TENANTS.filter(t=>t.st!=="已終止").map(t=>[t.id,t.s]),el?.dataset?.t||"T001"))}${F("項目",S("ncK",["導入費","加購訓練","其他"],"導入費"))}${F("金額 *",I("ncA","20000","","number"))}${F("到期日",I("ncD",addDays(TODAY,14)))}${F("說明",I("ncX","","例：到場教育訓練 2 場"),1)}</div>`,[{label:"取消"},{label:"建立帳單",cls:"primary",fn:()=>{if(!required(["ncA"]))return;const id="INV-2611-OT"+(INVS.length+1);INVS.push({id,tid:val("ncT"),period:"一次性",kind:val("ncK"),amt:Number(val("ncA")),credit:0,issued:TODAY,due:val("ncD"),st:"未付",paidOn:null,method:null,einv:null,dun:[]});audit("帳務",id,"新增一次性費用 "+money(val("ncA")),val("ncX"));closeAll();renderAll();toast("已建立帳單 "+id);}}]);},
+ invCredit(el){const i=INVS.find(x=>x.id===el.dataset.i);reasonBox("開立折讓（P-BILL-10）",`${i.id} 淨額 ${money(i.amt-i.credit)}`,"開立折讓",r=>{const a=Number(val("crA"));if(!a||a>i.amt-i.credit){toast("折讓金額不正確");return;}i.credit+=a;if(i.credit>=i.amt)i.st="已折讓";audit("帳務",i.id,"開立折讓 "+money(a),r);closeAll();renderAll();toast(i.st==="已付"?"已開立折讓，將退款 "+money(a):"已開立折讓");},false,F("折讓金額",I("crA",i.amt-i.credit,"","number")));},
+ dunRemind(el){const t=tById(el.dataset.t);modal("寄送催收提醒",`<div class="form-grid">${F("管道",S("drW",["Email＋後台通知","LINE（租戶擁有者）","電話"],"Email＋後台通知"))}${F("內容",TA("drT",`${t.s} 您好，貴公司有 ${overdueInvs(t).length} 張帳單已逾期 ${overdueDays(t)} 天，請儘速付款以免影響服務。`),1)}</div>`,[{label:"取消"},{label:"送出",cls:"primary",fn:()=>{overdueInvs(t).forEach(i=>i.dun.push({d:TODAY,way:val("drW"),txt:"已寄送提醒"}));audit("帳務",t.s,"寄送催收提醒",val("drW"));closeAll();renderAll();toast("已寄送並記錄");}}]);},
+ dunLog(el){const t=tById(el.dataset.t);const logs=overdueInvs(t).flatMap(i=>i.dun.map(d=>({...d,i:i.id}))).sort((a,b)=>b.d.localeCompare(a.d));modal(`${t.s} 催收紀錄（P-BILL-09）`,`${logs.length?`<ul class="timeline">${logs.map(d=>`<li><b>${d.way}</b> · ${d.i}<small>${d.d}</small>${d.txt}</li>`).join("")}</ul>`:'<p class="hint">尚無紀錄</p>'}<div class="form-grid" style="margin-top:12px">${F("方式",S("dlW",["電話","Email","拜訪"],"電話"))}${F("承諾付款日",I("dlP",""))}${F("內容 *",TA("dlT"),1)}</div>`,[{label:"關閉"},{label:"新增紀錄",cls:"primary",fn:()=>{if(!required(["dlT"]))return;overdueInvs(t).forEach(i=>i.dun.push({d:TODAY,way:val("dlW"),txt:val("dlT")+(val("dlP")?"（承諾 "+val("dlP")+" 付款）":"")}));closeAll();renderAll();toast("已新增催收紀錄");}}]);},
+ dunApply(el){const t=tById(el.dataset.t);const rs=ruleStage(overdueDays(t));confirmBox("套用逾期規則",`${t.s} 逾期 ${overdueDays(t)} 天，依規則將狀態由「${t.st}」改為「${rs}」。`,"套用",()=>{closeAll();setStatus(t,rs,`依逾期規則（逾期 ${overdueDays(t)} 天）`);toast("已套用");},true);},
+ /* 夥伴 */
+ newPartner(){modal("新增推薦夥伴",`<div class="form-grid">${F("名稱 *",I("npN"),1)}${F("類型",S("npT",["個人","公司"],"公司"))}${F("聯絡人 *",I("npC"))}${F("電話",I("npTel"))}${F("匯款帳戶",I("npB","","銀行 分行 帳號"))}${F("推薦碼 *",I("npCode","","例：ABC-01"))}${F("合作模式",S("npM",["推薦佣金","經銷"],"推薦佣金"))}</div>`,[{label:"取消"},{label:"建立",cls:"primary",fn:()=>{if(!required(["npN","npC","npCode"]))return;const code=val("npCode").toUpperCase();if(PARTNERS.some(p=>p.code===code)){toast("推薦碼已存在");return;}const id="P0"+(PARTNERS.length+1);PARTNERS.push({id,n:val("npN"),type:val("npT"),ct:val("npC"),tel:val("npTel"),bank:val("npB"),model:val("npM"),kind:val("npM")==="經銷"?"經銷折扣":"比例",rate:val("npM")==="經銷"?25:15,fixed:0,months:12,inclOT:false,claw:PARAMS.claw,code,since:TODAY});$("#portalPtn").innerHTML="";$("#fPtn").innerHTML="";audit("推薦夥伴",val("npN"),"新增夥伴，推薦碼 "+code);closeAll();renderAll();toast("已建立夥伴，預設佣金 15%（首年）");}}]);},
+ partnerOpen(el){const p=pById(el.dataset.p);const s=ptnStats(p);const ls=LEADS.filter(l=>l.pid===p.id);
+  drawer(p.n,`<dl class="dl"><dt>類型</dt><dd>${p.type}</dd><dt>聯絡人</dt><dd>${p.ct} · ${p.tel}</dd><dt>匯款帳戶</dt><dd>${p.bank||"—"}</dd><dt>合作模式</dt><dd>${p.model}</dd><dt>佣金規則</dt><dd>${PTN_DESC(p)}${p.claw?`；${p.claw} 個月內退租追回`:""}</dd><dt>推薦碼</dt><dd><code>${p.code}</code> <button class="linkbtn" data-act="copyRef" data-p="${p.id}">複製推薦連結</button></dd><dt>合作起日</dt><dd>${p.since}</dd></dl>
+  <div class="stat3" style="margin:16px 0"><div><b>${s.ref}</b><small>推薦數</small></div><div><b>${s.won}</b><small>成交</small></div><div><b>${money(s.mrr)}</b><small>帶來 MRR</small></div><div><b>${money(s.comm)}</b><small>累計佣金</small></div></div>
+  <h3 style="font-size:14px;margin:0 0 8px">推薦客戶</h3><div class="tbl-wrap"><table><thead><tr><th>客戶</th><th>階段</th><th>租戶狀態</th></tr></thead><tbody>${ls.length?ls.map(l=>`<tr><td>${l.n}</td><td>${stTag(l.stage)}</td><td>${l.tid?stTag(tById(l.tid).st):"—"}</td></tr>`).join(""):empty(3,"尚無")}</tbody></table></div>`,[{label:"夥伴入口預覽",fn:()=>{portalP=p.id;closeAll();location.hash="portal";renderPortal();icons();}},{label:"編輯佣金規則",cls:"primary",fn:()=>A.ptnRule({dataset:{p:p.id}})}]);},
+ ptnRule(el){const p=pById(el.dataset.p);modal(`佣金規則：${p.n}（P-PTN-03）`,`<div class="form-grid">${F("合作模式",S("prM",["推薦佣金","經銷"],p.model))}${F("計算方式",S("prK",["比例","固定金額","持續分潤","經銷折扣"],p.kind))}${F("比例（%）",I("prR",p.rate,"","number"))}${F("固定金額",I("prF",p.fixed,"","number"))}${F("計佣期間（月）",I("prMo",p.months,"","number"))}${F("追回期間（月）",I("prC",p.claw,"","number"))}<label class="check full"><input type="checkbox" id="prOT" ${p.inclOT?"checked":""}>導入費也計算佣金</label>${F("變更原因 *",TA("prX"),1)}</div><p class="hint">新規則只套用於變更後的付款；已產生的佣金不受影響。</p>`,[{label:"取消"},{label:"儲存",cls:"primary",fn:()=>{if(!required(["prX"]))return;Object.assign(p,{model:val("prM"),kind:val("prK"),rate:Number(val("prR")),fixed:Number(val("prF")),months:Number(val("prMo")),claw:Number(val("prC")),inclOT:chk("prOT")});audit("推薦夥伴",p.n,"變更佣金規則："+PTN_DESC(p),val("prX"));closeAll();renderAll();toast("佣金規則已更新");}}]);},
+ copyRef(el){const p=pById(el?.dataset?.p||portalP);const link=`signup.html?ref=${p.code}`;try{navigator.clipboard.writeText(link).catch(()=>{});}catch(e){}modal("推薦連結",`<p style="margin-top:0">已複製到剪貼簿：</p><p><code>${link}</code></p><p><a href="${link}" target="_blank">開啟申請頁預覽 ↗</a></p><p class="hint">透過此連結申請試用的客戶自動歸屬「${p.n}」。</p>`);},
+ material(el){modal("推廣資料下載",`<div class="row"><span><i data-lucide="file-text"></i> ${el.dataset.f}</span><span class="hint">PDF · 2.4 MB · 更新 2026/10/30</span></div><p class="hint">檔案含夥伴專屬推薦碼 ${pById(portalP).code} 的 QR Code。</p>`,[{label:"關閉"},{label:"下載",cls:"primary",fn:()=>{audit("推薦夥伴",pById(portalP).n,"下載推廣資料："+el.dataset.f);closeAll();toast("已下載 "+el.dataset.f);}}]);},
+ cmF(el){cmF=el.dataset.v;renderComms();icons();},
+ payout(){const by={};COMMS.filter(c=>c.st==="待撥付").forEach(c=>{by[c.pid]=(by[c.pid]||0)+c.amt;});const ids=Object.keys(by);if(!ids.length){toast("目前沒有待撥付佣金");return;}
+  modal("批次撥付佣金（P-PTN-05）",`<div class="form-grid">${F("夥伴",S("poP",ids.map(id=>[id,`${pById(id).n} · ${money(by[id])}`]),ids[0]),1)}${F("撥付日",I("poD","2026/11/15"))}${F("夥伴單據號碼（發票／簽收單）",I("poI"))}<div class="full"><span class="hint">匯款憑證</span><div class="drop" data-act="poDrop" id="poDrop" style="margin-top:6px">點此上傳匯款憑證</div></div></div>`,[{label:"取消"},{label:"確認撥付",cls:"primary",fn:()=>{if(!$("#poDrop").classList.contains("done")){toast("請上傳匯款憑證");return;}const pid=val("poP");const id="PO-"+(2611+PAYOUTS.length);COMMS.filter(c=>c.pid===pid&&c.st==="待撥付").forEach(c=>{c.st="已撥付";c.po=id;});PAYOUTS.unshift({id,pid,d:val("poD"),voucher:"匯款單 "+val("poD").slice(5).replace("/","")+".pdf",pinv:val("poI")});audit("推薦夥伴",pById(pid).n,`撥付佣金 ${money(by[pid])}（${id}）`);closeAll();renderAll();toast(`已撥付 ${money(by[pid])} 給 ${pById(pid).n}`);}}]);},
+ poDrop(el){el.classList.add("done");el.innerHTML='<i data-lucide="file-check-2"></i> 匯款單_20261115.pdf';icons();},
+ commClaw(el){const c=COMMS.find(x=>x.id===el.dataset.c);reasonBox("不予撥付",`${c.id} ${money(c.amt)}`,"確認",r=>{c.st="追回";audit("推薦夥伴",pById(c.pid).n,"佣金 "+c.id+" 不予撥付",r);closeAll();renderAll();},true);},
+ /* 客服 */
+ sF(el){sF=el.dataset.v;renderSupport();icons();},
+ ticketOpen(el){const x=TICKETS.find(k=>k.id===el.dataset.s);const t=tById(x.tid);
+  drawer(`${x.id} · ${t.s}`,`<dl class="dl"><dt>提問人</dt><dd>${x.by}（${x.src}）</dd><dt>類別／優先級</dt><dd>${x.cat} · ${x.pri}</dd><dt>建立</dt><dd>${x.created}</dd><dt>首次回應</dt><dd>${x.resp||"尚未回應"}（${t.tier}級距時限 ${QUOTA[t.tier].sla} 小時）</dd></dl>
+  <div class="form-grid" style="margin:14px 0">${F("狀態",S("tkSt",["新進","處理中","待客戶回覆","已解決","結案"],x.st))}${F("處理人",S("tkWho",["—",...STAFF.filter(s=>s.role==="客服"&&s.on).map(s=>s.n),ME.n],x.who))}</div>
+  <div class="msgs">${x.msgs.map(m=>`<div class="msg ${m.f==="s"?"me":m.f==="n"?"note":""}"><small>${m.n} · ${m.t}${m.f==="n"?" · 內部備註（客戶看不到）":""}</small>${m.x}</div>`).join("")}</div>
+  ${F("回覆內容",TA("tkMsg","","輸入回覆或內部備註…"),1)}`,[{label:"更新狀態／處理人",fn:()=>{x.st=val("tkSt");x.who=val("tkWho");audit("客服",x.id,"更新為 "+x.st+"，處理人 "+x.who);renderAll();A.ticketOpen({dataset:{s:x.id}});toast("已更新");}},{label:"發出授權請求",fn:()=>A.requestGrant({dataset:{t:x.tid}})},...(x.cat==="功能建議"?[{label:"合併到功能建議",fn:()=>A.sugMerge({dataset:{s:x.id}})}]:[]),{label:"內部備註",fn:()=>A.tkSend(x,"n")},{label:"回覆客戶",cls:"primary",fn:()=>A.tkSend(x,"s")}]);},
+ tkSend(x,f){if(!required(["tkMsg"]))return;const d=new Date();const tm=`11/06 ${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;x.msgs.push({f,n:ME.n,t:tm,x:val("tkMsg")});if(f==="s"){if(!x.resp)x.resp=now();if(x.st==="新進")x.st="處理中";if(x.who==="—")x.who=ME.n;}renderAll();A.ticketOpen({dataset:{s:x.id}});toast(f==="s"?"已回覆客戶（後台通知＋Email）":"已新增內部備註");},
+ newTicket(el){modal("新增客服問題",`<div class="form-grid">${F("租戶",S("ntkT",TENANTS.filter(t=>t.st!=="已終止").map(t=>[t.id,t.s]),el?.dataset?.t||"T001"))}${F("提問人 *",I("ntkB"))}${F("來源",S("ntkS",["電話","Email","租戶後台","LIFF"],"電話"))}${F("類別",S("ntkC",["操作問題","資料匯入","錯誤回報","功能建議","帳務"],"操作問題"))}${F("優先級",S("ntkP",["高","中","低"],"中"))}${F("問題描述 *",TA("ntkX"),1)}</div>`,[{label:"取消"},{label:"建立",cls:"primary",fn:()=>{if(!required(["ntkB","ntkX"]))return;const id="S-"+(2042+TICKETS.length);TICKETS.unshift({id,tid:val("ntkT"),by:val("ntkB"),src:val("ntkS"),cat:val("ntkC"),pri:val("ntkP"),st:"新進",who:"—",created:now(),resp:null,msgs:[{f:"c",n:val("ntkB"),t:now().slice(5),x:val("ntkX")}]});closeAll();renderAll();A.ticketOpen({dataset:{s:id}});toast("已建立 "+id);}}]);},
+ sugList(){modal("功能建議彙整（P-SUP-05）",`<div class="tbl-wrap"><table><thead><tr><th>建議</th><th class="num">次數</th><th>提出租戶</th></tr></thead><tbody>${SUGS.sort((a,b)=>b.cnt-a.cnt).map(s=>`<tr><td>${s.topic}</td><td class="num">${s.cnt}</td><td style="white-space:normal">${s.tenants.join("、")}</td></tr>`).join("")}</tbody></table></div>`,[{label:"關閉"}],true);},
+ sugMerge(el){const x=TICKETS.find(k=>k.id===el.dataset.s);modal("合併到功能建議",`${F("合併到",S("smT",[...SUGS.map(s=>s.topic),"（新建議）"],SUGS[0].topic),1)}${F("新建議名稱",I("smN","",x.msgs[0].x.slice(0,20)),1)}`,[{label:"取消"},{label:"合併",cls:"primary",fn:()=>{const tn=tName(x.tid);let s=SUGS.find(k=>k.topic===val("smT"));if(!s){if(!required(["smN"]))return;s={topic:val("smN"),cnt:0,tenants:[]};SUGS.push(s);}s.cnt++;if(!s.tenants.includes(tn))s.tenants.push(tn);x.st="已解決";closeAll();renderAll();toast(`已合併到「${s.topic}」（${s.cnt} 次）`);}}]);},
+ /* 公告 */
+ newAnn(){A.annEdit({dataset:{i:"-1"}});},
+ annEdit(el){const i=Number(el.dataset.i);const a=i>=0?ANNS[i]:{title:"",type:"一般",target:"全部租戶",ch:["後台","LINE"],at:"—",st:"草稿",body:""};const ro=a.st==="已發布";
+  modal(ro?"檢視公告":i>=0?"編輯公告":"新增公告",`<div class="form-grid">${F("標題 *",I("anT",a.title),1)}${F("類型",S("anK",["一般","版本更新","維護"],a.type))}${F("對象",S("anTg",["全部租戶","方案：基本","方案：專業","方案：旗艦",...TENANTS.filter(t=>t.st!=="已終止").map(t=>"租戶："+t.s)],a.target))}<div class="full"><span class="hint">管道</span><label class="check"><input type="checkbox" id="anC1" ${a.ch.includes("後台")?"checked":""}>租戶後台</label><label class="check"><input type="checkbox" id="anC2" ${a.ch.includes("LINE")?"checked":""}>LINE 推播</label></div>${F("內容 *",TA("anB",a.body),1)}${F("排程發布（留空＝存草稿）",I("anAt",a.st==="已排程"?a.at:"","2026/11/12 18:00"),1)}</div>`,ro?[{label:"關閉"}]:[{label:"取消"},{label:"儲存",cls:"primary",fn:()=>{if(!required(["anT","anB"]))return;const ch=[chk("anC1")?"後台":null,chk("anC2")?"LINE":null].filter(Boolean);if(!ch.length){toast("請至少選擇一個管道");return;}Object.assign(a,{title:val("anT"),type:val("anK"),target:val("anTg"),ch,body:val("anB"),at:val("anAt")||"—",st:val("anAt")?"已排程":"草稿"});if(i<0){a.id="AN-0"+(12+ANNS.length);ANNS.unshift(a);}audit("內容",a.id,a.st==="已排程"?"排程公告 "+a.at:"儲存公告草稿");closeAll();renderAll();toast(a.st==="已排程"?"已排程於 "+a.at:"已存為草稿");}}]);},
+ annPublish(el){const a=ANNS[Number(el.dataset.i)];confirmBox("立即發布",`發布「${a.title}」給 ${a.target}（${a.ch.join("、")}）？`,"發布",()=>{a.st="已發布";a.at=now();audit("內容",a.id,"發布平台公告",a.target);closeAll();renderAll();toast("已發布");});},
+ annUnsched(el){const a=ANNS[Number(el.dataset.i)];a.st="草稿";a.at="—";audit("內容",a.id,"取消排程");renderAll();toast("已取消排程，改為草稿");},
+ /* 範本 */
+ tplEdit(el){const i=Number(el.dataset.i);const t=TPLS[i];window._tpl=[...t.items];const draw=()=>drawer(`範本：${t.k}（v${t.v}）`,`<p class="hint" style="margin-top:0">儲存後版本 +1，只套用於之後建立的租戶。</p>${window._tpl.map((x,k)=>`<div class="row"><span>${x}</span><button class="btn sm" data-act="tplDel" data-k="${k}">移除</button></div>`).join("")}<div style="display:flex;gap:8px;margin-top:12px">${I("tplNew","","新增項目…")}<button class="btn" data-act="tplAdd">新增</button></div>`,[{label:"取消"},{label:"儲存為 v"+(t.v+1),cls:"primary",fn:()=>{t.items=[...window._tpl];t.v++;t.d=TODAY;audit("內容","範本："+t.k,"更新為 v"+t.v);closeAll();renderAll();toast(`已儲存 v${t.v}，新租戶將套用`);}}]);window._tplDraw=draw;draw();},
+ tplDel(el){window._tpl.splice(Number(el.dataset.k),1);window._tplDraw();},
+ tplAdd(){if(!val("tplNew")){toast("請輸入項目");return;}window._tpl.push(val("tplNew"));window._tplDraw();},
+ /* 教學 */
+ newVideo(){A.videoEdit({dataset:{i:"-1"}});},
+ videoEdit(el){const i=Number(el.dataset.i);const v=i>=0?VIDEOS[i]:{title:"",page:"交接日誌",dur:"0:30",langs:["繁"],on:false};modal(i>=0?"編輯教學影片":"上傳教學影片",`<div class="form-grid">${F("標題 *",I("viT",v.title),1)}${F("對應功能頁",S("viP",["交接日誌","報修","事件通報","請假","班表","巡邏打點","改善單回覆","支出拍照","LINE 綁定"],v.page))}${F("長度",I("viD",v.dur))}<div class="full"><span class="hint">語系版本（勾選已上傳的語系）</span><div style="display:flex;gap:12px;flex-wrap:wrap">${LANGS.map((l,k)=>`<label class="check"><input type="checkbox" id="viL${k}" ${v.langs.includes(l)?"checked":""}>${l}</label>`).join("")}</div></div><div class="full drop ${i>=0?"done":""}" data-act="viDrop" id="viDrop">${i>=0?"已上傳影片檔":"點此選擇影片檔（MP4，30 秒內）"}</div></div>`,[{label:"取消"},{label:"儲存",cls:"primary",fn:()=>{if(!required(["viT"]))return;if(!$("#viDrop").classList.contains("done")){toast("請上傳影片檔");return;}Object.assign(v,{title:val("viT"),page:val("viP"),dur:val("viD"),langs:LANGS.filter((l,k)=>chk("viL"+k))});if(i<0)VIDEOS.push(v);audit("內容",v.title,i>=0?"編輯教學影片":"上傳教學影片");closeAll();renderAll();toast("已儲存"+(v.on?"":"（目前下架中）"));}}]);},
+ viDrop(el){el.classList.add("done");el.textContent="已選擇：tutorial.mp4（0:28）";},
+ videoToggle(el){const v=VIDEOS[Number(el.dataset.i)];v.on=!v.on;audit("內容",v.title,v.on?"上架":"下架");renderContent();icons();toast(v.on?"已上架，LIFF「怎麼用」即可看到":"已下架");},
+ newDoc(){A.docEdit({dataset:{i:"-1"}});},
+ docEdit(el){const i=Number(el.dataset.i);const d=i>=0?DOCS[i]:{title:"",cat:"導入",views:0,d:TODAY,on:false,body:""};modal(i>=0?"編輯說明文件":"新增說明文件",`<div class="form-grid">${F("標題 *",I("doT",d.title),1)}${F("分類",S("doC",["導入","LINE 前台","帳務","資安","旗艦版","常見問題"],d.cat))}${F("內容",TA("doB",d.body||"（內文）"),1)}</div>`,[{label:"取消"},{label:"儲存",cls:"primary",fn:()=>{if(!required(["doT"]))return;Object.assign(d,{title:val("doT"),cat:val("doC"),body:val("doB"),d:TODAY});if(i<0)DOCS.unshift(d);audit("內容",d.title,i>=0?"編輯說明文件":"新增說明文件");closeAll();renderAll();toast("已儲存");}}]);},
+ docToggle(el){const d=DOCS[Number(el.dataset.i)];d.on=!d.on;renderContent();icons();toast(d.on?"已上架":"已下架");},
+ /* 版本 */
+ newRelease(){modal("新增版本說明（P-CMS-04）",`<div class="form-grid">${F("版本 *",I("rlV","v1.9"))}${F("發布日",I("rlD",TODAY))}${F("更新項目（一行一項）*",TA("rlI","","新功能或修正…"),1)}</div>`,[{label:"取消"},{label:"建立",cls:"primary",fn:()=>{if(!required(["rlV","rlI"]))return;RELS.unshift({v:val("rlV"),d:val("rlD"),items:val("rlI").split("\n").filter(Boolean),ann:null});closeAll();renderAll();toast("已建立，可產生公告草稿");}}]);},
+ relAnn(el){const r=RELS[Number(el.dataset.i)];const id="AN-0"+(12+ANNS.length);ANNS.unshift({id,title:`${r.v} 版本更新`,type:"版本更新",target:"全部租戶",ch:["後台"],at:"—",st:"草稿",body:r.items.join("；")});r.ann=id;closeAll();location.hash="announce";renderAll();toast("已產生公告草稿 "+id);setTimeout(()=>A.annEdit({dataset:{i:"0"}}),120);},
+ /* 條款 */
+ newTerm(){modal("發布新版本（P-CMS-05）",`<div class="form-grid">${F("文件",S("tmK",["服務條款","隱私權政策","資料處理約定"],"服務條款"))}${F("版本 *",I("tmV","v1.2"))}${F("生效日",I("tmE","2026/12/01"))}${F("變更摘要 *",TA("tmS"),1)}<div class="full drop" data-act="tmDrop" id="tmDrop">點此上傳條款 PDF（法律顧問審閱版）</div></div>`,[{label:"取消"},{label:"建立",cls:"primary",fn:()=>{if(!required(["tmV","tmS"]))return;if(!$("#tmDrop").classList.contains("done")){toast("請上傳條款檔案");return;}TERMS.unshift({kind:val("tmK"),v:val("tmV"),eff:val("tmE"),sum:val("tmS"),st:"待生效",acc:{}});audit("內容",val("tmK")+" "+val("tmV"),"建立新版本，生效日 "+val("tmE"),val("tmS"));closeAll();renderAll();toast("已建立，生效後租戶擁有者需重新同意");}}]);},
+ tmDrop(el){el.classList.add("done");el.textContent="已上傳：條款_審閱版.pdf";},
+ termActivate(el){const tm=TERMS[Number(el.dataset.i)];confirmBox("立即生效",`${tm.kind} ${tm.v} 立即生效？所有租戶擁有者下次登入需重新同意。`,"生效",()=>{TERMS.filter(x=>x.kind===tm.kind&&x.st==="生效中").forEach(x=>x.st="已停用");tm.st="生效中";tm.eff=TODAY;tm.acc={};audit("內容",tm.kind+" "+tm.v,"版本生效");closeAll();renderAll();toast("已生效，同意紀錄重新計算");});},
+ termAcc(el){const tm=TERMS[Number(el.dataset.i)];const ts=TENANTS.filter(t=>t.st!=="已終止");drawer(`${tm.kind} ${tm.v} 同意紀錄`,`<div class="tbl-wrap"><table><thead><tr><th>租戶</th><th>同意紀錄</th></tr></thead><tbody>${ts.map(t=>`<tr><td>${t.s}</td><td>${tm.acc[t.id]?tm.acc[t.id]:tag("尚未同意","t-warn")}</td></tr>`).join("")}</tbody></table></div>`,[{label:"提醒未同意者",cls:"primary",fn:()=>{const n=ts.filter(t=>!tm.acc[t.id]).length;audit("內容",tm.kind+" "+tm.v,`提醒 ${n} 位租戶擁有者同意`);closeAll();toast(`已通知 ${n} 位租戶擁有者`);}}]);},
+ /* 監控 */
+ mTab(el){mTab=el.dataset.tab;renderMonitor();icons();},
+ jobRetry(el){const j=JOBS.find(x=>x.id===el.dataset.j);j.st="執行中";j.msg="重試中…";j.dur="—";audit("系統",j.id,"重試背景工作");renderMonitor();icons();toast("已重新排入佇列");setTimeout(()=>{j.st="完成";j.dur="1 分 12 秒";j.msg="重試成功（已分批處理）";const a=MALERTS.find(m=>m.x.includes(j.id));if(a)a.done=true;if(location.hash==="#monitor"){renderMonitor();icons();}},1200);},
+ jobCancel(el){const j=JOBS.find(x=>x.id===el.dataset.j);j.st="失敗";j.msg="已由 "+ME.n+" 取消";audit("系統",j.id,"取消背景工作");renderMonitor();icons();},
+ alertDone(el){MALERTS[Number(el.dataset.i)].done=true;renderMonitor();icons();toast("已標記處理");},
+ saveThr(){MTHR={err:Number(val("thErr")),queue:Number(val("thQ")),linefail:Number(val("thL"))};audit("系統","告警門檻",`錯誤率 ${MTHR.err}%、佇列 ${MTHR.queue}、LINE 失敗率 ${MTHR.linefail}%`);renderMonitor();icons();toast("告警門檻已儲存");},
+ /* 平台人員 */
+ newStaff(){A.staffEdit({dataset:{i:"-1"}});},
+ staffEdit(el){const i=Number(el.dataset.i);const s=i>=0?STAFF[i]:{n:"",mail:"",role:"客服",tfa:false,on:true,last:"—"};modal(i>=0?"編輯平台人員":"新增平台人員",`<div class="form-grid">${F("姓名 *",I("sfN",s.n))}${F("Email *",I("sfM",s.mail))}${F("角色",S("sfR",ROLES,s.role))}<label class="check full"><input type="checkbox" checked disabled>強制雙因子驗證（不可關閉）</label></div>${i<0?'<p class="hint">建立後寄送啟用信，首次登入需設定密碼與驗證 App。</p>':""}`,[{label:"取消"},{label:"儲存",cls:"primary",fn:()=>{if(!required(["sfN","sfM"]))return;Object.assign(s,{n:val("sfN"),mail:val("sfM"),role:val("sfR")});if(i<0)STAFF.push(s);audit("平台人員",s.n,i>=0?"編輯人員，角色 "+s.role:"新增人員，角色 "+s.role);closeAll();renderAll();toast(i>=0?"已儲存":"已建立並寄送啟用信");}}]);},
+ staffReset(el){const s=STAFF[Number(el.dataset.i)];reasonBox("重設密碼與 2FA",`重設「${s.n}」的密碼與雙因子驗證，對方需重新設定。`,"重設",r=>{s.tfa=false;audit("平台人員",s.n,"重設密碼與 2FA",r);closeAll();renderAll();toast("已寄送重設信");},true);},
+ staffToggle(el){const s=STAFF[Number(el.dataset.i)];if(s.n===ME.n){toast("無法停用自己的帳號");return;}reasonBox(s.on?"停用帳號":"啟用帳號",s.n,s.on?"停用":"啟用",r=>{s.on=!s.on;audit("平台人員",s.n,s.on?"啟用帳號":"停用帳號",r);closeAll();renderAll();},s.on);},
+ permCycle(el){const r=el.dataset.r,f=Number(el.dataset.f);if(r==="平台管理員"&&FUNCS[f]==="平台設定"){toast("平台管理員必須保有平台設定權限");return;}const o=["全","讀","—"];PERM[r][f]=o[(o.indexOf(PERM[r][f])+1)%3];window._permDirty=true;renderStaff();icons();},
+ savePerm(){audit("平台人員","角色權限","更新角色權限矩陣");window._permDirty=false;toast("角色權限已儲存");},
+ /* 功能開關 */
+ newFlag(){modal("新增功能開關",`<div class="form-grid">${F("代碼 *",I("nfK","","snake_case"))}${F("功能名稱 *",I("nfN"))}</div>`,[{label:"取消"},{label:"建立（預設關閉）",cls:"primary",fn:()=>{if(!required(["nfK","nfN"]))return;FLAGS.push({key:val("nfK"),name:val("nfN"),mode:"關閉",tids:[],d:TODAY});audit("系統","功能開關 "+val("nfK"),"建立");closeAll();renderAll();}}]);},
+ flagEdit(el){const f=FLAGS[Number(el.dataset.i)];modal(`功能開關：${f.name}`,`${F("模式",S("flM",["關閉","指定租戶","全部開啟"],f.mode))}<div style="margin-top:12px"><span class="hint">指定租戶（模式為「指定租戶」時生效）</span><div class="grid g-2" style="gap:4px;margin-top:6px">${TENANTS.filter(t=>t.st!=="已終止").map(t=>`<label class="check"><input type="checkbox" id="fl_${t.id}" ${f.tids.includes(t.id)?"checked":""}>${t.s}</label>`).join("")}</div></div>`,[{label:"取消"},{label:"儲存",cls:"primary",fn:()=>{f.mode=val("flM");f.tids=TENANTS.filter(t=>chk("fl_"+t.id)).map(t=>t.id);f.d=TODAY;audit("系統","功能開關 "+f.key,`${f.mode}${f.mode==="指定租戶"?"："+f.tids.map(tName).join("、"):""}`);closeAll();renderAll();toast("已更新功能開關");}}]);},
+ saveParams(){const n=k=>Number(val(k));if(!(n("pmLate")<n("pmRo")&&n("pmRo")<n("pmSusp"))){toast("逾期天數需依序遞增：付款逾期 < 唯讀 < 停權");return;}Object.assign(PARAMS,{trial:n("pmTrial"),remind:n("pmRemind"),late:n("pmLate"),ro:n("pmRo"),susp:n("pmSusp"),keep:n("pmKeep"),claw:n("pmClaw"),lineName:val("pmLineName"),lineId:val("pmLineId"),lineChannel:val("pmLineCh"),mailFrom:val("pmMail"),pay:val("pmPay"),einv:val("pmEinv")});audit("系統","平台參數","更新平台參數");renderAll();toast("平台參數已儲存");},
+ auF(el){auF=el.dataset.v;renderAudit();icons();},
+};
+
+/* =====================================================================
+   事件委派與路由
+   ===================================================================== */
+document.addEventListener("click",e=>{
+  const f=e.target.closest("[data-foot]");if(f){const fn=FOOT[f.dataset.foot];fn?fn():closeAll();return;}
+  const el=e.target.closest("[data-act]");if(!el)return;
+  if(el.tagName==="A")return;
+  const fn=A[el.dataset.act];if(fn){e.preventDefault();fn(el);}
+});
+document.addEventListener("change",e=>{const c=e.target.dataset.change;if(!c)return;if(["fSrc","fPtn","fSales"].includes(c))renderFunnel();if(c==="portalPtn"){portalP=e.target.value;renderPortal();}if(c==="monT"){monT=e.target.value;renderMonitor();}icons();});
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeAll();});
+$("#otp").addEventListener("input",e=>{if(e.target.value&&e.target.nextElementSibling)e.target.nextElementSibling.focus();});
+$("#q").addEventListener("keydown",e=>{if(e.key==="Enter"){tQ=e.target.value.trim();tF="全部";location.hash="tenants";renderTenants();icons();}});
+$("#docQ").addEventListener("input",e=>{docQ=e.target.value.trim();renderContent();icons();});
+$("#auQ").addEventListener("input",e=>{auQ=e.target.value.trim();renderAudit();});
+const ov=$("#ov");new MutationObserver(()=>{if(!ov.classList.contains("on"))ov.style.background="";}).observe(ov,{attributes:true});
+
+function renderAll(){renderDash();renderReports();renderLeads();renderApps();renderFunnel();renderTenants();renderTenant();renderHealth();renderGrants();renderPlans();renderCoupons();renderBilling();renderDunning();renderPartners();renderComms();renderPortal();renderSupport();renderAnn();renderTpl();renderContent();renderReleases();renderTerms();renderMonitor();renderStaff();renderFlags();renderAudit();icons();}
+function route(){
+  const id=(location.hash||"#dashboard").slice(1);const sec=document.getElementById("s-"+id)?id:"dashboard";
+  if(sec==="tenant")renderTenant();if(sec==="params")renderParams();
+  $$("section.screen").forEach(s=>s.classList.toggle("on",s.id==="s-"+sec));
+  $$("aside a").forEach(a=>a.classList.toggle("active",a.getAttribute("href")==="#"+(sec==="tenant"?"tenants":sec)));
+  A.closeMenu();closeAll();window.scrollTo(0,0);icons();
+}
+window.addEventListener("hashchange",route);
+try{if(sessionStorage.getItem("pcmp-ops"))$("#login").style.display="none"}catch(e){}
+renderAll();renderParams();route();
+</script>
+</body>
+</html>

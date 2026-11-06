@@ -1,0 +1,996 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LINE 前台原型</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+TC:wght@400;500;700;900&family=Noto+Sans+Thai:wght@400;600;700&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+<style>
+:root{
+  --bg:#f4f6fa; --panel:#ffffff; --panel-2:#f8fafc; --text:#0f172a; --muted:#64748b; --border:#e2e8f0;
+  --accent:#0ea5e9; --accent-soft:#e0f2fe;
+  --ok:#059669; --ok-bg:#d1fae5; --warn:#b45309; --warn-bg:#fef3c7; --bad:#dc2626; --bad-bg:#fee2e2; --info-bg:#e0e7ff; --info:#4338ca;
+  --shadow:0 1px 2px rgba(15,23,42,.04),0 4px 16px rgba(15,23,42,.06);
+  --line:#06c755; --line-dark:#04a447; --chat-bg:#8eaad6; --bubble:#ffffff; --bubble-me:#9be86b; --bubble-text:#111827;
+  --phone-bg:#ffffff; --liff-bg:#f3f5f8; --liff-card:#ffffff; --menu-bg:#ffffff; --menu-tile:#f1f5f9;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0a0f1a; --panel:#111827; --panel-2:#0f1623; --text:#e5e7eb; --muted:#94a3b8; --border:#1f2a3c;
+    --accent-soft:#0c2a3d;
+    --ok:#34d399; --ok-bg:#06281f; --warn:#fbbf24; --warn-bg:#2d2208; --bad:#f87171; --bad-bg:#2e1111; --info-bg:#1e1b4b; --info:#a5b4fc;
+    --shadow:0 1px 2px rgba(0,0,0,.3);
+    --chat-bg:#1f2a3d; --bubble:#2b3446; --bubble-me:#2f6b33; --bubble-text:#f1f5f9;
+    --phone-bg:#111827; --liff-bg:#0d1320; --liff-card:#172033; --menu-bg:#151d2c; --menu-tile:#1e293b;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0a0f1a; --panel:#111827; --panel-2:#0f1623; --text:#e5e7eb; --muted:#94a3b8; --border:#1f2a3c;
+  --accent-soft:#0c2a3d;
+  --ok:#34d399; --ok-bg:#06281f; --warn:#fbbf24; --warn-bg:#2d2208; --bad:#f87171; --bad-bg:#2e1111; --info-bg:#1e1b4b; --info:#a5b4fc;
+  --shadow:0 1px 2px rgba(0,0,0,.3);
+  --chat-bg:#1f2a3d; --bubble:#2b3446; --bubble-me:#2f6b33; --bubble-text:#f1f5f9;
+  --phone-bg:#111827; --liff-bg:#0d1320; --liff-card:#172033; --menu-bg:#151d2c; --menu-tile:#1e293b;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,"Noto Sans TC","Noto Sans Thai",system-ui,sans-serif;font-size:14px;line-height:1.55}
+button,input,select,textarea{font:inherit;color:inherit}
+svg.lucide{width:18px;height:18px;stroke-width:1.9;flex-shrink:0}
+.wrap{display:grid;grid-template-columns:340px minmax(0,1fr);gap:28px;max-width:1180px;margin:0 auto;padding:24px 16px 40px;align-items:start}
+@media (max-width:860px){.wrap{grid-template-columns:1fr}.stage{order:-1}}
+
+/* ---------- 控制面板 ---------- */
+.ctrl{background:var(--panel);border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow);padding:18px;position:sticky;top:16px;max-height:calc(100vh - 32px);overflow:auto}
+@media (max-width:860px){.ctrl{position:static;max-height:none}}
+.ctrl h1{font-size:17px;margin:0 0 2px}
+.ctrl .sub{color:var(--muted);font-size:12.5px;margin:0 0 14px}
+.ctrl h3{font-size:12px;letter-spacing:.06em;color:var(--muted);margin:16px 0 8px;text-transform:uppercase}
+.ctrl label{display:block;font-size:12.5px;color:var(--muted);margin:8px 0 4px}
+.ctrl select{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:10px;background:var(--panel-2)}
+.btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--border);background:var(--panel-2);border-radius:10px;padding:7px 11px;cursor:pointer;font-size:13px;font-weight:600}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.danger{background:var(--bad);border-color:var(--bad);color:#fff}
+.btn svg.lucide{width:15px;height:15px}
+.pushes{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.pushes .btn{justify-content:flex-start;font-size:12.5px}
+.meter{height:8px;border-radius:99px;background:var(--border);overflow:hidden;margin:6px 0 4px}
+.meter i{display:block;height:100%;background:var(--ok)}
+.meter.warn i{background:var(--warn)}.meter.bad i{background:var(--bad)}
+.small{font-size:12px;color:var(--muted)}
+.links{display:flex;flex-wrap:wrap;gap:5px}
+.links a{font-size:12px;padding:4px 8px;border-radius:8px;background:var(--panel-2);border:1px solid var(--border);text-decoration:none;color:var(--text)}
+.links a:hover{border-color:var(--accent);color:var(--accent)}
+.req{background:var(--panel-2);border:1px dashed var(--border);border-radius:10px;padding:10px;font-size:12.5px}
+.req b{display:block;margin-bottom:4px}
+.req code{font-size:11.5px;background:var(--accent-soft);color:var(--accent);padding:1px 6px;border-radius:6px;margin:2px 2px 0 0;display:inline-block}
+
+/* ---------- 手機 ---------- */
+.stage{display:flex;justify-content:center}
+.phone{width:390px;max-width:100%;height:min(820px,calc(100vh - 48px));min-height:640px;border-radius:46px;border:11px solid #0b0f17;background:var(--phone-bg);position:relative;overflow:hidden;box-shadow:0 30px 80px rgba(15,23,42,.25);display:flex;flex-direction:column}
+@media (max-width:420px){.phone{height:760px;border-width:6px;border-radius:30px}}
+.sbar{height:34px;display:flex;align-items:center;justify-content:space-between;padding:0 24px;font-size:13px;font-weight:700;background:var(--line);color:#fff;flex-shrink:0}
+.sbar span{display:flex;gap:4px;align-items:center}.sbar svg.lucide{width:14px;height:14px}
+.lhead{height:52px;display:flex;align-items:center;gap:10px;padding:0 12px;background:var(--line);color:#fff;flex-shrink:0}
+.lhead .av{width:34px;height:34px;border-radius:50%;background:#fff;color:var(--line);display:grid;place-items:center;font-weight:800;font-size:14px}
+.lhead .nm{font-weight:700;font-size:15.5px;line-height:1.15}
+.lhead .nm small{display:block;font-weight:500;font-size:11px;opacity:.85}
+.lhead .sp{flex:1}
+.ibtn{border:0;background:transparent;color:inherit;width:38px;height:38px;border-radius:50%;display:grid;place-items:center;cursor:pointer}
+.ibtn:hover{background:rgba(255,255,255,.15)}
+.chat{flex:1;overflow-y:auto;background:var(--chat-bg);padding:12px 10px 16px;display:flex;flex-direction:column;gap:10px}
+.msg{display:flex;gap:8px;align-items:flex-end;max-width:92%}
+.msg .av{width:30px;height:30px;border-radius:50%;background:var(--line);color:#fff;display:grid;place-items:center;font-size:12px;font-weight:800;flex-shrink:0}
+.msg .b{background:var(--bubble);color:var(--bubble-text);padding:10px 13px;border-radius:18px 18px 18px 4px;font-size:15px;line-height:1.5;white-space:pre-line}
+.msg .tm{font-size:10.5px;color:rgba(255,255,255,.85);flex-shrink:0}
+.msg.me{align-self:flex-end;flex-direction:row-reverse}
+.msg.me .b{background:var(--bubble-me);border-radius:18px 18px 4px 18px}
+.sys{align-self:center;background:rgba(0,0,0,.25);color:#fff;font-size:12px;padding:3px 12px;border-radius:99px}
+.card{background:var(--bubble);color:var(--bubble-text);border-radius:18px;overflow:hidden;width:250px;box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.card .ch{padding:10px 14px;font-weight:800;font-size:14px;display:flex;align-items:center;gap:6px;color:#fff}
+.card .ch.k-emg{background:#dc2626}.card .ch.k-warn{background:#d97706}.card .ch.k-info{background:#2563eb}.card .ch.k-ok{background:var(--line)}.card .ch.k-gray{background:#475569}
+.card .cb{padding:12px 14px;font-size:14.5px;line-height:1.5;white-space:pre-line}
+.card .cb small{display:block;color:#64748b;font-size:12px;margin-top:4px}
+.card .cbtn{display:block;width:100%;border:0;border-top:1px solid rgba(100,116,139,.2);background:transparent;padding:12px;color:#2563eb;font-weight:800;font-size:15px;cursor:pointer}
+:root[data-theme="dark"] .card .cbtn{color:#7cb6ff}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .card .cbtn{color:#7cb6ff}}
+.ibar{display:flex;align-items:center;gap:6px;padding:7px 8px;border-top:1px solid var(--border);background:var(--menu-bg);flex-shrink:0}
+.ibar .menutg{border:1px solid var(--border);background:var(--menu-tile);border-radius:10px;padding:7px 10px;font-weight:800;font-size:13px;display:flex;gap:4px;align-items:center;cursor:pointer;color:var(--text)}
+.ibar input{flex:1;min-width:0;border:1px solid var(--border);border-radius:99px;padding:8px 12px;background:var(--panel-2);font-size:14px}
+.ibar .ibtn{color:var(--line)}
+.rmenu{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);flex-shrink:0;border-top:1px solid var(--border)}
+.rmenu.off{display:none}
+.tile{background:var(--menu-bg);border:0;min-height:96px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;cursor:pointer;position:relative;font-weight:800;font-size:15px;color:var(--text);padding:8px 4px;text-align:center;line-height:1.2}
+.tile svg.lucide{width:30px;height:30px;color:var(--line)}
+.tile:hover{background:var(--menu-tile)}
+.tile .bd{position:absolute;top:10px;right:22%;background:#dc2626;color:#fff;font-size:12px;min-width:22px;height:22px;border-radius:99px;display:grid;place-items:center;padding:0 6px}
+.tile.lock{color:var(--muted)}.tile.lock svg.lucide{color:var(--muted)}
+.tile small{font-size:11px;font-weight:600;color:var(--muted)}
+
+/* ---------- LIFF ---------- */
+.liff{position:absolute;left:0;right:0;top:34px;bottom:0;background:var(--liff-bg);transform:translateY(105%);transition:transform .25s ease;display:flex;flex-direction:column;z-index:20;font-size:18px}
+.liff.on{transform:none}
+.lfh{height:54px;display:flex;align-items:center;gap:6px;padding:0 8px;background:var(--liff-card);border-bottom:1px solid var(--border);flex-shrink:0}
+.lfh .tt{flex:1;text-align:center;font-weight:800;font-size:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lfh .ibtn{color:var(--text)}
+.lfh .ibtn:hover{background:var(--menu-tile)}
+.lfsite{font-size:13px;color:var(--muted);text-align:center;padding:4px;background:var(--liff-card);border-bottom:1px solid var(--border)}
+.lfb{flex:1;overflow-y:auto;padding:14px 14px 28px}
+.lfb h4{font-size:17px;margin:18px 0 8px;display:flex;align-items:center;gap:8px}
+.lfb h4:first-child{margin-top:4px}
+.stp{display:inline-grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--line);color:#fff;font-size:16px;font-weight:800;flex-shrink:0}
+.box{background:var(--liff-card);border:1px solid var(--border);border-radius:16px;padding:14px;margin-bottom:12px}
+.bb{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:58px;border-radius:16px;border:2px solid var(--border);background:var(--liff-card);font-size:18px;font-weight:800;cursor:pointer;color:var(--text);padding:8px 12px}
+.bb svg.lucide{width:24px;height:24px}
+.bb.go{background:var(--line);border-color:var(--line);color:#fff}
+.bb.go:hover{background:var(--line-dark)}
+.bb.red{background:#dc2626;border-color:#dc2626;color:#fff}
+.bb.soft{background:var(--menu-tile)}
+.bb + .bb{margin-top:10px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.row3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.chip{border:2px solid var(--border);background:var(--liff-card);border-radius:14px;min-height:64px;padding:8px;font-size:16px;font-weight:800;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:var(--text);text-align:center;line-height:1.2}
+.chip svg.lucide{width:24px;height:24px}
+.chip.sel{border-color:var(--line);background:#e8f9ee;color:#065f2c}
+:root[data-theme="dark"] .chip.sel{background:#0f3320;color:#86efac}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .chip.sel{background:#0f3320;color:#86efac}}
+.chip.lv-emg.sel{border-color:#dc2626;background:#fee2e2;color:#991b1b}
+.chip.lv-imp.sel{border-color:#d97706;background:#fef3c7;color:#92400e}
+.ta{width:100%;min-height:96px;border:2px solid var(--border);border-radius:14px;padding:12px;font-size:17px;background:var(--liff-card);resize:vertical}
+.in{width:100%;border:2px solid var(--border);border-radius:14px;padding:12px;font-size:17px;background:var(--liff-card)}
+.photos{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}
+.ph{width:84px;height:84px;border-radius:12px;position:relative;display:flex;align-items:flex-end;padding:4px;color:#fff;font-size:11px;font-weight:700;overflow:hidden}
+.ph::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 30% 30%,rgba(255,255,255,.35),transparent 60%)}
+.ph span{position:relative}
+.ph .x{position:absolute;top:4px;right:4px;width:26px;height:26px;border-radius:50%;border:0;background:rgba(0,0,0,.55);color:#fff;display:grid;place-items:center;cursor:pointer}
+.ph .x svg.lucide{width:14px;height:14px}
+.li{display:flex;gap:12px;align-items:center;background:var(--liff-card);border:1px solid var(--border);border-radius:16px;padding:12px 14px;margin-bottom:10px;width:100%;text-align:left;font-size:16px;color:var(--text)}
+button.li{cursor:pointer}
+button.li:hover{border-color:var(--line)}
+.li .ic{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;background:var(--menu-tile);flex-shrink:0}
+.li .ic svg.lucide{width:24px;height:24px}
+.li .tx{flex:1;min-width:0}
+.li .tx b{display:block;font-size:17px}
+.li .tx small{display:block;color:var(--muted);font-size:14px}
+.li .acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.sb{border:2px solid var(--border);background:var(--liff-card);border-radius:12px;padding:8px 12px;font-size:15px;font-weight:800;cursor:pointer;color:var(--text);display:inline-flex;align-items:center;gap:5px}
+.sb.go{background:var(--line);border-color:var(--line);color:#fff}
+.sb.red{border-color:#dc2626;color:#dc2626}
+.sb svg.lucide{width:17px;height:17px}
+.tag{display:inline-flex;align-items:center;gap:4px;padding:2px 10px;border-radius:99px;font-size:13px;font-weight:800;white-space:nowrap}
+.t-ok{background:var(--ok-bg);color:var(--ok)}.t-warn{background:var(--warn-bg);color:var(--warn)}.t-bad{background:var(--bad-bg);color:var(--bad)}.t-info{background:var(--info-bg);color:var(--info)}.t-mute{background:var(--border);color:var(--muted)}
+.note{background:var(--warn-bg);color:var(--warn);border-radius:12px;padding:10px 12px;font-size:15px;margin:10px 0;display:flex;gap:8px}
+.note.info{background:var(--info-bg);color:var(--info)}
+.note.ok{background:var(--ok-bg);color:var(--ok)}
+.note.bad{background:var(--bad-bg);color:var(--bad)}
+.note svg.lucide{width:20px;height:20px;margin-top:2px}
+.prog{height:14px;border-radius:99px;background:var(--border);overflow:hidden;margin:8px 0}
+.prog i{display:block;height:100%;background:var(--line)}
+.chk{display:flex;align-items:center;gap:10px;font-size:17px;padding:8px 0;border-bottom:1px dashed var(--border)}
+.chk input{width:26px;height:26px;accent-color:var(--line)}
+.done-hero{text-align:center;padding:18px 6px}
+.done-hero .big{width:84px;height:84px;border-radius:50%;background:var(--ok-bg);color:var(--ok);display:grid;place-items:center;margin:0 auto 10px}
+.done-hero .big svg.lucide{width:46px;height:46px}
+.done-hero.emg .big{background:var(--bad-bg);color:var(--bad)}
+.done-hero h3{margin:0 0 6px;font-size:22px}
+.tl{list-style:none;margin:8px 0;padding:0;text-align:left}
+.tl li{display:flex;gap:8px;align-items:center;padding:6px 0;font-size:16px}
+.tl li svg.lucide{color:var(--ok)}
+.sched{width:100%;border-collapse:collapse;font-size:16px}
+.sched td{padding:10px 8px;border-bottom:1px solid var(--border)}
+.sched tr.today td{background:#e8f9ee;font-weight:800}
+:root[data-theme="dark"] .sched tr.today td{background:#0f3320}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .sched tr.today td{background:#0f3320}}
+.lockv{text-align:center;padding:40px 10px}
+.lockv .big{width:90px;height:90px;border-radius:50%;background:var(--menu-tile);display:grid;place-items:center;margin:0 auto 12px}
+.lockv .big svg.lucide{width:44px;height:44px;color:var(--muted)}
+
+/* ---------- 綁定流程 ---------- */
+.bind{position:absolute;left:0;right:0;top:34px;bottom:0;background:var(--liff-bg);z-index:25;display:none;flex-direction:column;font-size:18px}
+.bind.on{display:flex}
+.bind .bh{height:52px;display:flex;align-items:center;justify-content:center;font-weight:800;background:var(--line);color:#fff;flex-shrink:0;gap:8px}
+.bind .bb-body{flex:1;overflow:auto;padding:18px}
+.steps{display:flex;gap:6px;justify-content:center;margin-bottom:14px}
+.steps i{width:38px;height:6px;border-radius:99px;background:var(--border)}
+.steps i.on{background:var(--line)}
+.prof{text-align:center;padding:20px 0}
+.prof .pav{width:110px;height:110px;border-radius:50%;background:var(--line);color:#fff;display:grid;place-items:center;margin:0 auto 12px;font-size:34px;font-weight:900}
+.idc{background:var(--liff-card);border:1px solid var(--border);border-radius:16px;padding:6px 16px;margin:12px 0}
+.idc div{display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px dashed var(--border);font-size:17px}
+.idc div:last-child{border-bottom:0}
+.idc span{color:var(--muted)}
+
+/* ---------- modal / toast / guide（手機內） ---------- */
+#ov{position:absolute;inset:0;background:rgba(2,6,23,.55);z-index:40;display:none}
+#ov.on{display:block}
+#modal{position:absolute;left:0;right:0;bottom:0;max-height:88%;background:var(--liff-card);border-radius:22px 22px 0 0;z-index:41;display:none;flex-direction:column;font-size:17px}
+#modal.on{display:flex}
+#modal .mh{padding:16px 18px 8px;font-weight:800;font-size:19px;display:flex;align-items:center;gap:8px}
+#modal .mb{padding:4px 18px 10px;overflow:auto}
+#modal .mf{padding:12px 18px 18px;display:flex;gap:8px;flex-wrap:wrap}
+#modal .mf .btn{flex:1;justify-content:center;min-height:52px;font-size:17px;border-radius:14px;border-width:2px}
+#modal .mf .btn.primary{background:var(--line);border-color:var(--line)}
+#toast{position:absolute;left:50%;bottom:110px;transform:translateX(-50%) translateY(20px);background:rgba(15,23,42,.92);color:#fff;padding:10px 16px;border-radius:14px;font-size:14.5px;opacity:0;pointer-events:none;transition:.2s;z-index:60;width:max-content;max-width:86%;text-align:center}
+#toast.on{opacity:1;transform:translateX(-50%)}
+#flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:70;transition:opacity .25s}
+#flash.on{opacity:.85;transition:none}
+#guide{position:absolute;inset:0;z-index:50;background:rgba(2,6,23,.7);display:none;align-items:center;justify-content:center;padding:24px}
+#guide.on{display:flex}
+#guide .gc{background:var(--liff-card);border-radius:22px;padding:22px;width:100%;font-size:19px;text-align:center}
+#guide .gc .stp{width:52px;height:52px;font-size:24px;margin:0 auto 10px;display:grid}
+#guide .gc p{margin:0 0 16px;line-height:1.5;font-weight:700}
+#guide .dots{display:flex;gap:6px;justify-content:center;margin-bottom:14px}
+#guide .dots i{width:10px;height:10px;border-radius:50%;background:var(--border)}#guide .dots i.on{background:var(--line)}
+.scanner{height:230px;border-radius:16px;background:#0b0f17;position:relative;overflow:hidden;margin-bottom:12px}
+.scanner::before{content:"";position:absolute;inset:40px 70px;border:3px solid var(--line);border-radius:14px}
+.scanner::after{content:"";position:absolute;left:70px;right:70px;height:3px;background:var(--line);top:50%;animation:scan 1.6s ease-in-out infinite alternate;box-shadow:0 0 12px var(--line)}
+@keyframes scan{from{top:42px}to{top:186px}}
+.scanner span{position:absolute;bottom:10px;left:0;right:0;text-align:center;color:#cbd5e1;font-size:14px}
+.video{height:190px;border-radius:16px;background:linear-gradient(135deg,#0f172a,#065f46);display:grid;place-items:center;color:#fff;position:relative;margin-bottom:10px}
+.video svg.lucide{width:54px;height:54px}
+.video .vbar{position:absolute;left:12px;right:12px;bottom:12px;height:6px;border-radius:99px;background:rgba(255,255,255,.25);overflow:hidden}
+.video .vbar i{display:block;height:100%;width:0;background:var(--line);transition:width 3s linear}
+.video .cap{position:absolute;top:10px;left:12px;font-size:13px;opacity:.85}
+.rec{animation:pulse 1s infinite}
+@keyframes pulse{50%{opacity:.4}}
+.vis-hide{display:none!important}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <!-- ======================= 原型控制面板 ======================= -->
+  <aside class="ctrl">
+    <h1>LINE 前台 · 原型控制</h1>
+    <p class="sub">模擬社區工作人員在 LINE 官方帳號中的操作（圖文選單＋LIFF 頁面）。資料皆為虛構。</p>
+
+    <h3>身分與環境</h3>
+    <label for="cRole">角色（圖文選單依角色切換）</label>
+    <select id="cRole" data-change="role">
+      <option value="mgr">總幹事 · 劉德華</option>
+      <option value="guard">保全 · 許文雄</option>
+      <option value="clean">清潔 · Nguyễn Thị Lan</option>
+      <option value="tech">機電 · 王志強（派駐 2 社區）</option>
+    </select>
+    <label for="cLang">語系</label>
+    <select id="cLang" data-change="lang"></select>
+    <label for="cSite">目前社區</label>
+    <select id="cSite" data-change="site"></select>
+    <div class="small" id="siteNote" style="margin-top:4px"></div>
+    <label for="cPlan">租戶方案版本（功能授權 P-SUB-02）</label>
+    <select id="cPlan" data-change="plan">
+      <option value="1">基本版</option>
+      <option value="2">專業版</option>
+      <option value="3" selected>旗艦版</option>
+    </select>
+    <label for="cOa">官方帳號模式（P-LINE-01）</label>
+    <select id="cOa" data-change="oa">
+      <option value="shared">平台共用帳號「社區工作站」</option>
+      <option value="own">租戶自有帳號「永信物業 工作站」（P1）</option>
+    </select>
+
+    <h3>模擬推播（P-LINE-08）</h3>
+    <div class="pushes">
+      <button class="btn" data-act="push" data-k="emg"><i data-lucide="siren"></i>緊急事件</button>
+      <button class="btn" data-act="push" data-k="overdue"><i data-lucide="clock-alert"></i>工單逾期</button>
+      <button class="btn" data-act="push" data-k="improve"><i data-lucide="clipboard-check"></i>改善單</button>
+      <button class="btn" data-act="push" data-k="digest"><i data-lucide="sunrise"></i>每日摘要</button>
+      <button class="btn" data-act="push" data-k="news"><i data-lucide="megaphone"></i>公司公告</button>
+      <button class="btn" data-act="push" data-k="takeover"><i data-lucide="repeat"></i>交接待確認</button>
+    </div>
+    <div class="small" style="margin-top:6px">緊急、逾期、改善單即時推播；一般待辦合併為每日 07:30 摘要。</div>
+    <div style="margin-top:10px;font-size:12.5px;font-weight:700">本月推播配額（P-LINE-09）：<span id="qTxt"></span></div>
+    <div class="meter" id="qBar"><i></i></div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap">
+      <button class="btn" data-act="quotaNear"><i data-lucide="gauge"></i>模擬接近上限</button>
+      <button class="btn" data-act="quotaReset"><i data-lucide="rotate-ccw"></i>配額歸零</button>
+    </div>
+
+    <h3>綁定與重設</h3>
+    <div style="display:flex;gap:6px;flex-wrap:wrap">
+      <button class="btn" data-act="resetDemo"><i data-lucide="link-2-off"></i>重新綁定（重播流程）</button>
+      <button class="btn" data-act="theme"><i data-lucide="sun-moon"></i>深淺色</button>
+    </div>
+    <div class="small" style="margin-top:6px" id="bindNote"></div>
+
+    <h3>直接開啟 LIFF 頁面</h3>
+    <div class="links" id="links">
+      <a href="#chat">聊天室</a>
+      <a href="#bind1">綁定①加好友</a><a href="#bind2">綁定②邀請碼</a><a href="#bind3">綁定③確認身分</a><a href="#bind4">綁定④語系</a>
+      <a href="#todo">待辦</a><a href="#shift">交接日誌</a><a href="#repair">報修</a><a href="#incident">事件通報</a>
+      <a href="#patrol">巡邏打點</a><a href="#schedule">班表</a><a href="#leave">請假</a><a href="#news">公告</a>
+      <a href="#improve">改善單</a><a href="#workorder">我的工單</a><a href="#maint">保養</a><a href="#expense">支出拍照</a>
+      <a href="#more">更多</a><a href="#help">怎麼用</a><a href="#feedback">問題回報</a><a href="#settings">設定／語系</a><a href="#sitepick">切換社區</a>
+    </div>
+
+    <h3>本畫面對應需求</h3>
+    <div class="req" id="reqBox"></div>
+  </aside>
+
+  <!-- ======================= 手機 ======================= -->
+  <div class="stage">
+    <div class="phone" id="phone">
+      <div class="sbar"><b>09:41</b><span><i data-lucide="signal"></i><i data-lucide="wifi"></i><i data-lucide="battery-full"></i></span></div>
+      <div class="lhead">
+        <div class="av" id="oaAv">社</div>
+        <div class="nm"><span id="oaName">社區工作站</span><small id="oaSub">官方帳號</small></div>
+        <div class="sp"></div>
+        <button class="ibtn" data-act="open" data-p="settings" aria-label="設定"><i data-lucide="settings"></i></button>
+        <button class="ibtn" data-act="toggleMenu" aria-label="選單"><i data-lucide="menu"></i></button>
+      </div>
+      <div class="chat" id="chat"></div>
+      <div class="ibar">
+        <button class="menutg" data-act="toggleMenu"><i data-lucide="layout-grid"></i><span id="menuLbl">選單</span></button>
+        <input id="msgIn" placeholder="輸入訊息">
+        <button class="ibtn" data-act="sendMsg" aria-label="送出"><i data-lucide="send-horizontal"></i></button>
+      </div>
+      <div class="rmenu" id="rmenu"></div>
+
+      <!-- LIFF 頁面 -->
+      <div class="liff" id="liff">
+        <div class="lfh">
+          <button class="ibtn" data-act="tutorial" aria-label="怎麼用"><i data-lucide="circle-help"></i></button>
+          <div class="tt" id="liffTitle"></div>
+          <button class="ibtn" data-act="liffClose" aria-label="關閉"><i data-lucide="x"></i></button>
+        </div>
+        <div class="lfsite" id="liffSite"></div>
+        <div class="lfb" id="liffBody"></div>
+      </div>
+
+      <!-- 綁定流程 -->
+      <div class="bind" id="bind">
+        <div class="bh"><i data-lucide="link"></i><span id="bindTitle">帳號綁定</span></div>
+        <div class="bb-body" id="bindBody"></div>
+      </div>
+
+      <div id="ov" data-act="closeOv"></div>
+      <div id="modal"><div class="mh" id="mTitle"></div><div class="mb" id="mBody"></div><div class="mf" id="mFoot"></div></div>
+      <div id="guide"><div class="gc" id="guideBody"></div></div>
+      <div id="toast"></div>
+      <div id="flash"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* =====================================================================
+   多語系（圖文選單、LIFF 標題、主要按鈕）
+   順序：繁中 / English / Bahasa Indonesia / Tiếng Việt / ไทย
+   ===================================================================== */
+const LANGS=[["zh","繁體中文"],["en","English"],["id","Bahasa Indonesia"],["vi","Tiếng Việt"],["th","ไทย"]];
+const D={
+ todo:["待辦","To-do","Tugas","Việc cần làm","งานที่ต้องทำ"],
+ shift:["交接日誌","Shift Handover","Serah Terima Shift","Giao ca","ส่งมอบกะ"],
+ repair:["報修","Repair Request","Laporan Perbaikan","Báo sửa chữa","แจ้งซ่อม"],
+ incident:["事件通報","Report Incident","Lapor Kejadian","Báo sự cố","แจ้งเหตุ"],
+ patrol:["巡邏打點","Patrol","Patroli","Tuần tra","ลาดตระเวน"],
+ schedule:["班表","My Shifts","Jadwal Kerja","Lịch làm việc","ตารางงาน"],
+ leave:["請假","Leave","Cuti","Xin nghỉ phép","ลางาน"],
+ news:["公告","Announcements","Pengumuman","Thông báo","ประกาศ"],
+ improve:["改善單","Improvement Notices","Perbaikan Temuan","Phiếu khắc phục","ใบแจ้งแก้ไข"],
+ workorder:["我的工單","My Work Orders","Order Kerja Saya","Phiếu việc của tôi","ใบงานของฉัน"],
+ maint:["保養","Maintenance","Perawatan","Bảo trì","บำรุงรักษา"],
+ expense:["支出拍照","Expense Photo","Foto Pengeluaran","Chụp chứng từ chi","ถ่ายรูปค่าใช้จ่าย"],
+ more:["更多","More","Lainnya","Thêm","เพิ่มเติม"],
+ help:["怎麼用","How to Use","Cara Pakai","Hướng dẫn","วิธีใช้"],
+ feedback:["問題回報","Report a Problem","Laporkan Masalah","Báo lỗi","แจ้งปัญหา"],
+ settings:["設定","Settings","Pengaturan","Cài đặt","ตั้งค่า"],
+ sitepick:["切換社區","Switch Site","Ganti Lokasi","Đổi khu dân cư","เปลี่ยนชุมชน"],
+ menu:["選單","Menu","Menu","Menu","เมนู"],
+ submit:["送出","Submit","Kirim","Gửi","ส่ง"],
+ photo:["拍照","Take Photo","Ambil Foto","Chụp ảnh","ถ่ายรูป"],
+ voice:["語音輸入","Voice Input","Input Suara","Nói để nhập","พูดแทนพิมพ์"],
+ open:["開啟","Open","Buka","Mở","เปิด"],
+ confirm:["確認","Confirm","Konfirmasi","Xác nhận","ยืนยัน"],
+ cancel:["取消","Cancel","Batal","Hủy","ยกเลิก"],
+ close:["關閉","Close","Tutup","Đóng","ปิด"],
+ next:["下一步","Next","Lanjut","Tiếp","ถัดไป"],
+ skip:["略過","Skip","Lewati","Bỏ qua","ข้าม"],
+ gotit:["知道了","Got it","Mengerti","Đã hiểu","เข้าใจแล้ว"],
+ step:["步驟","Step","Langkah","Bước","ขั้นที่"],
+ s_photo:["拍下照片","Take a photo","Ambil foto","Chụp ảnh","ถ่ายรูป"],
+ s_cat:["選擇類別","Choose category","Pilih kategori","Chọn loại","เลือกประเภท"],
+ s_lv:["選擇等級","Choose level","Pilih tingkat","Chọn mức độ","เลือกระดับ"],
+ s_send:["送出","Send","Kirim","Gửi","ส่ง"],
+ s_tpl:["選範本／說明","Template / notes","Templat / catatan","Mẫu / ghi chú","เลือกแบบ / บันทึก"],
+ s_check:["點交物品","Hand over items","Serah terima barang","Bàn giao vật dụng","ส่งมอบอุปกรณ์"],
+ lv1:["一般","Normal","Biasa","Thường","ทั่วไป"],
+ lv2:["重要","Important","Penting","Quan trọng","สำคัญ"],
+ lv3:["緊急","Emergency","Darurat","Khẩn cấp","ฉุกเฉิน"],
+ c_water:["水電","Plumbing/Electric","Listrik/Air","Điện nước","ไฟฟ้า/ประปา"],
+ c_lift:["電梯","Elevator","Lift","Thang máy","ลิฟต์"],
+ c_door:["門禁","Access Control","Akses Pintu","Cửa ra vào","ระบบประตู"],
+ c_fire:["消防","Fire Safety","Pemadam","PCCC","ดับเพลิง"],
+ c_clean:["清潔","Cleaning","Kebersihan","Vệ sinh","ความสะอาด"],
+ c_other:["其他","Other","Lainnya","Khác","อื่นๆ"],
+ normal:["正常","Normal","Normal","Bình thường","ปกติ"],
+ abnormal:["異常","Abnormal","Tidak Normal","Bất thường","ผิดปกติ"],
+ scan:["掃描巡邏點","Scan Checkpoint","Pindai Titik","Quét điểm tuần tra","สแกนจุดตรวจ"],
+ takeover:["確認接班","Confirm Takeover","Terima Shift","Xác nhận nhận ca","ยืนยันรับกะ"],
+ apply:["送出申請","Apply","Ajukan","Gửi đơn","ยื่นคำขอ"],
+ accept:["接單","Accept","Terima","Nhận việc","รับงาน"],
+ complete:["完工回報","Report Done","Lapor Selesai","Báo hoàn thành","แจ้งเสร็จงาน"],
+ reply:["回覆改善","Reply","Balas","Phản hồi","ตอบกลับ"],
+ backchat:["回到聊天","Back to Chat","Kembali ke Chat","Về trò chuyện","กลับไปแชท"],
+ again:["再填一筆","New Entry","Isi Lagi","Tạo mới","เพิ่มอีก"],
+ watch:["看教學影片","Watch Tutorial","Tonton Tutorial","Xem video","ดูวิดีโอสอน"],
+ locked:["未開通","Not enabled","Belum aktif","Chưa mở","ยังไม่เปิดใช้"],
+ bind_add:["加入好友","Add Friend","Tambah Teman","Kết bạn","เพิ่มเพื่อน"],
+ bind_scan:["掃描邀請碼","Scan Invite Code","Pindai Kode Undangan","Quét mã mời","สแกนรหัสเชิญ"],
+ bind_me:["是我，確認綁定","Yes, that's me","Ya, ini saya","Đúng, là tôi","ใช่ ฉันเอง"],
+ bind_notme:["不是我","Not me","Bukan saya","Không phải tôi","ไม่ใช่ฉัน"],
+ lang:["語系","Language","Bahasa","Ngôn ngữ","ภาษา"],
+};
+const LI={zh:0,en:1,id:2,vi:3,th:4};
+function t(k){const r=D[k];return r?(r[LI[S.lang]]||r[0]):k;}
+
+/* =====================================================================
+   假資料與狀態
+   ===================================================================== */
+const TENANT="永信物業管理股份有限公司";
+const USERS={
+ mgr:{n:"劉德華",id:"E10231",title:"總幹事",sites:["春暉苑"],lang:"zh"},
+ guard:{n:"許文雄",id:"E10877",title:"保全員（日班）",sites:["春暉苑"],lang:"zh"},
+ clean:{n:"Nguyễn Thị Lan",id:"E11402",title:"清潔員",sites:["春暉苑"],lang:"vi"},
+ tech:{n:"王志強",id:"E10455",title:"機電技師",sites:["春暉苑","雲頂閱"],lang:"zh"},
+};
+const MENU={
+ mgr:["shift","repair","incident","improve","todo","more"],
+ guard:["shift","patrol","incident","repair","schedule","more"],
+ clean:["schedule","leave","incident","repair","news","more"],
+ tech:["workorder","repair","maint","incident","schedule","more"],
+};
+const PAGES={
+ todo:{ic:"list-todo",req:["F-HOME-01","F-HOME-02","P-LINE-05","P-LINE-08"]},
+ shift:{ic:"notebook-pen",req:["F-SHIFT-01","F-SHIFT-02","F-SHIFT-03","P-LINE-06","P-HELP-03"],guide:1},
+ repair:{ic:"wrench",req:["F-REP-01","F-REP-02","F-REP-03","P-LINE-06","P-HELP-03"],guide:1},
+ incident:{ic:"siren",req:["F-INC-01","F-INC-02","F-INC-03","P-LINE-06","P-HELP-03"],guide:1},
+ patrol:{ic:"scan-line",req:["F-PAT-01","F-PAT-02","F-PAT-03","F-PAT-04","專業版"],need:2},
+ schedule:{ic:"calendar-days",req:["F-ATT-03","F-ATT-01（打卡：加購候選）"]},
+ leave:{ic:"calendar-x",req:["F-ATT-04","B-SCH-06（總幹事初審）"]},
+ news:{ic:"megaphone",req:["F-NEWS-01","B-DOC-01","B-DOC-03"]},
+ improve:{ic:"clipboard-check",req:["F-AUD-01","B-AUD-03","專業版"],need:2},
+ workorder:{ic:"hard-hat",req:["F-REP-02","F-REP-03","F-REP-05"]},
+ maint:{ic:"cog",req:["F-MNT-01","F-MNT-02","專業版"],need:2},
+ expense:{ic:"receipt",req:["F-FIN-01","B-FIN-07","B-FIN-08","旗艦版"],need:3},
+ more:{ic:"layout-grid",req:["P-LINE-04","A.3 選單結構"]},
+ help:{ic:"circle-help",req:["P-HELP-01","P-HELP-03"]},
+ feedback:{ic:"message-square-warning",req:["P-OPS-05","P-SUP-01"]},
+ settings:{ic:"settings",req:["P-LINE-03","P-LINE-04","NF-UX-04","B-SYS-05（通知偏好）"]},
+ sitepick:{ic:"building-2",req:["P-LINE-07"]},
+};
+const GUIDES={
+ repair:["先按「拍照」，拍下要修的地方。","選擇是哪一類的問題，例如水電、電梯。","按綠色的「送出」，就完成了！"],
+ incident:["先拍照或錄影，記錄現場狀況。","選擇等級：緊急會立刻通知督導。","按「送出」，主管就會收到通知。"],
+ shift:["點選範本，或按「語音輸入」直接說話。","勾選鑰匙、對講機等點交物品。","按「送出」，下一班人員確認就完成交接。"],
+};
+
+let S;
+function initState(){
+ S={
+  role:"mgr",lang:"zh",plan:3,oa:"shared",theme:null,
+  bound:true,bindStep:1,bindErr:false,bindCode:"",
+  site:{mgr:"春暉苑",guard:"春暉苑",clean:"春暉苑",tech:"春暉苑"},siteChosen:{},
+  menuOpen:true,page:null,pending:null,seen:{},guide:null,
+  quota:{used:2412,limit:3000},
+  photos:{},form:{},done:{},
+  chat:[],
+  repairs:[
+   {id:"R-28755",cat:"c_door",loc:"側門",desc:"側門感應讀卡機無反應",st:"待處理",who:"—",days:7},
+   {id:"R-28801",cat:"c_water",loc:"B1 機房",desc:"抽水馬達有異音",st:"處理中",who:"機電 王志強",days:2},
+   {id:"R-28790",cat:"c_clean",loc:"中庭",desc:"中庭排水孔堵塞",st:"已完成",who:"清潔 Nguyễn Thị Lan",days:1},
+  ],
+  incs:[{id:"INC-3307",lv:"lv1",cat:"設備異常",desc:"大門感應器異常",t:"昨天 18:03",st:"處理中",log:["18:10 已通知機電王志強"]}],
+  pendingShift:[{id:"SH-5520",from:"許文雄（日班）",to:"夜班",t:"今天 08:00",note:"1. 7F 住戶反映走廊燈閃爍，已報修。\n2. 包裹 3 件待領（冷藏 1 件）。",items:"鑰匙 6 串、對講機 3 支、門禁卡 2 張",st:"待確認"}],
+  shifts:[],
+  leaves:[{k:"特休",d:"11/28（五）",days:"1 天",st:"督導核准中",flow:["11/05 送出","11/05 總幹事同意"]}],
+  toApprove:[
+   {id:"LV-901",n:"Nguyễn Thị Lan",t:"清潔",k:"特休",d:"11/20–11/21",days:"2 天",st:"待初審",cover:"清潔人力仍符合編制"},
+   {id:"LV-902",n:"何俊宏",t:"保全",k:"病假",d:"11/16（日）",days:"1 天",st:"待初審",cover:"需安排代班"},
+  ],
+  news:[
+   {id:1,title:"颱風季防災 SOP 更新",body:"請各社區於 11/10 前完成：\n1. 檢查地下室抽水機與防水閘門\n2. 頂樓排水孔清理\n3. 準備沙包 20 包以上\n4. 更新緊急聯絡名冊",imp:true,read:false,d:"11/05"},
+   {id:2,title:"尾牙活動報名開始",body:"12/20（六）晚上 6 點，地點：圓山飯店。請於 11/30 前向總幹事報名。",imp:false,read:false,d:"11/04"},
+   {id:3,title:"11 月份勞健保費率調整說明",body:"本月起勞保費率調整，薪資單將於 12 月發放時說明。",imp:false,read:true,d:"11/01"},
+  ],
+  improves:[
+   {id:"IM-1104",item:"交接日誌缺漏 2 班",due:"11/12",st:"待改善",sup:"陳志豪",reply:""},
+   {id:"IM-1099",item:"大廳地墊破損",due:"11/09",st:"已回覆待複查",sup:"陳志豪",reply:"已更換新地墊（附照片 2 張）"},
+  ],
+  patrol:{name:"夜班第 3 輪（00:00–02:00）",points:[
+   {n:"大門警衛室",res:"正常",t:"00:05"},{n:"B1 機房",res:null},{n:"B2 停車場",res:null},{n:"頂樓水塔",res:null},{n:"中庭",res:null},{n:"垃圾集中區",res:null}]},
+  workorders:[
+   {id:"R-28755",site:"春暉苑",cat:"c_door",loc:"側門",desc:"側門感應讀卡機無反應",st:"待接單",log:[]},
+   {id:"R-28801",site:"春暉苑",cat:"c_water",loc:"B1 機房",desc:"抽水馬達有異音",st:"處理中",log:["11/05 10:20 已拆檢，疑似軸承磨損"]},
+   {id:"R-28822",site:"雲頂閱",cat:"c_water",loc:"B1 車道",desc:"地下室照明 3 盞不亮",st:"待接單",log:[]},
+  ],
+  maint:[
+   {id:"MT-301",site:"春暉苑",n:"電梯月保（1、2 號梯）",vendor:"永大電梯",due:"11/10",st:"待執行"},
+   {id:"MT-302",site:"春暉苑",n:"消防設備年度檢修申報",vendor:"安心消防",due:"11/25",st:"待執行"},
+   {id:"MT-303",site:"雲頂閱",n:"水塔清洗（半年）",vendor:"清源水塔",due:"12/05",st:"待執行"},
+   {id:"MT-288",site:"春暉苑",n:"發電機每月試運轉",vendor:"社區機電",due:"11/01",st:"已完成",rec:"11/01 試運轉 15 分鐘，正常"},
+  ],
+  expenses:[{d:"11/03",cat:"清潔用品",amt:1280,pay:"零用金",st:"已登錄"}],
+  tickets:[],
+  suppressed:[],
+ };
+ S.chat=[
+  {k:"sys",txt:"今天"},
+  {k:"bot",txt:"早安，劉德華總幹事！\n今天春暉苑的待辦有 5 項，請點下方「待辦」查看。",tm:"07:30"},
+  {k:"card",kind:"k-info",ic:"sunrise",title:"每日摘要 · 11/06",body:"・交接待確認 1 筆\n・改善單 1 張（11/12 到期）\n・未讀公告 2 則\n・待初審請假 2 筆",p:"todo",tm:"07:30"},
+  {k:"card",kind:"k-emg",ic:"siren",title:"緊急事件",body:"森林綠園 B2 停車場漏水\n通報人：保全 何俊宏",small:"跨社區通知：您為鄰近社區總幹事",p:"incident",tm:"09:42"},
+ ];
+}
+
+/* =====================================================================
+   工具
+   ===================================================================== */
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const fmt=n=>Number(n).toLocaleString("zh-TW");
+const icons=()=>lucide.createIcons();
+const tag=(x,c)=>`<span class="tag ${c}">${x}</span>`;
+const stTag=s=>tag(s,{"待處理":"t-bad","待接單":"t-bad","待改善":"t-bad","待確認":"t-warn","待初審":"t-warn","處理中":"t-info","待料/外包":"t-warn","已完成":"t-ok","已結案":"t-ok","已確認":"t-ok","已回覆待複查":"t-info","督導核准中":"t-info","總幹事初審中":"t-info","已核准":"t-ok","已駁回":"t-mute","待執行":"t-warn","已登錄":"t-ok","待簽核":"t-warn","處理中（客服）":"t-info","新進":"t-warn"}[s]||"t-mute");
+const now=()=>{const d=new Date();return String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");};
+const user=()=>USERS[S.role];
+const site=()=>S.site[S.role];
+const locked=p=>(PAGES[p]?.need||0)>S.plan;
+let tt;function toast(m){const x=$("#toast");x.textContent=m;x.classList.add("on");clearTimeout(tt);tt=setTimeout(()=>x.classList.remove("on"),2600);}
+let FOOT={};
+function foot(el,btns){FOOT={};el.innerHTML=btns.map((b,i)=>{FOOT[i]=b.fn;return `<button class="btn ${b.cls||""}" data-foot="${i}">${b.label}</button>`}).join("");}
+function modal(title,body,btns=[{label:t("close")}]){closeAll(true);$("#mTitle").innerHTML=title;$("#mBody").innerHTML=body;foot($("#mFoot"),btns);$("#modal").classList.add("on");$("#ov").classList.add("on");icons();}
+function closeAll(keepOv){$("#modal").classList.remove("on");$("#guide").classList.remove("on");if(!keepOv)$("#ov").classList.remove("on");}
+function addMsg(m){m.tm=m.tm||now();S.chat.push(m);renderChat();}
+function flash(){const f=$("#flash");f.classList.add("on");setTimeout(()=>f.classList.remove("on"),60);}
+const HUES=[200,150,28,280,340,95];
+function photoBlock(key,label){return `<div class="photos" id="ph-${key}">${photosHtml(key)}</div><button class="bb soft" data-act="snap" data-k="${key}"><i data-lucide="camera"></i>${label||t("photo")}</button>`;}
+function photosHtml(key){return (S.photos[key]||[]).map((p,i)=>`<div class="ph" style="background:linear-gradient(135deg,hsl(${p.h} 55% 45%),hsl(${p.h+40} 50% 30%))"><span>${p.tm}</span><button class="x" data-act="delPhoto" data-k="${key}" data-i="${i}" aria-label="刪除照片"><i data-lucide="x"></i></button></div>`).join("");}
+function renderPhotos(key){const el=$("#ph-"+key);if(el){el.innerHTML=photosHtml(key);icons();}}
+const chips=(g,opts,cls="")=>opts.map(([v,label,ic])=>`<button class="chip ${cls} ${S.form[g]===v?"sel":""} ${v==="lv3"?"lv-emg":v==="lv2"?"lv-imp":""}" data-act="pick" data-g="${g}" data-v="${v}">${ic?`<i data-lucide="${ic}"></i>`:""}${label}</button>`).join("");
+const stepH=(n,k)=>`<h4><span class="stp">${n}</span>${t(k)}</h4>`;
+
+/* =====================================================================
+   聊天室與圖文選單
+   ===================================================================== */
+function renderChat(){
+ const c=$("#chat");
+ c.innerHTML=S.chat.map(m=>{
+  if(m.k==="sys")return `<div class="sys">${esc(m.txt)}</div>`;
+  if(m.k==="me")return `<div class="msg me"><div class="b">${esc(m.txt)}</div><div class="tm">${m.tm}</div></div>`;
+  if(m.k==="bot")return `<div class="msg"><div class="av">${S.oa==="own"?"永":"社"}</div><div class="b">${esc(m.txt)}</div><div class="tm">${m.tm}</div></div>`;
+  return `<div class="msg"><div class="av">${S.oa==="own"?"永":"社"}</div><div class="card"><div class="ch ${m.kind}"><i data-lucide="${m.ic}"></i>${esc(m.title)}</div><div class="cb">${esc(m.body)}${m.small?`<small>${esc(m.small)}</small>`:""}</div>${m.p?`<button class="cbtn" data-act="open" data-p="${m.p}">${t("open")}「${t(m.p)}」</button>`:""}</div><div class="tm">${m.tm}</div></div>`;
+ }).join("");
+ icons();c.scrollTop=c.scrollHeight;
+}
+function badge(p){
+ const sp=site();
+ switch(p){
+  case "todo":return todoItems().length;
+  case "shift":return S.pendingShift.filter(x=>x.st==="待確認").length;
+  case "improve":return S.improves.filter(x=>x.st==="待改善").length;
+  case "news":return S.news.filter(x=>!x.read).length;
+  case "workorder":return S.workorders.filter(x=>x.site===sp&&x.st==="待接單").length;
+  case "maint":return S.maint.filter(x=>x.site===sp&&x.st==="待執行").length;
+  case "patrol":return S.patrol.points.filter(x=>!x.res).length;
+  case "leave":return S.role==="mgr"?S.toApprove.filter(x=>x.st==="待初審").length:0;
+ }return 0;
+}
+function renderMenu(){
+ const m=$("#rmenu");m.classList.toggle("off",!S.menuOpen||!S.bound);
+ m.innerHTML=MENU[S.role].map(p=>{
+  const lk=locked(p),b=lk?0:badge(p);
+  return `<button class="tile ${lk?"lock":""}" data-act="open" data-p="${p}"><i data-lucide="${lk?"lock":PAGES[p].ic}"></i>${t(p)}${lk?`<small>${t("locked")}</small>`:""}${b?`<span class="bd">${b}</span>`:""}</button>`;
+ }).join("");
+ $("#menuLbl").textContent=t("menu");
+ icons();
+}
+
+/* =====================================================================
+   待辦清單（F-HOME-01）
+   ===================================================================== */
+function todoItems(){
+ const r=[],sp=site();
+ S.pendingShift.filter(x=>x.st==="待確認").forEach(x=>r.push({ic:"repeat",b:"交接待確認："+x.from,s:x.t,p:"shift",c:"t-warn"}));
+ if(!locked("improve")&&(S.role==="mgr"))S.improves.filter(x=>x.st==="待改善").forEach(x=>r.push({ic:"clipboard-check",b:"改善單 "+x.id+"："+x.item,s:"期限 "+x.due,p:"improve",c:"t-bad"}));
+ const un=S.news.filter(x=>!x.read).length;if(un)r.push({ic:"megaphone",b:"未讀公告 "+un+" 則",s:"重要公告需確認閱讀",p:"news",c:"t-info"});
+ if(S.role==="mgr"){S.toApprove.filter(x=>x.st==="待初審").forEach(x=>r.push({ic:"calendar-x",b:"請假初審："+x.n+" "+x.k+" "+x.days,s:x.d,p:"leave",c:"t-warn"}));
+  S.repairs.filter(x=>x.st==="已完成").forEach(x=>r.push({ic:"wrench",b:"報修待結案："+x.id+" "+x.desc,s:"已完工，請確認",p:"repair",c:"t-ok"}));}
+ if(S.role==="guard"&&!locked("patrol")){const left=S.patrol.points.filter(x=>!x.res).length;if(left)r.push({ic:"scan-line",b:"巡邏未完成 "+left+" 點",s:S.patrol.name,p:"patrol",c:"t-warn"});}
+ if(S.role==="tech"){S.workorders.filter(x=>x.site===sp&&x.st==="待接單").forEach(x=>r.push({ic:"hard-hat",b:"待接工單 "+x.id+"："+x.desc,s:x.loc,p:"workorder",c:"t-bad"}));
+  if(!locked("maint"))S.maint.filter(x=>x.site===sp&&x.st==="待執行").forEach(x=>r.push({ic:"cog",b:"保養："+x.n,s:"期限 "+x.due,p:"maint",c:"t-warn"}));}
+ S.suppressed.forEach(x=>r.push({ic:"bell-off",b:x.title,s:"超出推播配額，改在待辦顯示",p:x.p,c:"t-mute"}));
+ return r;
+}
+
+/* =====================================================================
+   LIFF 頁面渲染
+   ===================================================================== */
+const R={};
+R.todo=()=>{const it=todoItems();
+ return `<div class="note info"><i data-lucide="info"></i><span>${esc(user().n)}，今天 ${esc(site())} 共有 <b>${it.length}</b> 項待辦。</span></div>`+
+ (it.length?it.map(x=>`<button class="li" data-act="open" data-p="${x.p}"><span class="ic tag ${x.c}"><i data-lucide="${x.ic}"></i></span><span class="tx"><b>${esc(x.b)}</b><small>${esc(x.s)}</small></span><i data-lucide="chevron-right"></i></button>`).join(""):`<div class="done-hero"><div class="big"><i data-lucide="party-popper"></i></div><h3>都處理完了！</h3></div>`)+
+ `<button class="li" data-act="pkgInfo"><span class="ic"><i data-lucide="package"></i></span><span class="tx"><b>未領包裹 5 件</b><small>包裹、訪客請在櫃台電腦（網頁版）處理</small></span><i data-lucide="chevron-right"></i></button>`;};
+
+R.shift=()=>{
+ if(S.done.shift)return doneHero("交接日誌已送出","等待下一班 Budi Santoso 確認接班",[["notebook-pen","編號 "+S.done.shift]]);
+ const pend=S.pendingShift.filter(x=>x.st==="待確認");
+ return (pend.length?`<h4><i data-lucide="repeat"></i>待我確認接班</h4>`+pend.map(x=>`<div class="box"><b>${esc(x.from)} → ${esc(x.to)}</b><div class="small" style="font-size:14px">${x.t}・${esc(x.items)}</div><div style="white-space:pre-line;margin:8px 0;font-size:16px">${esc(x.note)}</div><button class="bb go" data-act="takeover" data-id="${x.id}"><i data-lucide="check-check"></i>${t("takeover")}</button></div>`).join(""):"")+
+ `<div class="note info"><i data-lucide="sparkles"></i><span>本班自動帶入：包裹 12 件、訪客 8 人、事件 1 件（F-SHIFT-03）</span></div>`+
+ stepH(1,"s_tpl")+`<div class="row2">${chips("tpl",[["正常","一切正常","smile"],["待辦","有待辦事項","list-todo"],["設備","設備異常","triangle-alert"],["住戶","住戶反映","users"]])}</div>
+ <textarea class="ta" id="shiftText" style="margin-top:10px" placeholder="補充說明（可用語音）">${esc(S.form.shiftText||"")}</textarea>
+ <button class="bb soft" data-act="voice" data-t="shiftText" id="vb-shiftText" style="margin-top:8px"><i data-lucide="mic"></i>${t("voice")}</button>`+
+ stepH(2,"s_check")+`<div class="box" style="padding:4px 14px">${["鑰匙 6 串","對講機 3 支","門禁卡 2 張","公務手機 1 支"].map((x,i)=>`<label class="chk"><input type="checkbox" class="hk" ${i<3?"checked":""}>${x}</label>`).join("")}</div>`+
+ stepH(3,"s_send")+`<button class="bb go" data-act="shiftSubmit"><i data-lucide="send"></i>${t("submit")}</button>`+
+ (S.shifts.length?`<h4><i data-lucide="history"></i>我送出的交接</h4>`+S.shifts.map(x=>`<div class="li"><span class="ic"><i data-lucide="notebook-pen"></i></span><span class="tx"><b>${x.id}・${x.tpl}</b><small>${x.t}・接班：${x.to}</small></span>${stTag(x.st)}</div>`).join(""):"");
+};
+
+const CATS=[["c_water","droplets"],["c_lift","arrow-up-down"],["c_door","door-closed"],["c_fire","flame"],["c_clean","sparkles"],["c_other","ellipsis"]];
+R.repair=()=>{
+ if(S.done.repair)return doneHero("報修已送出","工單編號 "+S.done.repair+"，處理進度會用 LINE 通知您",[["user-check","已通知總幹事與機電"]]);
+ return stepH(1,"s_photo")+photoBlock("repair")+
+ stepH(2,"s_cat")+`<div class="row3">${chips("rcat",CATS.map(([k,ic])=>[k,t(k),ic]))}</div>
+ <select class="in" id="rLoc" style="margin-top:10px">${["公設：大廳","公設：B1 機房","公設：B2 停車場","公設：中庭","公設：側門","住戶：A 棟 7F-2","住戶：B 棟 3F-1"].map(x=>`<option ${S.form.rLoc===x?"selected":""}>${x}</option>`).join("")}</select>
+ <textarea class="ta" id="rDesc" style="margin-top:10px" placeholder="簡單描述（可不填）">${esc(S.form.rDesc||"")}</textarea>
+ <button class="bb soft" data-act="voice" data-t="rDesc" id="vb-rDesc" style="margin-top:8px"><i data-lucide="mic"></i>${t("voice")}</button>`+
+ stepH(3,"s_send")+`<button class="bb go" data-act="repairSubmit"><i data-lucide="send"></i>${t("submit")}</button>`+
+ `<h4><i data-lucide="list"></i>本社區報修進度</h4>`+S.repairs.map(x=>`<div class="li"><span class="ic"><i data-lucide="wrench"></i></span><span class="tx"><b>${x.id}・${t(x.cat)}・${esc(x.loc)}</b><small>${esc(x.desc)}・${esc(x.who)}</small>${S.role==="mgr"&&x.st==="已完成"?`<span class="acts"><button class="sb go" data-act="repairClose" data-id="${x.id}"><i data-lucide="check"></i>確認結案</button><button class="sb red" data-act="repairReopen" data-id="${x.id}"><i data-lucide="undo-2"></i>未修好</button></span>`:""}</span>${stTag(x.st)}</div>`).join("");
+};
+
+R.incident=()=>{
+ if(S.done.incident){const d=S.done.incident;
+  const who=d.lv==="lv3"?[["siren","已即時推播：督導 陳志豪"],["siren","已即時推播：區域經理 李美玲"],["siren","已即時推播：營運副總 王建民"]]:d.lv==="lv2"?[["bell","已通知：督導 陳志豪"]]:[["bell","已通知：總幹事 劉德華"]];
+  return doneHero(d.lv==="lv3"?"已即時通知督導":"事件已通報","事件編號 "+d.id+"・"+t(d.lv),who,d.lv==="lv3");}
+ return stepH(1,"s_photo")+photoBlock("incident","拍照／錄影")+
+ stepH(2,"s_lv")+`<div class="row3">${chips("ilv",[["lv1",t("lv1"),"info"],["lv2",t("lv2"),"triangle-alert"],["lv3",t("lv3"),"siren"]])}</div>
+ <select class="in" id="iCat" style="margin-top:10px">${["治安","火警","漏水","停電","糾紛","人員受傷","客訴","設備異常","其他"].map(x=>`<option>${x}</option>`).join("")}</select>
+ <textarea class="ta" id="iDesc" style="margin-top:10px" placeholder="地點與狀況（可用語音）">${esc(S.form.iDesc||"")}</textarea>
+ <button class="bb soft" data-act="voice" data-t="iDesc" id="vb-iDesc" style="margin-top:8px"><i data-lucide="mic"></i>${t("voice")}</button>
+ <div class="note"><i data-lucide="info"></i><span>一般→總幹事；重要→督導；緊急→督導＋區域經理＋主管（即時推播）</span></div>`+
+ stepH(3,"s_send")+`<button class="bb red" data-act="incSubmit"><i data-lucide="send"></i>${t("submit")}</button>`+
+ `<h4><i data-lucide="list"></i>處理中的事件</h4>`+S.incs.map(x=>`<div class="li"><span class="ic"><i data-lucide="siren"></i></span><span class="tx"><b>${x.id}・${esc(x.cat)}・${t(x.lv)}</b><small>${esc(x.desc)}・${x.t}</small><small>${x.log.map(esc).join("<br>")}</small>${x.st!=="已結案"?`<span class="acts"><button class="sb" data-act="incUpdate" data-id="${x.id}"><i data-lucide="pencil"></i>更新進度</button><button class="sb go" data-act="incClose" data-id="${x.id}"><i data-lucide="check"></i>結案報告</button></span>`:""}</span>${stTag(x.st)}</div>`).join("");
+};
+
+R.patrol=()=>{const P=S.patrol.points,done=P.filter(x=>x.res).length,pct=Math.round(done/P.length*100);
+ return `<div class="box"><b>${esc(S.patrol.name)}</b><div class="prog"><i style="width:${pct}%"></i></div><div style="font-size:16px">已完成 <b>${done}</b> / ${P.length} 點（${pct}%）</div>${done<P.length?`<div class="note" style="margin-bottom:0"><i data-lucide="alarm-clock"></i><span>請於 02:00 前完成，逾時會通知總幹事（F-PAT-04）</span></div>`:`<div class="note ok" style="margin-bottom:0"><i data-lucide="circle-check"></i><span>本輪巡邏完成！</span></div>`}</div>
+ <button class="bb go" data-act="patScan"><i data-lucide="scan-line"></i>${t("scan")}</button>
+ <h4><i data-lucide="map-pin"></i>巡邏點</h4>`+P.map((x,i)=>`<div class="li"><span class="ic">${x.res?`<i data-lucide="${x.res==="正常"?"circle-check":"triangle-alert"}" style="color:${x.res==="正常"?"var(--ok)":"var(--bad)"}"></i>`:`<b>${i+1}</b>`}</span><span class="tx"><b>${esc(x.n)}</b><small>${x.res?x.t+"・"+x.res+(x.note?"："+esc(x.note):""):"尚未打點"}</small></span>${x.res?tag(x.res,x.res==="正常"?"t-ok":"t-bad"):tag("未巡","t-mute")}</div>`).join("")+
+ `<button class="bb soft" data-act="patReset"><i data-lucide="rotate-ccw"></i>開始下一輪</button>`;};
+
+let weekOff=0;
+R.schedule=()=>{const base=weekOff?["11/10（一）","11/11（二）","11/12（三）","11/13（四）","11/14（五）","11/15（六）","11/16（日）"]:["11/03（一）","11/04（二）","11/05（三）","11/06（四）","11/07（五）","11/08（六）","11/09（日）"];
+ const sh=S.role==="guard"?["日班 07–19","日班 07–19","休","休","日班 07–19","日班 07–19","日班 07–19"]:S.role==="clean"?["早班 07–15","早班 07–15","早班 07–15","早班 07–15","早班 07–15","休","休"]:["日班 09–18","日班 09–18","日班 09–18","日班 09–18","日班 09–18","休","休"];
+ return `<div class="row2" style="margin-bottom:10px"><button class="bb ${weekOff?"soft":"go"}" data-act="week" data-v="0">本週</button><button class="bb ${weekOff?"go":"soft"}" data-act="week" data-v="1" style="margin-top:0">下週</button></div>
+ <div class="box" style="padding:4px 10px"><table class="sched">${base.map((d,i)=>`<tr class="${!weekOff&&i===3?"today":""}"><td>${d}</td><td style="text-align:right">${sh[i]==="休"?tag("休","t-mute"):esc(sh[i])}</td></tr>`).join("")}</table></div>
+ <div class="note info"><i data-lucide="info"></i><span>上下班打卡為加購模組，貴公司尚未開通（F-ATT-01）。</span></div>
+ <button class="bb soft" data-act="open" data-p="leave"><i data-lucide="calendar-x"></i>${t("leave")}</button>`;};
+
+R.leave=()=>{
+ return (S.role==="mgr"?`<h4><i data-lucide="inbox"></i>待我初審（${S.toApprove.filter(x=>x.st==="待初審").length}）</h4>`+S.toApprove.map(x=>`<div class="li"><span class="ic"><i data-lucide="user"></i></span><span class="tx"><b>${esc(x.n)}（${x.t}）${x.k} ${x.days}</b><small>${x.d}・${esc(x.cover)}</small>${x.st==="待初審"?`<span class="acts"><button class="sb go" data-act="lvOk" data-id="${x.id}"><i data-lucide="check"></i>同意</button><button class="sb red" data-act="lvNo" data-id="${x.id}"><i data-lucide="x"></i>駁回</button></span>`:""}</span>${stTag(x.st)}</div>`).join(""):"")+
+ `<h4><i data-lucide="calendar-plus"></i>我要請假</h4><div class="row2">${chips("lvk",[["特休","特休","tree-palm"],["病假","病假","thermometer"],["事假","事假","briefcase"],["公假","公假","landmark"]])}</div>
+ <div class="row2" style="margin-top:10px"><input class="in" type="date" id="lvFrom" value="2026-11-20"><input class="in" type="date" id="lvTo" value="2026-11-20"></div>
+ <select class="in" id="lvHalf" style="margin-top:10px"><option>全天</option><option>上午半天</option><option>下午半天</option></select>
+ <textarea class="ta" id="lvReason" style="margin-top:10px;min-height:70px" placeholder="原因（可不填）"></textarea>
+ <button class="bb go" data-act="lvSubmit" style="margin-top:10px"><i data-lucide="send"></i>${t("apply")}</button>
+ <h4><i data-lucide="history"></i>我的申請</h4>`+S.leaves.map(x=>`<div class="li"><span class="ic"><i data-lucide="calendar"></i></span><span class="tx"><b>${x.k} ${x.days}・${x.d}</b><small>${x.flow.join(" → ")}</small></span>${stTag(x.st)}</div>`).join("");};
+
+R.news=()=>S.news.map(x=>`<button class="li" data-act="newsOpen" data-id="${x.id}"><span class="ic">${x.read?`<i data-lucide="mail-open"></i>`:`<i data-lucide="mail" style="color:var(--bad)"></i>`}</span><span class="tx"><b>${x.imp?"【重要】":""}${esc(x.title)}</b><small>${x.d}・總公司</small></span>${x.read?tag("已讀","t-ok"):tag("未讀","t-bad")}</button>`).join("");
+
+let impSel=null;
+R.improve=()=>{
+ if(impSel){const x=S.improves.find(i=>i.id===impSel);
+  return `<button class="sb" data-act="impBack" style="margin-bottom:10px"><i data-lucide="chevron-left"></i>返回列表</button>
+  <div class="box"><b style="font-size:19px">${x.id}・${esc(x.item)}</b><div style="margin-top:6px">督導：${x.sup}・改善期限 <b>${x.due}</b></div><div class="photos" style="margin-top:8px"><div class="ph" style="background:linear-gradient(135deg,#7c2d12,#451a03)"><span>稽核照片</span></div></div></div>
+  ${stepH(1,"s_photo")}${photoBlock("imp","拍改善後照片")}
+  <h4><span class="stp">2</span>改善說明</h4><textarea class="ta" id="impText" placeholder="說明改善措施">${esc(S.form.impText||"")}</textarea>
+  <button class="bb soft" data-act="voice" data-t="impText" id="vb-impText" style="margin-top:8px"><i data-lucide="mic"></i>${t("voice")}</button>
+  ${stepH(3,"s_send")}<button class="bb go" data-act="impSubmit"><i data-lucide="send"></i>${t("reply")}</button>`;}
+ return S.improves.map(x=>`<button class="li" data-act="impOpen" data-id="${x.id}"><span class="ic"><i data-lucide="clipboard-check"></i></span><span class="tx"><b>${x.id}・${esc(x.item)}</b><small>期限 ${x.due}・督導 ${x.sup}${x.reply?"<br>回覆："+esc(x.reply):""}</small></span>${stTag(x.st)}</button>`).join("");};
+
+R.workorder=()=>{const L=S.workorders.filter(x=>x.site===site());
+ return `<div class="note info"><i data-lucide="building-2"></i><span>目前社區：${esc(site())}（可在「設定」切換）</span></div>`+(L.length?L.map(x=>`<div class="li"><span class="ic"><i data-lucide="hard-hat"></i></span><span class="tx"><b>${x.id}・${t(x.cat)}・${esc(x.loc)}</b><small>${esc(x.desc)}</small>${x.log.length?`<small>${x.log.map(esc).join("<br>")}</small>`:""}<span class="acts">${
+  x.st==="待接單"?`<button class="sb go" data-act="woAccept" data-id="${x.id}"><i data-lucide="hand"></i>${t("accept")}</button>`:
+  x.st==="處理中"||x.st==="待料/外包"?`<button class="sb" data-act="woUpdate" data-id="${x.id}"><i data-lucide="pencil"></i>更新進度</button><button class="sb" data-act="woVendor" data-id="${x.id}"><i data-lucide="truck"></i>待料/外包</button><button class="sb go" data-act="woDone" data-id="${x.id}"><i data-lucide="camera"></i>${t("complete")}</button>`:
+  `<span class="small">等待總幹事確認結案</span>`}</span></span>${stTag(x.st)}</div>`).join(""):`<div class="done-hero"><div class="big"><i data-lucide="check"></i></div><h3>本社區沒有工單</h3></div>`);};
+
+R.maint=()=>{const L=S.maint.filter(x=>x.site===site());
+ return `<div class="note info"><i data-lucide="calendar-clock"></i><span>依設備保養週期自動產生（F-MNT-01）</span></div>`+L.map(x=>`<div class="li"><span class="ic"><i data-lucide="cog"></i></span><span class="tx"><b>${esc(x.n)}</b><small>${esc(x.vendor)}・期限 ${x.due}${x.rec?"<br>"+esc(x.rec):""}</small>${x.st==="待執行"?`<span class="acts"><button class="sb go" data-act="mtRecord" data-id="${x.id}"><i data-lucide="clipboard-pen"></i>登錄保養紀錄</button></span>`:""}</span>${stTag(x.st)}</div>`).join("");};
+
+R.expense=()=>{
+ if(S.done.expense){const d=S.done.expense;return doneHero("支出已登錄",d.cat+"・NT$"+fmt(d.amt)+"・"+d.pay,d.amt>5000?[["printer","金額超過 5,000：請列印請款單給財委簽核"],["camera","簽核後拍照上傳，才能封帳"]]:[["check","已列入本月收支明細"]]);}
+ return stepH(1,"s_photo")+photoBlock("exp","拍發票／收據")+
+ `<h4><span class="stp">2</span>科目與金額</h4><div class="row3">${chips("ecat",[["清潔用品","清潔用品","spray-can"],["文具郵電","文具郵電","pencil"],["修繕費","修繕費","hammer"],["水電費","水電費","zap"],["管委會雜支","管委會雜支","coffee"],["其他","其他","ellipsis"]])}</div>
+ <input class="in" id="eAmt" type="number" inputmode="numeric" placeholder="金額（元）" style="margin-top:10px;font-size:22px;font-weight:800" value="${esc(S.form.eAmt||"")}">
+ <div class="row3" style="margin-top:10px">${chips("epay",[["零用金","零用金","wallet"],["轉帳","轉帳","landmark"],["現金","現金","banknote"]])}</div>
+ <div class="note"><i data-lucide="info"></i><span>本社區簽核級距：5,000 以下總幹事；5,000～30,000 財委；30,000 以上主委＋監委。</span></div>`+
+ stepH(3,"s_send")+`<button class="bb go" data-act="expSubmit"><i data-lucide="send"></i>${t("submit")}</button>
+ <h4><i data-lucide="history"></i>本月登錄</h4>`+S.expenses.map(x=>`<div class="li"><span class="ic"><i data-lucide="receipt"></i></span><span class="tx"><b>${x.cat}・NT$${fmt(x.amt)}</b><small>${x.d}・${x.pay}</small></span>${stTag(x.st)}</div>`).join("");};
+
+R.more=()=>{const all=["todo","shift","repair","incident","patrol","schedule","leave","news","improve","workorder","maint","expense"];
+ const mine=all.filter(p=>!MENU[S.role].includes(p)&&!(p==="workorder"&&S.role!=="tech")&&!(p==="expense"&&S.role!=="mgr")&&!(p==="improve"&&S.role!=="mgr"));
+ return `<div class="row3">${mine.concat(["help","feedback","settings","sitepick"]).map(p=>`<button class="chip" data-act="open" data-p="${p}"><i data-lucide="${locked(p)?"lock":PAGES[p].ic}"></i>${t(p)}${locked(p)?`<small class="small">${t("locked")}</small>`:""}</button>`).join("")}</div>`;};
+
+const VIDS=[["repair","報修：拍照→選類別→送出","0:30"],["incident","事件通報與等級說明","0:35"],["shift","交接日誌與語音輸入","0:40"],["patrol","巡邏掃碼打點","0:30"],["leave","線上請假","0:25"],["improve","回覆改善單","0:30"],["expense","支出拍照登錄","0:35"]];
+R.help=()=>`<div class="note info"><i data-lucide="languages"></i><span>教學影片提供 5 種語言字幕，依您的語系自動播放（P-HELP-01）。</span></div>`+
+ VIDS.map(([p,n,d])=>`<button class="li" data-act="playHelp" data-p="${p}"><span class="ic" style="background:var(--line);color:#fff"><i data-lucide="play"></i></span><span class="tx"><b>${n}</b><small>${t(p)}・${d}</small></span><i data-lucide="chevron-right"></i></button>`).join("")+
+ `<button class="bb soft" data-act="replayGuide"><i data-lucide="hand-helping"></i>重新顯示首次使用引導</button>
+ <button class="bb soft" data-act="printGuide"><i data-lucide="printer"></i>現場教學單頁（給督導列印）</button>`;
+
+R.feedback=()=>{
+ if(S.done.feedback)return doneHero("已收到您的問題","編號 "+S.done.feedback+"，客服會在 1 個工作天內回覆",[["message-circle","回覆會傳到這個 LINE 聊天室"]]);
+ return `<h4><span class="stp">1</span>問題類型</h4><div class="row2">${chips("fcat",[["操作問題","不會操作","circle-help"],["錯誤回報","畫面有錯誤","bug"],["功能建議","我有建議","lightbulb"],["其他","其他","ellipsis"]])}</div>
+ <h4><span class="stp">2</span>說明</h4><textarea class="ta" id="fText" placeholder="請描述遇到的狀況（可用語音）">${esc(S.form.fText||"")}</textarea>
+ <button class="bb soft" data-act="voice" data-t="fText" id="vb-fText" style="margin-top:8px"><i data-lucide="mic"></i>${t("voice")}</button>
+ <div class="photos" id="ph-shot" style="margin-top:10px">${S.form.shot?`<div class="ph" style="background:linear-gradient(160deg,#06c755,#0f172a)"><span>畫面截圖</span><button class="x" data-act="shotDel" aria-label="移除截圖"><i data-lucide="x"></i></button></div>`:""}</div>
+ <button class="bb soft" data-act="shot"><i data-lucide="image-plus"></i>附上目前畫面截圖</button>
+ <h4><span class="stp">3</span>${t("s_send")}</h4><button class="bb go" data-act="fbSubmit"><i data-lucide="send"></i>${t("submit")}</button>`+
+ (S.tickets.length?`<h4><i data-lucide="history"></i>我的回報</h4>`+S.tickets.map(x=>`<div class="li"><span class="ic"><i data-lucide="message-square-warning"></i></span><span class="tx"><b>${x.id}・${x.cat}</b><small>${esc(x.text)}</small></span>${stTag(x.st)}</div>`).join(""):"");};
+
+R.settings=()=>{const u=user();
+ return `<h4><i data-lucide="languages"></i>${t("lang")}</h4>`+LANGS.map(([k,n])=>`<button class="bb ${S.lang===k?"go":"soft"}" data-act="setLang" data-v="${k}">${n}</button>`).join("")+
+ `<h4><i data-lucide="building-2"></i>${t("sitepick")}</h4><div class="box">目前社區：<b>${esc(site())}</b><br><span class="small" style="font-size:14px">派駐社區：${u.sites.join("、")}</span></div>${u.sites.length>1?`<button class="bb soft" data-act="open" data-p="sitepick"><i data-lucide="arrow-left-right"></i>${t("sitepick")}</button>`:""}
+ <h4><i data-lucide="bell"></i>通知</h4><div class="box" style="padding:4px 14px"><label class="chk"><input type="checkbox" checked disabled>緊急事件一律即時推播</label><label class="chk"><input type="checkbox" checked id="digestOn">每日摘要（07:30）</label><label class="chk"><input type="checkbox" id="mailOn">同時寄送 Email</label></div>
+ <h4><i data-lucide="link"></i>帳號綁定</h4><div class="idc"><div><span>姓名</span><b>${esc(u.n)}</b></div><div><span>工號</span><b>${u.id}</b></div><div><span>公司</span><b style="text-align:right">${TENANT}</b></div></div>
+ <div class="note info"><i data-lucide="shield"></i><span>一個 LINE 帳號只能綁定一位員工。如需解除綁定請洽公司管理者；離職時系統會自動解除（P-LINE-02、03）。</span></div>
+ <button class="bb soft" data-act="open" data-p="feedback"><i data-lucide="message-square-warning"></i>${t("feedback")}</button>`;};
+
+R.sitepick=()=>`<div class="note info"><i data-lucide="info"></i><span>您派駐多個社區，請選擇現在要操作的社區。系統會記住您的選擇（P-LINE-07）。</span></div>`+
+ user().sites.map(s=>`<button class="bb ${site()===s?"go":"soft"}" data-act="pickSite" data-v="${s}"><i data-lucide="building-2"></i>${s}</button>`).join("");
+
+function doneHero(h,sub,list,emg){return `<div class="done-hero ${emg?"emg":""}"><div class="big"><i data-lucide="${emg?"siren":"circle-check"}"></i></div><h3>${h}</h3><div style="font-size:16px;color:var(--muted)">${esc(sub)}</div><ul class="tl">${(list||[]).map(([i,x])=>`<li><i data-lucide="${i}"></i>${esc(x)}</li>`).join("")}</ul></div><button class="bb go" data-act="again"><i data-lucide="plus"></i>${t("again")}</button><button class="bb soft" data-act="liffClose"><i data-lucide="message-circle"></i>${t("backchat")}</button>`;}
+
+function lockView(p){const need=PAGES[p].need===3?"旗艦版":"專業版";
+ return `<div class="lockv"><div class="big"><i data-lucide="lock"></i></div><h3 style="font-size:21px;margin:0 0 6px">「${t(p)}」${t("locked")}</h3><p style="color:var(--muted);font-size:16px">此功能屬於${need}，貴公司目前使用${["","基本版","專業版","旗艦版"][S.plan]}。<br>如需使用，請洽公司系統管理員。</p></div><button class="bb soft" data-act="liffClose"><i data-lucide="message-circle"></i>${t("backchat")}</button>`;}
+
+/* =====================================================================
+   LIFF 開關與路由
+   ===================================================================== */
+function needPick(p){return user().sites.length>1&&!S.siteChosen[S.role]&&!["sitepick","settings","help","feedback","more"].includes(p);}
+function openLiff(p){
+ if(!S.bound){S.bound=true;}
+ if(needPick(p)){S.pending=p;p="sitepick";}
+ S.page=p;
+ $("#liffTitle").textContent=t(p);
+ $("#liffSite").textContent=TENANT.replace("股份有限公司","")+"・"+site()+"・"+user().n;
+ $("#liffBody").innerHTML=locked(p)?lockView(p):R[p]();
+ $("#liff").classList.add("on");$("#bind").classList.remove("on");
+ icons();renderReq();renderMenu();
+ if(PAGES[p].guide&&!S.seen[p]&&!locked(p)&&!S.done[p]){S.guide={p,i:0};showGuide();}
+}
+function refresh(){if(S.page)openLiffKeep();renderMenu();renderReq();}
+function openLiffKeep(){const sc=$("#liffBody").scrollTop;$("#liffTitle").textContent=t(S.page);$("#liffBody").innerHTML=locked(S.page)?lockView(S.page):R[S.page]();icons();$("#liffBody").scrollTop=sc;}
+function closeLiff(){S.page=null;$("#liff").classList.remove("on");renderReq();}
+function go(p){if(location.hash==="#"+p){if(PAGES[p])openLiff(p);else route();}else location.hash=p;}
+function route(){
+ const h=(location.hash||"#chat").slice(1);
+ closeAll();
+ const m=h.match(/^bind([1-4])$/);
+ if(m){S.bound=false;S.bindStep=+m[1];S.bindErr=false;closeLiff();renderBind();renderMenu();renderReq();return;}
+ if(PAGES[h]){openLiff(h);return;}
+ closeLiff();if(S.bound)$("#bind").classList.remove("on");else renderBind();renderMenu();
+}
+function showGuide(){const g=S.guide,steps=GUIDES[g.p];
+ $("#guideBody").innerHTML=`<div class="dots">${steps.map((_,i)=>`<i class="${i===g.i?"on":""}"></i>`).join("")}</div><span class="stp">${g.i+1}</span><p>${steps[g.i]}</p><button class="bb go" data-act="guideNext">${g.i<steps.length-1?t("next"):t("gotit")}</button>${g.i<steps.length-1?`<button class="bb soft" data-act="guideSkip">${t("skip")}</button>`:""}`;
+ $("#guide").classList.add("on");}
+
+/* =====================================================================
+   綁定流程（P-LINE-02、03）
+   ===================================================================== */
+function renderBind(){
+ const st=S.bindStep,u=user();
+ const dots=`<div class="steps">${[1,2,3,4].map(i=>`<i class="${i<=st?"on":""}"></i>`).join("")}</div>`;
+ let h="";
+ if(st===1)h=`<div class="prof"><div class="pav">${S.oa==="own"?"永":"社"}</div><h2 style="margin:0">${S.oa==="own"?"永信物業 工作站":"社區工作站"}</h2><p style="color:var(--muted);font-size:15px">物業公司員工專用的工作帳號<br>好友人數 12,840</p></div><button class="bb go" data-act="bindAdd"><i data-lucide="user-plus"></i>${t("bind_add")}</button><div class="note info" style="margin-top:14px"><i data-lucide="info"></i><span>請掃描主管提供的 QR Code 加入好友，或在 LINE 搜尋官方帳號。</span></div>`;
+ if(st===2)h=`<div class="msg" style="max-width:100%"><div class="av">社</div><div class="b" style="background:var(--liff-card);color:var(--text)">歡迎！請掃描主管給您的「邀請碼」，或輸入邀請碼完成綁定。</div></div>
+  ${S.bindErr?`<div class="note bad" style="margin-top:12px"><i data-lucide="octagon-alert"></i><span><b>此 LINE 帳號已綁定「宏遠保全股份有限公司」的員工。</b><br>一個 LINE 帳號只能綁定一家公司的一位員工，請先請原公司管理者解除綁定，再重新掃碼。</span></div>`:""}
+  <button class="bb go" data-act="bindScan" style="margin-top:14px"><i data-lucide="qr-code"></i>${t("bind_scan")}</button>
+  <div style="text-align:center;color:var(--muted);margin:12px 0;font-size:15px">或輸入邀請碼</div>
+  <input class="in" id="bindCode" placeholder="例如：YX-8231-KL" value="${esc(S.bindCode)}" style="text-transform:uppercase;letter-spacing:.08em;text-align:center;font-weight:800">
+  <button class="bb soft" data-act="bindCode" style="margin-top:10px"><i data-lucide="keyboard"></i>${t("confirm")}</button>`;
+ if(st===3)h=`<p style="font-size:18px;font-weight:700;margin:0 0 6px">請確認以下是您本人：</p><div class="idc"><div><span>姓名</span><b>${esc(u.n)}</b></div><div><span>工號</span><b>${u.id}</b></div><div><span>職稱</span><b>${u.title}</b></div><div><span>公司</span><b style="text-align:right">${TENANT}</b></div><div><span>派駐社區</span><b>${u.sites.join("、")}</b></div></div>
+  <button class="bb go" data-act="bindConfirm"><i data-lucide="badge-check"></i>${t("bind_me")}</button><button class="bb soft" data-act="bindNotMe"><i data-lucide="user-x"></i>${t("bind_notme")}</button>`;
+ if(st===4)h=`<p style="font-size:18px;font-weight:700;margin:0 0 10px;text-align:center">請選擇語言 · Choose language</p>`+LANGS.map(([k,n])=>`<button class="bb ${k===u.lang?"go":"soft"}" data-act="bindLang" data-v="${k}">${n}</button>`).join("");
+ $("#bindTitle").textContent=["","加入官方帳號","輸入邀請碼","確認身分","選擇語言"][st];
+ $("#bindBody").innerHTML=dots+h;$("#bind").classList.add("on");icons();
+}
+
+/* =====================================================================
+   推播（P-LINE-08、09、10）
+   ===================================================================== */
+function pushCard(k){
+ const sp=site();
+ const C={
+  emg:{kind:"k-emg",ic:"siren",title:"緊急事件",body:sp+" 地下室 B2 疑似火警警報\n通報人：保全 Budi Santoso",small:"已同時通知督導 陳志豪、區域經理 李美玲",p:"incident",urgent:1},
+  overdue:{kind:"k-warn",ic:"clock-alert",title:"工單逾期",body:"R-28755 側門感應讀卡機無反應\n已 7 天未處理",p:S.role==="tech"?"workorder":"repair",urgent:1},
+  improve:{kind:"k-warn",ic:"clipboard-check",title:"新的改善單",body:"IM-1110 垃圾分類區異味\n督導：陳志豪・期限 11/15",p:"improve",urgent:1},
+  digest:{kind:"k-info",ic:"sunrise",title:"每日摘要 · 07:30",body:"今日待辦 "+todoItems().length+" 項\n點下方按鈕查看全部",p:"todo"},
+  news:{kind:"k-ok",ic:"megaphone",title:"公司公告",body:"年終盤點作業通知\n請於 12/15 前完成社區財產盤點",p:"news"},
+  takeover:{kind:"k-gray",ic:"repeat",title:"交接待確認",body:"夜班 Budi Santoso 已送出交接日誌\n請確認接班",p:"shift"},
+ }[k];
+ return C;
+}
+function doPush(k){
+ if(!S.bound){toast("此員工尚未綁定 LINE，已改以 Email／PWA 推播通知（P-LINE-10）");return;}
+ const c=pushCard(k);
+ if(k==="improve"&&!S.improves.find(x=>x.id==="IM-1110"))S.improves.unshift({id:"IM-1110",item:"垃圾分類區異味",due:"11/15",st:"待改善",sup:"陳志豪",reply:""});
+ if(k==="news"&&!S.news.find(x=>x.id===4))S.news.unshift({id:4,title:"年終盤點作業通知",body:"請於 12/15 前完成社區財產盤點，盤點表請上傳至公告文件中心。",imp:false,read:false,d:"11/06"});
+ if(k==="takeover"&&!S.pendingShift.find(x=>x.id==="SH-5531"))S.pendingShift.unshift({id:"SH-5531",from:"Budi Santoso（夜班）",to:"日班",t:"今天 07:00",note:"1. 02:30 B2 車道積水已通報。\n2. 冷藏包裹 1 件。",items:"鑰匙 6 串、對講機 3 支",st:"待確認"});
+ if(k==="emg")S.incs.unshift({id:"INC-33"+(10+S.incs.length),lv:"lv3",cat:"火警",desc:"B2 疑似火警警報（保全 Budi Santoso 通報）",t:"今天 "+now(),st:"處理中",log:[now()+" 已即時推播督導與主管"]});
+ if(!c.urgent&&S.quota.used>=S.quota.limit){S.suppressed.push({title:c.title+"："+c.body.split("\n")[0],p:c.p});toast("本月推播配額已用完：非緊急通知改在「待辦」顯示（P-LINE-09）");renderQuota();refresh();return;}
+ S.quota.used++;addMsg({k:"card",...c});renderQuota();refresh();
+ toast(c.urgent?"即時推播已送出":"已推送");
+}
+function renderQuota(){const q=S.quota,p=Math.min(100,q.used/q.limit*100);$("#qTxt").textContent=fmt(q.used)+" / "+fmt(q.limit)+" 則";const b=$("#qBar");b.querySelector("i").style.width=p+"%";b.className="meter "+(p>=100?"bad":p>=90?"warn":"");}
+
+/* =====================================================================
+   控制面板
+   ===================================================================== */
+function renderCtrl(){
+ $("#cRole").value=S.role;
+ $("#cLang").innerHTML=LANGS.map(([k,n])=>`<option value="${k}" ${S.lang===k?"selected":""}>${n}</option>`).join("");
+ $("#cSite").innerHTML=user().sites.map(s=>`<option ${site()===s?"selected":""}>${s}</option>`).join("");
+ $("#siteNote").textContent=user().sites.length>1?"此員工派駐多社區：首次開啟 LIFF 會先選社區，之後記住選擇。":"此員工只派駐一個社區。";
+ $("#cPlan").value=String(S.plan);$("#cOa").value=S.oa;
+ $("#oaName").textContent=S.oa==="own"?"永信物業 工作站":"社區工作站";
+ $("#oaSub").textContent=S.oa==="own"?"官方帳號（租戶自有，訊息費由租戶負擔）":"官方帳號（平台共用）";
+ $("#oaAv").textContent=S.oa==="own"?"永":"社";
+ $("#bindNote").textContent=S.bound?"目前狀態：已綁定（"+user().n+"）":"目前狀態：尚未綁定";
+ renderQuota();
+}
+function renderReq(){
+ let ids,label;
+ if(!S.bound){ids=["P-LINE-01","P-LINE-02","P-LINE-03","NF-UX-04"];label="綁定流程 · 步驟 "+S.bindStep;}
+ else if(S.page){ids=["P-LINE-05"].concat(PAGES[S.page].req);label="LIFF："+D[S.page][0];}
+ else{ids=["P-LINE-01","P-LINE-04","P-LINE-08","P-LINE-09","P-LINE-10","A.3"];label="聊天室＋圖文選單";}
+ $("#reqBox").innerHTML=`<b>${label}</b>`+ids.map(x=>`<code>${x}</code>`).join("");
+}
+function renderAll(){renderCtrl();renderChat();renderMenu();renderReq();if(S.page)openLiffKeep();if(!S.bound)renderBind();}
+
+/* =====================================================================
+   動作
+   ===================================================================== */
+const findBy=(arr,id)=>arr.find(x=>x.id===id);
+const formVal=id=>{const el=$("#"+id);return el?el.value.trim():"";};
+function keepForm(){["shiftText","rDesc","iDesc","impText","fText","eAmt"].forEach(id=>{const el=$("#"+id);if(el)S.form[id]=el.value;});const rl=$("#rLoc");if(rl)S.form.rLoc=rl.value;}
+const A={
+ open:el=>go(el.dataset.p),
+ liffClose:()=>{go("chat");},
+ closeOv:()=>closeAll(),
+ toggleMenu:()=>{S.menuOpen=!S.menuOpen;renderMenu();},
+ sendMsg:()=>{const v=$("#msgIn").value.trim();if(!v){toast("請先輸入訊息");return;}$("#msgIn").value="";addMsg({k:"me",txt:v});setTimeout(()=>addMsg({k:"bot",txt:"這是工作用帳號，請使用下方選單操作。\n緊急狀況請按「事件通報」。\n（自動回覆，不計推播費用）"}),400);},
+ tutorial:()=>A.playHelp({dataset:{p:S.page||"repair"}}),
+ playHelp:el=>{const p=el.dataset.p,v=VIDS.find(x=>x[0]===p)||["",t(p)+" 教學","0:30"];
+  modal(`<i data-lucide="play-circle"></i>${t("help")}：${esc(t(p))}`,`<div class="video"><span class="cap">${esc(v[1])}・字幕：${LANGS[LI[S.lang]][1]}</span><button class="ibtn" data-act="vidPlay" style="width:80px;height:80px;color:#fff" aria-label="播放"><i data-lucide="play"></i></button><div class="vbar"><i id="vbar"></i></div></div><p style="margin:0;color:var(--muted);font-size:15px">影片長度 ${v[2]}，以實際操作畫面錄製。</p>`,[{label:t("close")},{label:"開啟此功能",cls:"primary",fn:()=>{closeAll();go(p);}}]);},
+ vidPlay:()=>{const b=$("#vbar");if(b){b.style.width="0";requestAnimationFrame(()=>{b.style.width="100%";});toast("播放中…");}},
+ replayGuide:()=>{S.seen={};S.done.repair=null;toast("已重設，下次開啟「報修」等功能會再顯示引導");go("repair");},
+ printGuide:()=>modal(`<i data-lucide="printer"></i>現場教學單頁`,`<div class="box" style="font-size:16px"><b style="font-size:20px">報修三步驟</b><ol style="padding-left:22px;margin:8px 0"><li>按 LINE 下方「報修」</li><li>拍照 → 選類別</li><li>按綠色「送出」</li></ol><b style="font-size:20px">緊急事件</b><p style="margin:6px 0">按「事件通報」→ 選「緊急」→ 送出，督導會立刻收到。</p></div><p class="small" style="font-size:14px">大字版 A4，可列印張貼於警衛室（P-HELP-04）。</p>`,[{label:t("close")},{label:"列印 / 下載 PDF",cls:"primary",fn:()=>{closeAll();toast("已產生 PDF：教學單頁_報修與通報.pdf");}}]),
+ guideNext:()=>{const g=S.guide;if(!g)return closeAll();if(g.i<GUIDES[g.p].length-1){g.i++;showGuide();}else{S.seen[g.p]=1;S.guide=null;closeAll();}},
+ guideSkip:()=>{if(S.guide)S.seen[S.guide.p]=1;S.guide=null;closeAll();},
+ again:()=>{S.done[S.page]=null;if(S.page==="repair")S.photos.repair=[];if(S.page==="incident")S.photos.incident=[];if(S.page==="expense")S.photos.exp=[];openLiffKeep();},
+ pick:el=>{keepForm();S.form[el.dataset.g]=el.dataset.v;$$(`[data-g="${el.dataset.g}"]`).forEach(b=>b.classList.toggle("sel",b===el));
+  if(el.dataset.g==="tpl"){const ta=$("#shiftText");const txt={"正常":"本班一切正常，無特殊事項。","待辦":"待辦：","設備":"設備異常：","住戶":"住戶反映："}[el.dataset.v];if(ta&&!ta.value.includes(txt))ta.value=(ta.value?ta.value+"\n":"")+txt;}},
+ snap:el=>{const k=el.dataset.k;flash();(S.photos[k]=S.photos[k]||[]).push({h:HUES[(S.photos[k].length+k.length)%HUES.length],tm:now()});renderPhotos(k);toast("已拍照（"+S.photos[k].length+" 張）");},
+ delPhoto:el=>{const k=el.dataset.k;(S.photos[k]||[]).splice(+el.dataset.i,1);renderPhotos(k);},
+ voice:el=>{const id=el.dataset.t,b=$("#vb-"+id);if(!b||b.classList.contains("rec"))return;b.classList.add("rec");b.innerHTML=`<i data-lucide="audio-lines"></i>聆聽中…請說話`;icons();
+  setTimeout(()=>{const ta=$("#"+id);const say={shiftText:"B1 機房抽水馬達有異音，已通知機電王志強，明天早上會來看。",rDesc:"燈一直閃，晚上很暗，住戶有反映。",iDesc:"B2 停車場靠近 3 號柱有積水，還在擴大。",impText:"已重新教育訓練夜班人員，並設定交班提醒。",fText:"拍照之後按送出沒有反應，等了很久。"}[id]||"（語音轉文字內容）";
+   if(ta){ta.value=(ta.value?ta.value+"\n":"")+say;}const bb=$("#vb-"+id);if(bb){bb.classList.remove("rec");bb.innerHTML=`<i data-lucide="mic"></i>${t("voice")}`;icons();}toast("語音已轉成文字");},1200);},
+ /* 交接 */
+ takeover:el=>{const x=findBy(S.pendingShift,el.dataset.id);x.st="已確認";addMsg({k:"bot",txt:"✅ 已確認接班："+x.from+"\n點交："+x.items});toast("已確認接班");refresh();},
+ shiftSubmit:()=>{keepForm();if(!S.form.tpl&&!formVal("shiftText")){toast("請選擇範本或填寫說明");return;}
+  const id="SH-55"+(40+S.shifts.length);S.shifts.unshift({id,tpl:S.form.tpl||"自行填寫",t:"今天 "+now(),to:"Budi Santoso（夜班）",st:"待確認"});
+  S.done.shift=id;S.form.tpl=null;S.form.shiftText="";addMsg({k:"bot",txt:"📝 交接日誌 "+id+" 已送出\n等待夜班 Budi Santoso 確認接班"});openLiffKeep();refresh();
+  setTimeout(()=>{const s=S.shifts.find(x=>x.id===id);if(s&&s.st==="待確認"){s.st="已確認";addMsg({k:"bot",txt:"✅ Budi Santoso 已確認接班（"+id+"）"});if(S.page==="shift")openLiffKeep();}},2500);},
+ /* 報修 */
+ repairSubmit:()=>{keepForm();if(!S.form.rcat){toast("請選擇類別（步驟 2）");return;}
+  const send=()=>{const id="R-288"+(31+S.repairs.length);S.repairs.unshift({id,cat:S.form.rcat,loc:S.form.rLoc||"公設：大廳",desc:S.form.rDesc||"（附照片）",st:"待處理",who:"—",days:0});
+   S.done.repair=id;S.form.rcat=null;S.form.rDesc="";S.photos.repair=[];closeAll();addMsg({k:"bot",txt:"🔧 報修已送出 "+id+"\n類別："+t(S.repairs[0].cat)+"・狀態：待處理"});openLiffKeep();refresh();};
+  if(!(S.photos.repair||[]).length)modal(`<i data-lucide="camera-off"></i>沒有照片`,`<p style="margin:0">有照片能幫助師傅更快判斷問題。確定不拍照直接送出？</p>`,[{label:"回去拍照"},{label:"直接送出",cls:"primary",fn:send}]);else send();},
+ repairClose:el=>{const x=findBy(S.repairs,el.dataset.id);x.st="已結案";addMsg({k:"bot",txt:"✔️ 報修 "+x.id+" 已結案"});refresh();},
+ repairReopen:el=>{const x=findBy(S.repairs,el.dataset.id);x.st="處理中";addMsg({k:"bot",txt:"↩️ 報修 "+x.id+" 退回處理中，已通知處理人"});refresh();},
+ /* 事件 */
+ incSubmit:()=>{keepForm();if(!S.form.ilv){toast("請選擇等級（步驟 2）");return;}
+  const id="INC-33"+(20+S.incs.length),lv=S.form.ilv;S.incs.unshift({id,lv,cat:formVal("iCat")||"其他",desc:S.form.iDesc||"（附照片）",t:"今天 "+now(),st:"處理中",log:[now()+" 已通報"]});
+  S.done.incident={id,lv};S.form.ilv=null;S.form.iDesc="";S.photos.incident=[];
+  addMsg({k:"card",kind:lv==="lv3"?"k-emg":lv==="lv2"?"k-warn":"k-info",ic:"siren",title:"事件已通報 "+id,body:t(lv)+"・"+S.incs[0].cat+"\n"+S.incs[0].desc,small:lv==="lv3"?"已即時通知督導、區域經理、營運副總":lv==="lv2"?"已通知督導":"已通知總幹事",p:"incident"});openLiffKeep();refresh();},
+ incUpdate:el=>{const x=findBy(S.incs,el.dataset.id);modal(`<i data-lucide="pencil"></i>更新進度 ${x.id}`,`<textarea class="ta" id="incLog" placeholder="目前處理狀況"></textarea>`,[{label:t("cancel")},{label:t("submit"),cls:"primary",fn:()=>{const v=formVal("incLog");if(!v){toast("請填寫進度");return;}x.log.push(now()+" "+v);closeAll();toast("已更新進度");refresh();}}]);},
+ incClose:el=>{const x=findBy(S.incs,el.dataset.id);modal(`<i data-lucide="file-check"></i>結案報告 ${x.id}`,`<textarea class="ta" id="incSum" placeholder="處理結果與後續預防"></textarea>${photoBlock("incClose","拍結案照片")}`,[{label:t("cancel")},{label:"結案",cls:"primary",fn:()=>{if(!formVal("incSum")){toast("請填寫結案說明");return;}x.st="已結案";x.log.push(now()+" 結案："+formVal("incSum"));closeAll();addMsg({k:"bot",txt:"✔️ 事件 "+x.id+" 已結案"});refresh();}}]);},
+ /* 巡邏 */
+ patScan:()=>{const left=S.patrol.points.map((x,i)=>({...x,i})).filter(x=>!x.res);if(!left.length){toast("本輪已全部完成");return;}
+  modal(`<i data-lucide="scan-line"></i>${t("scan")}`,`<div class="scanner"><span>將鏡頭對準巡邏點 QR Code</span></div>`+left.map(x=>`<button class="bb soft" data-act="patHit" data-i="${x.i}"><i data-lucide="map-pin"></i>模擬掃到：${esc(x.n)}</button>`).join(""),[{label:t("cancel")}]);},
+ patHit:el=>{const p=S.patrol.points[+el.dataset.i];modal(`<i data-lucide="map-pin"></i>${esc(p.n)}`,`<p style="margin:0 0 10px">已掃描成功，請選擇現場狀況：</p><div class="row2"><button class="bb go" data-act="patOk" data-i="${el.dataset.i}"><i data-lucide="circle-check"></i>${t("normal")}</button><button class="bb red" data-act="patBad" data-i="${el.dataset.i}" style="margin-top:0"><i data-lucide="triangle-alert"></i>${t("abnormal")}</button></div>`,[{label:t("cancel")}]);},
+ patOk:el=>{const p=S.patrol.points[+el.dataset.i];p.res="正常";p.t=now();closeAll();toast(p.n+"：正常");refresh();},
+ patBad:el=>{const i=el.dataset.i,p=S.patrol.points[+i];S.photos.pat=[];modal(`<i data-lucide="triangle-alert"></i>${esc(p.n)}・${t("abnormal")}`,`${photoBlock("pat")}<textarea class="ta" id="patNote" style="margin-top:10px" placeholder="異常說明">漏水</textarea><p class="small" style="font-size:14px;margin:8px 0 0">可一鍵轉成報修或事件通報（F-PAT-03）</p>`,
+  [{label:"僅記錄",fn:()=>{A._patRec(i);closeAll();refresh();}},{label:"轉報修",cls:"primary",fn:()=>{A._patRec(i);S.form.rDesc=p.n+"："+formVal("patNote");S.form.rcat="c_water";S.done.repair=null;closeAll();go("repair");}},{label:"轉事件",cls:"danger",fn:()=>{A._patRec(i);S.form.iDesc=p.n+"："+formVal("patNote");S.done.incident=null;closeAll();go("incident");}}]);},
+ _patRec:i=>{const p=S.patrol.points[+i];p.res="異常";p.t=now();p.note=formVal("patNote")||"異常";addMsg({k:"bot",txt:"⚠️ 巡邏異常："+p.n+"・"+p.note});},
+ patReset:()=>{const P=S.patrol.points;if(P.some(x=>!x.res)){modal(`<i data-lucide="alert-triangle"></i>尚有未巡點`,`<p style="margin:0">還有 ${P.filter(x=>!x.res).length} 點未巡，開始下一輪會將其記為「漏巡」並通知總幹事。</p>`,[{label:t("cancel")},{label:"仍要開始",cls:"danger",fn:()=>{closeAll();addMsg({k:"bot",txt:"⚠️ 漏巡 "+P.filter(x=>!x.res).length+" 點，已通知總幹事"});A._newRound();}}]);return;}A._newRound();},
+ _newRound:()=>{S.patrol.name="夜班第 4 輪（02:00–04:00）";S.patrol.points.forEach(x=>{x.res=null;x.note="";});toast("已開始下一輪");refresh();},
+ /* 班表／請假 */
+ week:el=>{weekOff=+el.dataset.v;openLiffKeep();},
+ lvSubmit:()=>{if(!S.form.lvk){toast("請選擇假別");return;}const f=formVal("lvFrom"),to=formVal("lvTo");if(!f||!to||to<f){toast("請確認請假日期");return;}
+  const d=f.slice(5).replace("-","/")+(to!==f?"–"+to.slice(5).replace("-","/"):""),half=formVal("lvHalf");
+  S.leaves.unshift({k:S.form.lvk,d,days:half==="全天"?((new Date(to)-new Date(f))/864e5+1)+" 天":"0.5 天",st:S.role==="mgr"?"督導核准中":"總幹事初審中",flow:["今天 送出",S.role==="mgr"?"督導審核中":"總幹事初審中"]});
+  addMsg({k:"bot",txt:"📅 請假申請已送出："+S.form.lvk+" "+d+"\n審核結果會用 LINE 通知您"});S.form.lvk=null;openLiffKeep();refresh();toast("已送出申請");},
+ lvOk:el=>{const x=findBy(S.toApprove,el.dataset.id);x.st="督導核准中";addMsg({k:"bot",txt:"已同意 "+x.n+" 的"+x.k+"，送督導核准"+(x.cover==="需安排代班"?"\n⚠️ 需安排代班，已通知督導":"")});refresh();},
+ lvNo:el=>{const x=findBy(S.toApprove,el.dataset.id);modal(`<i data-lucide="x-circle"></i>駁回 ${esc(x.n)} 的請假`,`<textarea class="ta" id="lvNoR" placeholder="駁回原因（會通知員工）"></textarea>`,[{label:t("cancel")},{label:"確定駁回",cls:"danger",fn:()=>{if(!formVal("lvNoR")){toast("請填寫原因");return;}x.st="已駁回";closeAll();toast("已駁回並通知員工");refresh();}}]);},
+ /* 公告 */
+ newsOpen:el=>{const x=S.news.find(n=>n.id===+el.dataset.id);if(!x.imp)x.read=true;
+  modal(`<i data-lucide="megaphone"></i>${x.imp?"【重要】":""}${esc(x.title)}`,`<div class="small" style="font-size:14px;margin-bottom:8px">${x.d}・總公司</div><div style="white-space:pre-line">${esc(x.body)}</div>${x.imp&&!x.read?`<div class="note" style="margin-top:12px"><i data-lucide="info"></i><span>重要公告需按「我已閱讀」確認（B-DOC-03）</span></div>`:""}`,
+  x.imp&&!x.read?[{label:t("close")},{label:"我已閱讀",cls:"primary",fn:()=>{x.read=true;closeAll();toast("已確認閱讀");refresh();}}]:[{label:t("close")}]);refresh();},
+ /* 改善單 */
+ impOpen:el=>{impSel=el.dataset.id;const x=findBy(S.improves,impSel);if(x.st!=="待改善"){modal(`<i data-lucide="clipboard-check"></i>${x.id}`,`<p style="margin:0">${esc(x.item)}</p><div class="note info"><i data-lucide="info"></i><span>已回覆：${esc(x.reply)}<br>等待督導複查。</span></div>`,[{label:t("close")}]);impSel=null;return;}S.photos.imp=[];openLiffKeep();},
+ impBack:()=>{impSel=null;openLiffKeep();},
+ impSubmit:()=>{keepForm();if(!(S.photos.imp||[]).length){toast("請拍改善後照片（步驟 1）");return;}if(!S.form.impText){toast("請填寫改善說明");return;}
+  const x=findBy(S.improves,impSel);x.st="已回覆待複查";x.reply=S.form.impText;S.form.impText="";impSel=null;addMsg({k:"bot",txt:"📋 改善單 "+x.id+" 已回覆，等待督導複查"});openLiffKeep();refresh();toast("已回覆");},
+ /* 工單 */
+ woAccept:el=>{const x=findBy(S.workorders,el.dataset.id);x.st="處理中";x.log.push(now()+" 已接單");addMsg({k:"bot",txt:"已接單 "+x.id+"，總幹事會收到通知"});refresh();},
+ woUpdate:el=>{const x=findBy(S.workorders,el.dataset.id);modal(`<i data-lucide="pencil"></i>更新進度 ${x.id}`,`<textarea class="ta" id="woLog" placeholder="處理狀況"></textarea>`,[{label:t("cancel")},{label:t("submit"),cls:"primary",fn:()=>{const v=formVal("woLog");if(!v){toast("請填寫進度");return;}x.log.push(now()+" "+v);closeAll();refresh();toast("已更新");}}]);},
+ woVendor:el=>{const x=findBy(S.workorders,el.dataset.id);modal(`<i data-lucide="truck"></i>待料／外包 ${x.id}`,`<select class="in" id="woV"><option>叫料中（等待零件）</option><option>外包：永大電梯</option><option>外包：大同水電行</option><option>外包：安心消防</option></select><input class="in" id="woCost" type="number" placeholder="預估費用（元，可不填）" style="margin-top:10px"><label class="chk"><input type="checkbox" id="woCmt" checked>費用由管委會支付（F-REP-05）</label>`,[{label:t("cancel")},{label:t("confirm"),cls:"primary",fn:()=>{x.st="待料/外包";x.log.push(now()+" "+formVal("woV")+(formVal("woCost")?"・預估 NT$"+fmt(formVal("woCost")):""));closeAll();refresh();toast("已更新為待料/外包");}}]);},
+ woDone:el=>{const x=findBy(S.workorders,el.dataset.id);S.photos.wo=[];modal(`<i data-lucide="camera"></i>${t("complete")} ${x.id}`,`${photoBlock("wo","拍完工照片")}<textarea class="ta" id="woNote" style="margin-top:10px" placeholder="處理說明"></textarea>`,[{label:t("cancel")},{label:t("submit"),cls:"primary",fn:()=>{if(!(S.photos.wo||[]).length){toast("請拍完工照片");return;}x.st="已完成";x.log.push(now()+" 完工："+(formVal("woNote")||"已修復"));closeAll();addMsg({k:"bot",txt:"🛠️ "+x.id+" 已完工，等待總幹事確認結案"});refresh();}}]);},
+ /* 保養 */
+ mtRecord:el=>{const x=findBy(S.maint,el.dataset.id);S.photos.mt=[];S.form.mtFile=null;
+  modal(`<i data-lucide="clipboard-pen"></i>${esc(x.n)}`,`<input class="in" type="date" id="mtDate" value="2026-11-06"><input class="in" id="mtVendor" value="${esc(x.vendor)}" style="margin-top:10px"><select class="in" id="mtRes" style="margin-top:10px"><option>正常</option><option>需追蹤</option><option>異常（轉報修）</option></select><div style="margin-top:10px">${photoBlock("mt")}</div><div id="mtFile" class="small" style="margin:8px 0;font-size:14px">尚未上傳保養報告</div><button class="bb soft" data-act="mockUpload"><i data-lucide="file-up"></i>上傳保養報告（PDF／照片）</button>`,
+  [{label:t("cancel")},{label:"儲存紀錄",cls:"primary",fn:()=>{x.st="已完成";x.rec=formVal("mtDate").slice(5).replace("-","/")+" "+formVal("mtVendor")+"・"+formVal("mtRes")+(S.form.mtFile?"・附報告":"");if(formVal("mtRes").startsWith("異常")){S.workorders.unshift({id:"R-288"+(60+S.workorders.length),site:x.site,cat:"c_other",loc:"設備",desc:x.n+" 保養發現異常",st:"處理中",log:[now()+" 由保養紀錄轉報修"]});}closeAll();addMsg({k:"bot",txt:"✅ 保養紀錄已儲存："+x.n});refresh();}}]);},
+ mockUpload:()=>{S.form.mtFile="保養報告_"+now().replace(":","")+".pdf";const f=$("#mtFile");if(f)f.textContent="已上傳："+S.form.mtFile;toast("已上傳");},
+ /* 支出 */
+ expSubmit:()=>{keepForm();if(!(S.photos.exp||[]).length){toast("請拍發票或收據（步驟 1）");return;}if(!S.form.ecat){toast("請選擇科目");return;}const amt=+S.form.eAmt;if(!amt||amt<=0){toast("請輸入金額");return;}if(!S.form.epay){toast("請選擇付款方式");return;}
+  const d={cat:S.form.ecat,amt,pay:S.form.epay};S.expenses.unshift({d:"11/06",...d,st:amt>5000?"待簽核":"已登錄"});S.done.expense=d;S.form.ecat=S.form.epay=null;S.form.eAmt="";S.photos.exp=[];
+  addMsg({k:"bot",txt:"🧾 支出已登錄："+d.cat+" NT$"+fmt(amt)+(amt>5000?"\n需列印請款單給財委簽核":"")});openLiffKeep();refresh();},
+ /* 問題回報 */
+ shot:()=>{S.form.shot=true;keepForm();openLiffKeep();toast("已附上目前畫面截圖");},
+ shotDel:()=>{S.form.shot=false;keepForm();openLiffKeep();},
+ fbSubmit:()=>{keepForm();if(!S.form.fcat){toast("請選擇問題類型");return;}if(!S.form.fText){toast("請描述問題");return;}
+  const id="SUP-2026-0"+(142+S.tickets.length);S.tickets.unshift({id,cat:S.form.fcat,text:S.form.fText,st:"新進"});S.done.feedback=id;S.form.fcat=null;S.form.fText="";S.form.shot=false;
+  addMsg({k:"bot",txt:"📨 已收到您的問題回報 "+id+"\n客服會在 1 個工作天內於此回覆。"});openLiffKeep();
+  setTimeout(()=>{const k=S.tickets.find(x=>x.id===id);if(k){k.st="處理中（客服）";addMsg({k:"bot",txt:"客服小美：您好，我們已收到 "+id+"，正在確認中，稍後回覆您。"});if(S.page==="feedback")openLiffKeep();}},2500);},
+ /* 設定 */
+ setLang:el=>{S.lang=el.dataset.v;renderAll();toast("Language: "+LANGS[LI[S.lang]][1]);},
+ pickSite:el=>{S.site[S.role]=el.dataset.v;S.siteChosen[S.role]=true;renderCtrl();toast("目前社區："+el.dataset.v);const p=S.pending;S.pending=null;if(p){openLiff(p);}else openLiffKeep();refresh();},
+ pkgInfo:()=>modal(`<i data-lucide="package"></i>包裹與訪客`,`<p style="margin:0 0 8px">包裹登記、領取簽名與訪客登記，在警衛室櫃台的共用電腦或平板（網頁版櫃台模式）操作，方便快速切換值班人員。</p><div class="note info"><i data-lucide="info"></i><span>LINE 前台只顯示未領數量提醒（SaaS 需求書 2.2：F-PKG、F-VIS 以網頁版為主）。</span></div>`,[{label:t("close")}]),
+ /* 綁定 */
+ bindAdd:()=>{go("bind2");},
+ bindScan:()=>modal(`<i data-lucide="qr-code"></i>${t("bind_scan")}`,`<div class="scanner"><span>將鏡頭對準主管手機上的邀請碼</span></div><button class="bb go" data-act="bindScanOk"><i data-lucide="check"></i>模擬掃到：YX-8231-KL</button><button class="bb red" data-act="bindScanErr"><i data-lucide="octagon-alert"></i>模擬：此 LINE 已綁定其他公司</button>`,[{label:t("cancel")}]),
+ bindScanOk:()=>{closeAll();S.bindCode="YX-8231-KL";go("bind3");},
+ bindScanErr:()=>{closeAll();S.bindErr=true;renderBind();},
+ bindCode:()=>{const v=formVal("bindCode").toUpperCase();S.bindCode=v;if(!v){toast("請輸入邀請碼");return;}
+  if(v==="YX-8231-KL"||/^YX-\d{4}-[A-Z]{2}$/.test(v)){S.bindErr=false;go("bind3");}
+  else if(v.startsWith("HY")){S.bindErr=true;renderBind();}
+  else{toast("邀請碼無效或已過期，請向主管重新索取");}},
+ bindConfirm:()=>{go("bind4");},
+ bindNotMe:()=>modal(`<i data-lucide="user-x"></i>資料不是您本人`,`<p style="margin:0">請聯絡您的主管重新產生邀請碼。每組邀請碼只能使用一次，24 小時內有效。</p>`,[{label:"回上一步",fn:()=>{closeAll();go("bind2");}},{label:t("close")}]),
+ bindLang:el=>{S.lang=el.dataset.v;S.bound=true;S.menuOpen=true;
+  S.chat=[{k:"sys",txt:"今天"},{k:"sys",txt:"已加入官方帳號"},{k:"bot",txt:user().n+" 您好！\n已完成綁定："+TENANT+"・"+user().sites.join("、")+"\n請使用下方選單開始工作。"}];
+  if(user().sites.length>1)S.siteChosen[S.role]=false;
+  renderAll();go("chat");toast("綁定完成");},
+ /* 控制面板 */
+ push:el=>doPush(el.dataset.k),
+ quotaNear:()=>{S.quota.used=S.quota.limit-2;renderQuota();toast("剩 2 則，之後非緊急通知會改在待辦顯示");},
+ quotaReset:()=>{S.quota.used=0;S.suppressed=[];renderQuota();refresh();toast("配額已歸零（新的月份）");},
+ resetDemo:()=>{const keep={role:S.role,plan:S.plan,oa:S.oa};initState();Object.assign(S,keep);S.lang=user().lang;S.bound=false;S.siteChosen={};renderAll();go("bind1");},
+ theme:()=>{const r=document.documentElement,cur=r.dataset.theme||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");r.dataset.theme=cur==="dark"?"light":"dark";},
+};
+
+/* =====================================================================
+   事件委派
+   ===================================================================== */
+document.addEventListener("click",e=>{
+ const f=e.target.closest("[data-foot]");if(f){const fn=FOOT[f.dataset.foot];fn?fn():closeAll();return;}
+ const el=e.target.closest("[data-act]");if(!el)return;
+ const fn=A[el.dataset.act];if(fn){e.preventDefault();fn(el);}
+});
+document.addEventListener("change",e=>{
+ const c=e.target.dataset.change;if(!c)return;const v=e.target.value;
+ if(c==="role"){S.role=v;S.lang=user().lang;impSel=null;}
+ if(c==="lang")S.lang=v;
+ if(c==="site"){S.site[S.role]=v;S.siteChosen[S.role]=true;}
+ if(c==="plan")S.plan=+v;
+ if(c==="oa")S.oa=v;
+ renderAll();
+ if(c==="role"&&S.page&&needPick(S.page))openLiff(S.page);
+ toast("已切換");
+});
+$("#msgIn").addEventListener("keydown",e=>{if(e.key==="Enter")A.sendMsg();});
+window.addEventListener("hashchange",route);
+initState();renderAll();route();
+</script>
+</body>
+</html>

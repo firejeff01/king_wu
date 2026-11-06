@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SaaS 原型總覽</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;700;800&family=Noto+Sans+TC:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0b1220;--panel:#111b2e;--text:#e2e8f0;--muted:#94a3b8;--border:#1f2a3c}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:radial-gradient(900px 500px at 0% 0%,#1e3a8a 0,transparent 60%),radial-gradient(700px 500px at 100% 100%,#0e7490 0,transparent 60%),var(--bg);color:var(--text);font-family:Inter,"Noto Sans TC",system-ui,sans-serif;padding:48px 16px}
+.w{max-width:1100px;margin:0 auto}
+h1{font-size:34px;margin:0 0 8px;font-weight:900}
+p.sub{color:var(--muted);margin:0 0 32px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.card{display:block;text-decoration:none;color:inherit;background:rgba(17,27,46,.85);border:1px solid var(--border);border-radius:20px;padding:26px;transition:.2s}
+a.card:hover{border-color:#38bdf8;transform:translateY(-2px)}
+.card.wide{grid-column:1/-1}
+.tag{display:inline-block;font-size:12px;font-weight:700;padding:3px 10px;border-radius:999px;background:#0c2a3d;color:#7dd3fc;margin-bottom:10px}
+.tag.ops{background:#2e1065;color:#c4b5fd}.tag.line{background:#052e16;color:#86efac}.tag.trial{background:#3b2a05;color:#fcd34d}
+h2{margin:0 0 10px;font-size:22px}
+.d{color:var(--muted);font-size:14px}
+ul{margin:12px 0 0;padding-left:20px;color:var(--muted);line-height:1.8;font-size:14px}
+.links{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+.links a{color:#7dd3fc;font-size:13px;font-weight:700;text-decoration:none;border:1px solid var(--border);border-radius:999px;padding:5px 12px}
+.links a:hover{border-color:#38bdf8}
+.note{margin-top:28px;color:var(--muted);font-size:13px;line-height:1.9;border-top:1px solid var(--border);padding-top:18px}
+.note a{color:#7dd3fc}
+@media (max-width:720px){.grid{grid-template-columns:1fr}h1{font-size:26px}body{padding:32px 16px}}
+</style>
+</head>
+<body>
+<div class="w">
+  <h1>物業社區管理平台 SaaS 版 · 畫面原型</h1>
+  <p class="sub">v0.1 · 三個端：平台營運後台（我們）、租戶後台與前台（物業公司）。每個按鈕皆可操作，資料皆為虛構，對應《SaaS 版需求規劃書》v0.2。</p>
+  <div class="grid">
+    <a class="card" href="ops.html">
+      <span class="tag ops">平台營運方 · 我們自己用</span>
+      <h2>平台營運後台</h2>
+      <div class="d">管理客戶、方案、帳務、推薦夥伴、客服與系統</div>
+      <ul>
+        <li>營運儀表板：MRR、租戶數、試用轉換、待處理清單</li>
+        <li>客戶開發：潛在客戶、試用申請、一鍵建立試用租戶</li>
+        <li>租戶管理：租戶詳情、健康度、限時授權存取</li>
+        <li>方案與價格版本、優惠碼、帳單與收款對帳</li>
+        <li>推薦夥伴與佣金計算、撥付</li>
+        <li>客服中心、內容管理（範本庫、教學影片）、系統監控、平台設定</li>
+      </ul>
+    </a>
+    <div class="card">
+      <span class="tag">租戶 · 物業公司幹部</span>
+      <h2><a href="admin.html" style="color:inherit;text-decoration:none">租戶後台（總公司管理平台） →</a></h2>
+      <div class="d">示範租戶：永信物業（旗艦版 · 入門級距，8 個服務中社區）</div>
+      <ul>
+        <li>登入：公司代碼＋帳號＋雙因子驗證，服務條款重新同意</li>
+        <li>導入精靈 6 步驟、導入檢查清單、示範資料</li>
+        <li>依方案鎖定模組（選單鎖頭、升級說明）</li>
+        <li>法人管理、社區模組開關、社區數上限與升級</li>
+        <li>員工 LINE 綁定邀請碼、使用率監控與低使用率警示</li>
+        <li>訂閱與帳單、平台客服授權、資料匯出、終止服務、說明中心</li>
+      </ul>
+      <div class="links"><a href="admin.html">開啟（旗艦版）</a><a href="admin.html?edition=basic">基本版</a><a href="admin.html?edition=pro">專業版</a><a href="admin.html?status=trial">試用中</a><a href="admin.html?status=overdue">付款逾期</a></div>
+    </div>
+    <a class="card" href="liff.html">
+      <span class="tag line">前台 · 社區工作人員個人手機</span>
+      <h2>LINE 前台</h2>
+      <div class="d">不用另裝 App；年長總幹事也用得來的主要入口</div>
+      <ul>
+        <li>綁定流程：加入好友 → 掃邀請碼 → 確認身分 → 選語系</li>
+        <li>依角色切換的圖文選單（總幹事、保全、清潔、機電）</li>
+        <li>LIFF 頁面：交接日誌、報修、事件通報、巡邏、班表、請假、公告、改善單</li>
+        <li>推播訊息：緊急事件、逾期工單、每日摘要</li>
+      </ul>
+    </a>
+    <div class="card">
+      <span class="tag">前台 · 櫃台共用電腦</span>
+      <h2><a href="site.html" style="color:inherit;text-decoration:none">網頁前台（櫃台模式／PWA） →</a></h2>
+      <div class="d">包裹、訪客、管理費收款等櫃台作業；顯示租戶名稱</div>
+      <ul>
+        <li>櫃台模式：點名字＋4 碼 PIN 快速切換使用者</li>
+        <li>依方案隱藏模組（巡邏、改善單屬專業版；管理費、社區財務屬旗艦版）</li>
+        <li>提示個人作業改用 LINE</li>
+      </ul>
+      <div class="links"><a href="site.html">開啟（旗艦版）</a><a href="site.html?edition=basic">基本版</a><a href="site.html?edition=pro">專業版</a></div>
+    </div>
+    <div class="card wide">
+      <span class="tag trial">官網 · 潛在客戶</span>
+      <h2><a href="signup.html" style="color:inherit;text-decoration:none">試用申請 →</a></h2>
+      <div class="d">官網表單：公司資料、社區數、推薦碼；送出後進入平台營運後台的潛在客戶清單</div>
+      <div class="links"><a href="signup.html">一般申請</a><a href="signup.html?ref=HY-CHEN">透過推薦連結申請（推薦碼 HY-CHEN）</a></div>
+    </div>
+  </div>
+  <div class="note">
+    <b>相關文件</b>：<a href="../社區管理系統SaaS版需求規劃書.html">SaaS 版需求規劃書</a> · <a href="../SaaS商業計畫書.html">SaaS 商業計畫書</a> · <a href="../../prototype/index.html">原單一公司版原型</a><br>
+    <b>原型展示提示</b>：租戶後台「訂閱與帳單」頁最下方有「原型展示用」區塊，可切換方案版本與訂閱狀態；也可用網址參數 <code>?edition=basic|pro|flag</code>、<code>?status=trial|overdue|readonly</code>。
+  </div>
+</div>
+</body>
+</html>

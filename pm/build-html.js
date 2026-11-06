@@ -1,10 +1,14 @@
 // 將需求規劃書 .md 轉成可直接開啟的 .html（內嵌 Markdown，於瀏覽器端以 marked + mermaid 渲染）
 // 用法：node build-html.js   （修改 md 後重新執行即可同步 html）
+//       node build-html.js <檔案.md> [側欄標題] [側欄副標]   （轉換其他 md，輸出同名 .html）
 const fs = require('fs');
 const path = require('path');
 
-const src = path.join(__dirname, '社區管理系統需求規劃書.md');
-const out = path.join(__dirname, '社區管理系統需求規劃書.html');
+const src = process.argv[2] ? path.resolve(process.argv[2]) : path.join(__dirname, '社區管理系統需求規劃書.md');
+const out = src.replace(/.md$/i, '') + '.html';
+const brand = process.argv[3] || '社區管理系統';
+const sub = process.argv[4] || '需求規劃書';
+const docTitle = process.argv[3] ? brand + '：' + sub : '社區管理系統需求';
 const md = fs.readFileSync(src, 'utf8');
 const embedded = JSON.stringify(md).replace(/<\/script/gi, '<\\/script');
 
@@ -13,7 +17,7 @@ const html = `<!doctype html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>社區管理系統需求</title>
+<title>${docTitle}</title>
 <style>
 :root{
   --bg:#f6f7f9; --panel:#ffffff; --text:#1f2933; --muted:#5f6b7a; --border:#e1e5ea;
@@ -92,8 +96,8 @@ tr.hidden{display:none}
 <button class="menu-btn" onclick="document.querySelector('nav').classList.toggle('open')">☰ 目錄</button>
 <div class="layout">
   <nav>
-    <div class="brand">社區管理系統</div>
-    <div class="sub">需求規劃書</div>
+    <div class="brand">${brand}</div>
+    <div class="sub">${sub}</div>
     <div class="tools">
       <button onclick="setTheme()">深淺色切換</button>
       <button onclick="window.print()">列印 / PDF</button>
