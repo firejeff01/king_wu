@@ -1,0 +1,489 @@
+<title>物業社區管理平台</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=LXGW+WenKai+TC:wght@400;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+/* 版面概念：值班交接簿——左側大標題配一張真實的交接日誌卡，往下依「痛點 → 角色 → 功能 → 比較 → 方案」閱讀，
+   橫向分隔線取自交接簿的格線，強調色取自保全反光背心的警示黃 */
+:root{
+  --bg:#f3f6f3; --panel:#ffffff; --panel-2:#e9efea; --ink:#11231e; --muted:#566a63; --line:#d5ded8;
+  --accent:#0d6e53; --accent-soft:#dcefe6; --signal:#e0a100; --signal-soft:#fbefc9; --bad:#b4371f; --bad-soft:#f8e1da;
+  --f-display:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+  --f-hand:"LXGW WenKai TC","Noto Sans TC","PingFang TC","Microsoft JhengHei",serif;
+  --f-mono:"JetBrains Mono",ui-monospace,"SFMono-Regular",Consolas,monospace;
+  --f-body:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+  --r:14px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0c1512; --panel:#13201b; --panel-2:#182a23; --ink:#e3ece7; --muted:#9db1a9; --line:#26392f;
+    --accent:#45c79c; --accent-soft:#163a2e; --signal:#f2c13b; --signal-soft:#3a3013; --bad:#f08a72; --bad-soft:#3b1d16; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0c1512; --panel:#13201b; --panel-2:#182a23; --ink:#e3ece7; --muted:#9db1a9; --line:#26392f;
+  --accent:#45c79c; --accent-soft:#163a2e; --signal:#f2c13b; --signal-soft:#3a3013; --bad:#f08a72; --bad-soft:#3b1d16; color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.75;margin:0}
+a{color:var(--accent)}
+:focus-visible{outline:3px solid var(--signal);outline-offset:2px;border-radius:6px}
+.wrap{max-width:1120px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+section{padding-block:64px;border-top:1px solid var(--line)}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0;line-height:1.3}
+h2{font-size:clamp(26px,3.4vw,36px);font-weight:900;letter-spacing:.01em}
+h3{font-size:19px;font-weight:700}
+p{margin:0}
+.eyebrow{font-family:var(--f-mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);font-weight:700}
+.lead{color:var(--muted);max-width:62ch;font-size:17px}
+.sec-head{display:grid;gap:10px;margin-bottom:32px}
+.tag{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:700;padding:2px 10px;border-radius:999px;background:var(--accent-soft);color:var(--accent);white-space:nowrap}
+.tag.y{background:var(--signal-soft);color:var(--ink)}
+
+/* ---------- 頂部 ---------- */
+.top{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-block:18px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:900;font-family:var(--f-display);font-size:17px}
+.brand .mk{width:34px;height:34px;border-radius:9px;background:var(--accent);color:var(--bg);display:grid;place-items:center;font-size:17px}
+.top nav{display:flex;gap:18px;flex-wrap:wrap;font-size:14px}
+.top nav a{color:var(--muted);text-decoration:none}
+.top nav a:hover{color:var(--accent)}
+
+/* ---------- 主視覺 ---------- */
+.hero{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);gap:48px;align-items:center;padding-block:40px 64px}
+.hero h1{font-size:clamp(28px,4.4vw,48px);font-weight:900;letter-spacing:-.01em;text-wrap:wrap}
+.hero h1 .hl{background:linear-gradient(transparent 62%,var(--signal-soft) 62%);padding:0 .08em}
+.hero .lead{margin-top:20px;font-size:18px}
+.cta{display:flex;gap:12px;flex-wrap:wrap;margin-top:28px}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:12px 22px;border-radius:12px;font-weight:700;text-decoration:none;font-size:16px;border:2px solid var(--accent)}
+.btn.p{background:var(--accent);color:var(--bg)}
+.btn.s{color:var(--accent);background:transparent}
+.btn:hover{filter:brightness(1.08)}
+.facts{display:flex;gap:28px;flex-wrap:wrap;margin-top:34px}
+.facts div{display:grid}
+.facts b{font-family:var(--f-mono);font-size:26px;color:var(--ink);font-variant-numeric:tabular-nums}
+.facts span{font-size:13px;color:var(--muted)}
+
+/* 交接日誌卡 */
+.log{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);box-shadow:0 18px 40px -24px rgba(13,40,30,.45);overflow:hidden;font-family:var(--f-hand)}
+.log-h{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 18px;background:var(--panel-2);border-bottom:1px solid var(--line);font-family:var(--f-body)}
+.log-h b{font-size:15px}
+.log-h small{font-family:var(--f-mono);color:var(--muted);font-size:12px}
+.log ol{list-style:none;margin:0;padding:6px 18px 4px}
+.log li{display:grid;grid-template-columns:52px minmax(0,1fr);gap:10px;padding:10px 0;border-bottom:1px dashed var(--line);font-size:16px;line-height:1.55}
+.log li:last-child{border-bottom:0}
+.log time{font-family:var(--f-mono);font-size:13px;color:var(--muted);padding-top:2px}
+.log .src{font-family:var(--f-body);font-size:12px;font-weight:700;color:var(--accent);margin-left:6px}
+.log .warn{color:var(--bad);font-weight:700}
+.log-f{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 18px;border-top:1px solid var(--line);font-family:var(--f-body);font-size:13px;color:var(--muted)}
+.stamp{font-family:var(--f-hand);font-weight:700;color:var(--accent);border:2px solid var(--accent);border-radius:8px;padding:2px 10px;transform:rotate(-4deg);font-size:15px}
+
+/* ---------- 痛點 ---------- */
+.pains{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.pain{background:var(--panel);padding:24px;display:grid;gap:10px;align-content:start}
+.pain .q{font-family:var(--f-hand);font-size:20px;line-height:1.5}
+.pain .a{font-size:14px;color:var(--muted)}
+.pain .a b{color:var(--accent)}
+
+/* ---------- 角色 ---------- */
+.roles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:20px}
+.role{display:grid;gap:12px;align-content:start;padding-top:16px;border-top:3px solid var(--ink)}
+.role .who{font-size:13px;color:var(--muted)}
+.role ul{margin:0;padding-left:1.1em;display:grid;gap:6px;font-size:15px}
+
+/* ---------- LINE 三步 ---------- */
+.line-demo{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:48px;align-items:center}
+.phones{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+.ph{width:min(170px,30%);min-width:140px;aspect-ratio:9/17;max-width:100%;background:var(--panel);border:1px solid var(--line);border-radius:22px;padding:12px 10px;display:flex;flex-direction:column;gap:8px;box-shadow:0 14px 30px -22px rgba(13,40,30,.5)}
+.ph .st{font-family:var(--f-mono);font-size:11px;color:var(--accent);font-weight:700}
+.ph .ttl{font-weight:900;font-size:17px;font-family:var(--f-display)}
+.ph .shot{flex:1;border-radius:12px;background:repeating-linear-gradient(135deg,var(--panel-2) 0 10px,var(--accent-soft) 10px 20px);display:grid;place-items:center;font-size:13px;color:var(--muted);text-align:center;padding:8px}
+.ph .chips{display:grid;grid-template-columns:1fr 1fr;gap:6px;flex:1;align-content:start}
+.ph .chips span{font-size:13px;border:1px solid var(--line);border-radius:10px;padding:8px 4px;text-align:center}
+.ph .chips span.on{background:var(--accent);color:var(--bg);border-color:var(--accent);font-weight:700}
+.ph .big{background:var(--accent);color:var(--bg);font-weight:900;text-align:center;border-radius:12px;padding:12px;font-size:18px}
+.ph .done{flex:1;display:grid;place-items:center;text-align:center;font-size:14px;color:var(--muted)}
+.ph .done b{display:block;font-size:30px;color:var(--accent)}
+.checks{display:grid;gap:14px;margin-top:22px}
+.checks div{display:grid;grid-template-columns:28px minmax(0,1fr);gap:10px}
+.checks i{font-style:normal;width:28px;height:28px;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-weight:900;font-size:14px}
+
+/* ---------- 功能 ---------- */
+.mods{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px}
+.mod{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:24px;display:grid;gap:14px;align-content:start}
+.mod-h{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap}
+.mod ul{margin:0;padding:0;list-style:none;display:grid;gap:8px;font-size:15px}
+.mod li{display:grid;grid-template-columns:16px minmax(0,1fr);gap:8px}
+.mod li::before{content:"";width:8px;height:8px;border-radius:2px;background:var(--accent);margin-top:.7em}
+.mod li small{color:var(--muted);display:block;font-size:13px}
+
+/* ---------- 優勢 ---------- */
+.adv{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:28px 32px}
+.adv div{display:grid;gap:8px;align-content:start}
+.adv .n{font-family:var(--f-mono);font-size:13px;color:var(--signal);font-weight:700}
+.adv p{color:var(--muted);font-size:15px}
+
+/* ---------- 比較表 ---------- */
+.tw{overflow-x:auto;border:1px solid var(--line);border-radius:var(--r);background:var(--panel)}
+table{border-collapse:collapse;width:100%;min-width:860px;font-size:14px}
+th,td{padding:12px 14px;border-bottom:1px solid var(--line);text-align:center;vertical-align:middle}
+th{font-weight:700;background:var(--panel-2);font-size:13px;line-height:1.4}
+th small{display:block;font-weight:400;color:var(--muted);font-size:12px}
+td:first-child,th:first-child{text-align:left;position:sticky;left:0;background:var(--panel);z-index:1;min-width:190px}
+th:first-child{background:var(--panel-2)}
+.us{background:var(--accent-soft)}
+th.us{background:var(--accent);color:var(--bg)}
+th.us small{color:var(--bg);opacity:.85}
+tr:last-child td{border-bottom:0}
+.y{color:var(--accent);font-weight:900}
+.p{color:var(--signal);font-weight:900}
+.n{color:var(--muted)}
+.legend{display:flex;gap:18px;flex-wrap:wrap;font-size:13px;color:var(--muted);margin-top:12px}
+.notes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;margin-top:28px}
+.note{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:20px;display:grid;gap:8px}
+.note p{font-size:15px;color:var(--muted)}
+
+/* ---------- 方案 ---------- */
+.plans{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
+.plan{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:24px;display:grid;gap:14px;align-content:start}
+.plan.rec{border:2px solid var(--accent)}
+.price{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.price b{font-size:30px}
+.price span{color:var(--muted);font-size:13px;font-family:var(--f-body)}
+.tiers{font-size:13px;color:var(--muted);display:grid;gap:2px;font-variant-numeric:tabular-nums}
+.plan ul{margin:0;padding-left:1.1em;font-size:14px;display:grid;gap:4px}
+.extra{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px;margin-top:20px}
+.extra div{padding:16px 18px;border:1px dashed var(--line);border-radius:var(--r);font-size:14px;color:var(--muted)}
+.extra b{color:var(--ink);display:block;margin-bottom:4px}
+
+/* ---------- 資安 ---------- */
+.trust{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:20px}
+.trust div{display:grid;gap:6px;align-content:start;font-size:14px;color:var(--muted)}
+.trust b{color:var(--ink);font-size:16px}
+
+/* ---------- 試用流程 ---------- */
+.steps{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;counter-reset:s}
+.steps div{counter-increment:s;background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:16px;display:grid;gap:6px;font-size:14px;color:var(--muted);align-content:start}
+.steps div::before{content:counter(s);font-family:var(--f-mono);font-weight:700;color:var(--accent);font-size:20px}
+.steps b{color:var(--ink);font-size:15px}
+.final{margin-top:36px;background:var(--ink);color:var(--bg);border-radius:var(--r);padding:32px;display:flex;justify-content:space-between;align-items:center;gap:24px;flex-wrap:wrap}
+.final h2{color:var(--bg)}
+.final p{opacity:.8;margin-top:8px;max-width:56ch}
+.final .btn{border-color:var(--signal);background:var(--signal);color:#11231e}
+
+/* ---------- 來源 ---------- */
+.src{font-size:13px;color:var(--muted)}
+.src ol{padding-left:1.2em;display:grid;gap:4px;margin:10px 0 0}
+footer{padding-block:28px 48px;font-size:13px;color:var(--muted);border-top:1px solid var(--line)}
+
+@media (max-width:900px){
+  .hero,.line-demo{grid-template-columns:1fr;gap:32px}
+  .pains,.adv,.plans,.extra{grid-template-columns:1fr 1fr}
+  .roles,.trust{grid-template-columns:1fr 1fr}
+  .steps{grid-template-columns:1fr 1fr}
+  .mods,.notes{grid-template-columns:1fr}
+  .top nav{display:none}
+}
+@media (max-width:560px){
+  section{padding-block:48px}
+  .pains,.adv,.plans,.extra,.roles,.trust,.steps{grid-template-columns:1fr}
+  .final{padding:24px}
+}
+@media (prefers-reduced-motion:no-preference){
+  .stamp{animation:stamp .5s ease-out .4s both}
+  @keyframes stamp{from{transform:rotate(-4deg) scale(1.25);opacity:.4}to{transform:rotate(-4deg) scale(1);opacity:1}}
+}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand"><span class="mk" aria-hidden="true">管</span>物業社區管理平台</div>
+    <nav aria-label="頁面導覽">
+      <a href="#pain">痛點</a><a href="#line">LINE 操作</a><a href="#features">功能</a><a href="#compare">比較</a><a href="#plans">方案</a>
+    </nav>
+  </header>
+
+  <div class="hero">
+    <div>
+      <p class="eyebrow">給物業管理與保全公司的營運平台</p>
+      <h1 style="margin-top:14px">總公司看得到每個社區，<br><span class="hl">年長總幹事也用得來。</span></h1>
+      <p class="lead">合約、證照、人力、督導稽核、報修與管委會月報，集中在同一個平台。現場人員用每天都在用的 LINE 操作，不必另裝 App，報修、通報、交接都在三步內完成。</p>
+      <div class="cta">
+        <a class="btn p" href="#trial">申請試用</a>
+        <a class="btn s" href="#compare">看與其他系統的比較</a>
+      </div>
+      <div class="facts" aria-label="平台特色">
+        <div><b>3 步</b><span>報修、通報、交接</span></div>
+        <div><b>5 種</b><span>前台語系</span></div>
+        <div><b>0 個</b><span>要另外安裝的 App</span></div>
+      </div>
+    </div>
+
+    <figure class="log" aria-label="交接日誌範例" style="margin:0">
+      <div class="log-h"><b>春暉苑・交接日誌</b><small>11/07 夜班 → 日班</small></div>
+      <ol>
+        <li><time>02:10</time><span>住戶反映 B 棟 7 樓噪音，已到場勸導<span class="src">LINE</span></span></li>
+        <li><time>04:35</time><span class="warn">B2 車道燈 1 盞閃爍 → 已報修 R-28835</span></li>
+        <li><time>05:50</time><span>巡邏 6 點全數完成，頂樓水塔正常</span></li>
+        <li><time>06:55</time><span>包裹 12 件待領，鑰匙、對講機點交完成</span></li>
+      </ol>
+      <div class="log-f"><span>Budi Santoso（夜班保全）送出</span><span class="stamp">許文雄 已接班</span></div>
+    </figure>
+  </div>
+</div>
+
+<section id="pain">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow">痛點</p>
+      <h2>物業公司每天在處理的事，<br>我們一件一件拆開來解決</h2>
+    </div>
+    <div class="pains">
+      <div class="pain"><p class="q">「每個社區的狀況，都散在 LINE 群組、紙本和 Excel 裡。」</p><p class="a"><b>總公司儀表板</b>集中顯示各社區的報修、事件、人力缺口與預警，現場送出的資料即時回到總公司。</p></div>
+      <div class="pain"><p class="q">「合約什麼時候到期、誰的證照過期，全靠人記。」</p><p class="a">服務合約、員工證照、<b>社區廠商合約</b>到期前 90／60／30 天自動提醒，不再漏續約。</p></div>
+      <div class="pain"><p class="q">「排班、請假、代班，每個月都要打好幾通電話。」</p><p class="a">線上排班、<b>LINE 打卡與請假</b>，總幹事初審、督導核准，人力不足自動預警。</p></div>
+      <div class="pain"><p class="q">「督導巡點發現的缺失，改了沒有沒人知道。」</p><p class="a">稽核自動開立<b>改善單</b>，總幹事在 LINE 拍照回覆，督導複查結案，逾期自動通知。</p></div>
+      <div class="pain"><p class="q">「每到月底，總幹事要花好幾天做管委會月報。」</p><p class="a">收支、管理費收繳、工作報告、應付未付、憑證影本，<b>一鍵產出管委會月報</b>。</p></div>
+      <div class="pain"><p class="q">「總幹事年紀大、保全有外籍員工，系統買了怕沒人用。」</p><p class="a">LINE 操作、大字大按鈕、<b>五種語系</b>，並有<b>使用率監控</b>，哪個社區沒在用一眼就知道。</p></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow">每個角色</p>
+      <h2>同一套系統，每個人只看到自己需要的</h2>
+    </div>
+    <div class="roles">
+      <div class="role"><h3>老闆／總經理</h3><p class="who">付錢的人，要看得到全局</p><ul><li>各社區營運與預警總覽</li><li>合約到期與續約追蹤</li><li>社區毛利與虧損警示</li><li>各社區系統使用率</li></ul></div>
+      <div class="role"><h3>督導／區域主管</h3><p class="who">管理轄區、品質把關</p><ul><li>稽核表單與改善單追蹤</li><li>請假核准、人力調度</li><li>現場送出的申請集中處理</li><li>緊急事件即時推播</li></ul></div>
+      <div class="role"><h3>總幹事</h3><p class="who">現場的總管，最需要省事</p><ul><li>LINE 報修、通報、交接</li><li>請假初審、改善單回覆</li><li>廠商通訊錄、登記履約</li><li>管委會月報一鍵產出</li></ul></div>
+      <div class="role"><h3>保全／清潔／機電</h3><p class="who">常有年長與外籍同仁</p><ul><li>LINE 打卡、巡邏掃碼</li><li>拍照報修、事件通報</li><li>班表、請假、公告</li><li>繁中／英／印尼／越南／泰文</li></ul></div>
+    </div>
+  </div>
+</section>
+
+<section id="line">
+  <div class="wrap line-demo">
+    <div class="phones" aria-label="LINE 報修三步驟示意">
+      <div class="ph"><span class="st">STEP 1</span><span class="ttl">拍照</span><div class="shot">拍下要修的地方</div></div>
+      <div class="ph"><span class="st">STEP 2</span><span class="ttl">選類別</span><div class="chips"><span>水電</span><span class="on">門禁</span><span>電梯</span><span>消防</span><span>清潔</span><span>其他</span></div></div>
+      <div class="ph"><span class="st">STEP 3</span><span class="ttl">送出</span><div class="done"><div><b>✓</b>已通知總幹事<br>工單 R-28835</div></div><span class="big">完成</span></div>
+    </div>
+    <div>
+      <p class="eyebrow">LINE 前台</p>
+      <h2 style="margin-top:10px">總幹事不用學新 App，<br>打開 LINE 就能用</h2>
+      <p class="lead" style="margin-top:14px">現場人員加入公司的 LINE 官方帳號，掃描邀請碼綁定一次，之後所有作業都從聊天室下方的選單開始。</p>
+      <div class="checks">
+        <div><i>✓</i><span><b>依角色顯示選單</b>：總幹事、保全、清潔、機電各自看到需要的功能</span></div>
+        <div><i>✓</i><span><b>三步完成</b>：拍照取代打字、大字大按鈕、每頁都有 30 秒教學影片</span></div>
+        <div><i>✓</i><span><b>主動推播只送重要的</b>：緊急事件、逾期工單、改善單；一般待辦合併成每日摘要</span></div>
+        <div><i>✓</i><span><b>可用公司自己的官方帳號</b>：聊天室顯示貴公司品牌</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="features">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow">功能</p>
+      <h2>從現場到總公司，一套串起來</h2>
+      <p class="lead">可依社區逐步開通功能，先從一、兩個社區、兩三項功能開始。</p>
+    </div>
+    <div class="mods">
+      <div class="mod">
+        <div class="mod-h"><h3>總公司管理</h3><span class="tag">基本版</span></div>
+        <ul>
+          <li><span>社區、服務合約與到期提醒<small>可自訂組織層級，支援集團內多家公司（物業、保全分開法人）</small></span></li>
+          <li><span>員工、證照、派駐<small>離職即停權，LINE 綁定同步解除</small></span></li>
+          <li><span>排班、打卡、請假、補卡<small>範圍外打卡需主管確認；出勤資料可匯出到薪資系統</small></span></li>
+          <li><span>使用率監控<small>各社區、各員工的活躍度與 LINE 綁定率</small></span></li>
+        </ul>
+      </div>
+      <div class="mod">
+        <div class="mod-h"><h3>社區現場作業</h3><span class="tag">基本版</span></div>
+        <ul>
+          <li><span>報修工單、事件通報<small>指派機電或合約廠商，緊急事件即時通知督導</small></span></li>
+          <li><span>交接日誌、包裹、訪客、公告<small>公告已讀狀態總公司看得到</small></span></li>
+          <li><span>社區廠商與合約<small>電梯、消防、清潔等合約的付款排程、履約率、到期提醒</small></span></li>
+          <li><span>櫃台模式<small>共用電腦以工號＋PIN 切換，個資自動遮罩</small></span></li>
+        </ul>
+      </div>
+      <div class="mod">
+        <div class="mod-h"><h3>品質管理</h3><span class="tag">專業版</span></div>
+        <ul>
+          <li><span>督導稽核與改善單<small>平台提供物業、保全、清潔稽核範本</small></span></li>
+          <li><span>巡邏打點<small>掃描 QR Code，漏巡、超時提醒</small></span></li>
+          <li><span>設備保養與清潔檢核<small>依廠商合約自動產生保養任務</small></span></li>
+          <li><span>公設預約、進階報表</span></li>
+        </ul>
+      </div>
+      <div class="mod">
+        <div class="mod-h"><h3>帳務與經營</h3><span class="tag y">旗艦版／可加購</span></div>
+        <ul>
+          <li><span>管理費收繳<small>費率版本、帳單、收據、催繳、歷年紀錄與收繳分析</small></span></li>
+          <li><span>社區財務與管委會月報<small>記帳、支出簽核、零用金、對帳、封帳，一鍵產出月報</small></span></li>
+          <li><span>公司經營分析<small>社區損益、毛利排行、虧損警示、調價試算（旗艦版）</small></span></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow">優勢</p>
+      <h2>為什麼選這套</h2>
+    </div>
+    <div class="adv">
+      <div><span class="n">01</span><h3>為物業公司本身設計</h3><p>市面多數社區系統服務的是住戶。我們服務的是物業公司總部與派駐人員，管的是合約、人力、品質與毛利。</p></div>
+      <div><span class="n">02</span><h3>用得起來，看得見</h3><p>LINE 操作、三步完成、五種語系；使用率儀表板讓老闆看到導入成效，不怕花了錢沒人用。</p></div>
+      <div><span class="n">03</span><h3>總幹事反而變輕鬆</h3><p>交接、報修自動彙整成管委會月報的工作報告，月底不必再熬夜整理。</p></div>
+      <div><span class="n">04</span><h3>可以和住戶 App 並用</h3><p>社區已經在用住戶 App 也沒關係，本平台處理的是物業公司內部的營運管理，兩者分工不衝突。</p></div>
+      <div><span class="n">05</span><h3>按社區數計價，逐步導入</h3><p>以公司為單位、依社區數級距訂閱，帳號數不限；可依社區開關功能，從小範圍開始。</p></div>
+      <div><span class="n">06</span><h3>資安與個資列為第一優先</h3><p>雙因子驗證、加密儲存、租戶資料隔離、稽核日誌防竄改；退租時可完整帶走資料。</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="compare">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow">與市面方案比較</p>
+      <h2>多數系統服務住戶，或只解決一個環節</h2>
+      <p class="lead">依各家官網、應用程式商店與新聞報導的公開資料整理（2026 年 11 月）。公開資料未提到的功能標為「未見」，不代表該產品一定沒有。</p>
+    </div>
+    <div class="tw">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">比較項目</th>
+            <th scope="col" class="us">本平台<small>物業公司營運</small></th>
+            <th scope="col">智生活<small>今網・住戶 App</small></th>
+            <th scope="col">中保好生活<small>中保科技・住戶 App</small></th>
+            <th scope="col">外勤筋斗雲<small>三商電腦・通用考勤巡檢</small></th>
+            <th scope="col">巡邏 App<small>iPatrol、群揚大管家等</small></th>
+            <th scope="col">Excel＋LINE 群組<small>多數公司現況</small></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>主要服務對象</td><td class="us"><b>物業公司總部＋派駐人員</b></td><td>住戶、管委會</td><td>住戶、管委會</td><td>各行業外勤人員</td><td>保全巡邏</td><td>—</td></tr>
+          <tr><td>總公司跨社區總覽與預警</td><td class="us y">✓</td><td class="n">未見</td><td class="n">未見</td><td class="p">△ 考勤報表</td><td class="n">—</td><td class="n">—</td></tr>
+          <tr><td>服務合約、證照到期提醒</td><td class="us y">✓</td><td class="n">未見</td><td class="n">未見</td><td class="p">△ 設備合約</td><td class="n">—</td><td class="n">靠人記</td></tr>
+          <tr><td>督導稽核與改善單</td><td class="us y">✓</td><td class="n">未見</td><td class="n">未見</td><td class="p">△ 巡檢表單</td><td class="n">—</td><td class="n">紙本</td></tr>
+          <tr><td>排班、打卡、請假</td><td class="us y">✓</td><td class="n">未見</td><td class="n">未見</td><td class="y">✓</td><td class="p">△ 簽到</td><td class="n">Excel</td></tr>
+          <tr><td>巡邏打點</td><td class="us y">✓</td><td class="n">未見</td><td class="n">未見</td><td class="y">✓</td><td class="y">✓</td><td class="n">紙本</td></tr>
+          <tr><td>報修、事件通報</td><td class="us y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="p">△ 派工</td><td class="p">△ 異常回報</td><td class="p">△ 群組訊息</td></tr>
+          <tr><td>包裹、訪客、公告</td><td class="us y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="n">—</td><td class="n">—</td><td class="n">紙本</td></tr>
+          <tr><td>管理費收繳</td><td class="us y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="n">—</td><td class="n">—</td><td class="n">Excel</td></tr>
+          <tr><td>管委會月報一鍵產出</td><td class="us y">✓</td><td class="n">未見</td><td class="p">△ 帳務透明</td><td class="n">—</td><td class="n">—</td><td class="n">人工整理</td></tr>
+          <tr><td>社區廠商合約與履約</td><td class="us y">✓</td><td class="n">未見</td><td class="n">未見</td><td class="p">△ 設備合約</td><td class="n">—</td><td class="n">—</td></tr>
+          <tr><td>社區損益、毛利分析</td><td class="us y">✓</td><td class="n">—</td><td class="n">—</td><td class="n">—</td><td class="n">—</td><td class="n">—</td></tr>
+          <tr><td>現場人員免裝 App（LINE）</td><td class="us y">✓</td><td class="n">需 App</td><td class="n">需管理版 App</td><td class="n">需 App</td><td class="n">需 App</td><td class="y">✓</td></tr>
+          <tr><td>外籍人員多語系</td><td class="us y">✓ 5 種</td><td class="n">未見</td><td class="n">未見</td><td class="n">未見</td><td class="n">未見</td><td class="n">—</td></tr>
+          <tr><td>導入使用率監控</td><td class="us y">✓</td><td class="n">未見</td><td class="n">未見</td><td class="n">未見</td><td class="n">—</td><td class="n">—</td></tr>
+          <tr><td>住戶 App</td><td class="us n">不做（可並用）</td><td class="y">✓</td><td class="y">✓</td><td class="n">—</td><td class="n">—</td><td class="n">—</td></tr>
+          <tr><td>門禁、對講等硬體整合</td><td class="us n">不做</td><td class="y">✓</td><td class="y">✓</td><td class="n">—</td><td class="p">△ RFID</td><td class="n">—</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="legend"><span><span class="y">✓</span> 有</span><span><span class="p">△</span> 部分或通用功能</span><span>未見：公開資料未提到</span><span>—：不在該產品範圍</span></div>
+
+    <div class="notes">
+      <div class="note"><h3>我們不和住戶 App 搶同一件事</h3><p>智生活、中保好生活在住戶服務與門禁硬體上已經做得很成熟，社區可以繼續使用。本平台補上的是它們沒有涵蓋的部分：物業公司總部怎麼管理幾十個社區的合約、人力、品質與毛利。</p></div>
+      <div class="note"><h3>通用工具解決一個環節，這裡串起全部</h3><p>考勤巡檢、巡邏 App 各自做得不錯，但報修、稽核、合約、管委會月報還是散在別處。本平台把現場作業、總公司管理和社區帳務放在同一份資料裡。</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="plans">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow">方案</p>
+      <h2>以公司為單位，依社區數計價</h2>
+      <p class="lead">使用者帳號不限，只計算「服務中」的社區。以下為規劃中的參考價（每月、未稅），正式價格以報價為準。</p>
+    </div>
+    <div class="plans">
+      <div class="plan">
+        <div class="mod-h"><h3>基本版</h3><span class="tag">現場＋總公司</span></div>
+        <div class="price"><b>3,500</b> <span>元起／月</span></div>
+        <div class="tiers"><span>入門 1～10 社區　3,500</span><span>標準 11～30 社區　8,000</span><span>進階 31～60 社區　16,000</span></div>
+        <ul><li>社區、合約、員工、證照</li><li>排班、打卡、請假、薪資匯出</li><li>報修、通報、交接、包裹、訪客、公告</li><li>社區廠商與合約</li><li>LINE 前台、使用率監控</li></ul>
+      </div>
+      <div class="plan rec">
+        <div class="mod-h"><h3>專業版</h3><span class="tag y">品質管理</span></div>
+        <div class="price"><b>5,000</b> <span>元起／月</span></div>
+        <div class="tiers"><span>入門 1～10 社區　5,000</span><span>標準 11～30 社區　12,000</span><span>進階 31～60 社區　25,000</span></div>
+        <ul><li>基本版全部功能</li><li>督導稽核與改善單</li><li>巡邏打點</li><li>設備保養、清潔檢核</li><li>公設預約、進階報表</li></ul>
+      </div>
+      <div class="plan">
+        <div class="mod-h"><h3>旗艦版</h3><span class="tag">帳務與經營</span></div>
+        <div class="price"><b>8,000</b> <span>元起／月</span></div>
+        <div class="tiers"><span>入門 1～10 社區　8,000</span><span>標準 11～30 社區　18,000</span><span>進階 31～60 社區　36,000</span></div>
+        <ul><li>專業版全部功能</li><li>管理費收繳</li><li>社區財務與管委會月報</li><li>公司經營分析（社區損益）</li></ul>
+      </div>
+    </div>
+    <div class="extra">
+      <div><b>社區帳務模組（加購）</b>基本版、專業版可單獨加購管理費與社區財務：每月 3,000／6,000／11,000 元（依級距）</div>
+      <div><b>3 年預付</b>一次付清 36 個月享 85 折，期間不調價；年繳享九折</div>
+      <div><b>60 個社區以上</b>提供企業方案，可選專屬環境，另行報價</div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow">資安與資料</p>
+      <h2>住戶個資放在這裡，所以資安排第一</h2>
+    </div>
+    <div class="trust">
+      <div><b>登入保護</b>雙因子驗證、登入異常鎖定、新裝置登入通知</div>
+      <div><b>資料隔離與加密</b>每家公司資料完全隔離，敏感欄位加密、畫面遮罩</div>
+      <div><b>操作留痕</b>稽核日誌防竄改；平台客服需經貴公司限時授權才能協助</div>
+      <div><b>資料可帶走</b>隨時完整匯出；退租後 90 天唯讀，刪除後提供刪除證明</div>
+    </div>
+  </div>
+</section>
+
+<section id="trial">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow">開始試用</p>
+      <h2>從一個社區開始，兩週就看得到效果</h2>
+    </div>
+    <div class="steps">
+      <div><b>申請試用</b>填寫公司資料與社區數，完成 Email 驗證</div>
+      <div><b>開通帳號</b>審核後寄出開通信，設定密碼並綁定雙因子驗證</div>
+      <div><b>導入精靈</b>依步驟建立組織、社區、員工，可用 Excel 匯入</div>
+      <div><b>LINE 綁定</b>現場人員掃邀請碼綁定，總幹事 10 分鐘學會</div>
+      <div><b>看使用率</b>從儀表板確認每個社區都用起來了</div>
+    </div>
+    <div class="final">
+      <div>
+        <h2>想看實際操作？</h2>
+        <p>我們可以帶您走一遍：保全在 LINE 報修、總公司指派機電、總幹事結案，再看月底的管委會月報如何自動產出。</p>
+      </div>
+      <a class="btn" href="#line">先看 LINE 怎麼操作</a>
+    </div>
+  </div>
+</section>
+
+<section class="src">
+  <div class="wrap">
+    <h3 style="font-size:15px">比較資料來源（2026 年 11 月查詢）</h3>
+    <ol>
+      <li><a href="https://www.smartdaily.com.tw/" target="_blank" rel="noopener">智生活官網</a>；<a href="https://finance.technews.tw/2026/08/05/cloud-intercom/" target="_blank" rel="noopener">科技新報 2026/08 報導</a>；<a href="https://www.bnext.com.tw/article/69252/smart--way-bt" target="_blank" rel="noopener">數位時代報導</a>；<a href="https://www.ptt.cc/bbs/home-sale/M.1697172318.A.81E.html" target="_blank" rel="noopener">PTT home-sale 討論</a></li>
+      <li><a href="https://www.cna.com.tw/business/chinese/442532" target="_blank" rel="noopener">中央社：中保好生活</a>；<a href="https://market.ltn.com.tw/article/16397" target="_blank" rel="noopener">自由時報：中保好生活帳目透明</a>；<a href="https://udn.com/news/story/7266/8677840" target="_blank" rel="noopener">聯合新聞網報導</a></li>
+      <li><a href="https://apps.apple.com/py/app/%E5%A4%96%E5%8B%A4%E7%AD%8B%E6%96%97%E9%9B%B2-%E6%89%93%E5%8D%A1-%E6%A5%AD%E5%8B%99-%E7%B6%AD%E4%BF%AE-%E5%B7%A1%E6%AA%A2%E7%AE%A1%E7%90%86%E7%B3%BB%E7%B5%B1/id1150960906" target="_blank" rel="noopener">外勤筋斗雲 App Store 頁面</a>；<a href="https://www.servicejdc.com/product/blog/servicejd-property-management-company-attendance-shift.html" target="_blank" rel="noopener">數位物業管理說明</a></li>
+      <li><a href="https://apps.apple.com/kh/app/ipatrol/id1418928072" target="_blank" rel="noopener">iPatrol App Store 頁面</a>；<a href="https://apps.apple.com/hn/app/%E7%BE%A4%E6%8F%9A%E5%A4%A7%E7%AE%A1%E5%AE%B6-%E4%BF%9D%E5%85%A8%E5%B7%A1%E9%82%8F/id1439876285" target="_blank" rel="noopener">群揚大管家－保全巡邏 App Store 頁面</a></li>
+    </ol>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">本頁內容為產品規劃階段的說明，功能與價格以正式上線版本及報價為準。比較表依公開資料整理，各產品的實際功能請以其官方說明為準。</div>
+</footer>

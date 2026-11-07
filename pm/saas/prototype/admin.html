@@ -2776,11 +2776,11 @@ const plusHours=h=>fmtDT(new Date(Date.now()+h*3600e3));
 let PSNAP={};let PLAT_APPLYING=false;let PENDING_GRANTS=[];
 
 /* ---------- 方案與訂閱狀態 ---------- */
-const planFields=()=>JSON.stringify({ed:PLAN.ed,tier:PLAN.tier,cycle:PLAN.cycle,st:PLAN.st,susp:!!PLAN.susp,addon:!!PLAN.addon,addonCancel:!!PLAN.addonCancel,down:PLAN.down?{ed:PLAN.down.ed,tier:PLAN.down.tier}:null,line:LINEACC.mode,hist:PLANHIST.length});
+const planFields=()=>JSON.stringify({pp:PLAN.pp?{f:PLAN.pp.from,u:PLAN.pp.until,p:PLAN.pp.price}:null,ed:PLAN.ed,tier:PLAN.tier,cycle:PLAN.cycle,st:PLAN.st,susp:!!PLAN.susp,addon:!!PLAN.addon,addonCancel:!!PLAN.addonCancel,down:PLAN.down?{ed:PLAN.down.ed,tier:PLAN.down.tier}:null,line:LINEACC.mode,hist:PLANHIST.length});
 const stOut=()=>PLAN.st==="退租唯讀"?"已終止":PLAN.st==="唯讀"&&PLAN.susp?"停權":PLAN.st;
 const finalBk=()=>({id:"FIN-"+PCMP.now().slice(5,10).replace("/","")+"-01",type:"最終",sc:"全部資料",size:"18.6 GB",t:PCMP.now(),st:"可下載",exp:EXIT_END,dl:0,pw:false});
 function applyTenant(){const t=PCMP.tenant();if(!t)return;
- if(!PREVIEW){PLAN.ed=ED2[t.ed]||"flag";PLAN.tier=Math.max(0,TIERS2.indexOf(t.tier));PLAN.cycle=t.cycle||"月繳";PLAN.st=ST_IN[t.st]||"正式";PLAN.susp=t.st==="停權";
+ if(!PREVIEW){PLAN.ed=ED2[t.ed]||"flag";PLAN.tier=Math.max(0,TIERS2.indexOf(t.tier));PLAN.cycle=t.cycle||"月繳";PLAN.pp=PLAN.cycle==="3年預付"?{from:t.prepaidFrom||"—",until:t.prepaidUntil||"—",price:t.prepayPrice||PRICE[ED2[t.ed]||"flag"][Math.max(0,TIERS2.indexOf(t.tier))],disc:t.prepayDisc||.85}:null;PLAN.st=ST_IN[t.st]||"正式";PLAN.susp=t.st==="停權";
   PLAN.addon=!!t.addon;PLAN.addonCancel=!!t.addonCancel;PLAN.down=t.down?{ed:ED2[t.down.ed]||t.down.ed,tier:Math.max(0,TIERS2.indexOf(t.down.tier))}:null;PLAN.trialEnd=t.trialEnd||null;
   LINEACC.mode=t.lineMode||"共用";
   PLANHIST.length=0;(t.hist||[]).forEach(h=>PLANHIST.push({d:h.d,t:h.txt||h.t||"",by:h.by||"平台"}));
@@ -2791,7 +2791,8 @@ function writeTenant(){if(PREVIEW||PLAT_APPLYING)return;const cur=planFields();i
  if(now.ed!==prev.ed||now.tier!==prev.tier)T.push("方案改為 "+planName());
  if(now.down&&JSON.stringify(now.down)!==JSON.stringify(prev.down))T.push(`排定降級為 ${EDN[now.down.ed]} · ${TIERS[now.down.tier].n}級距（${PLAN.next} 生效）`);
  if(!now.down&&prev.down)T.push("取消排定的降級");
- if(now.cycle!==prev.cycle)T.push("繳費週期改為"+now.cycle);
+ if(now.pp&&!prev.pp)T.push(`購買 3 年預付（${now.pp.f}～${now.pp.u}）`);else if(now.cycle!==prev.cycle)T.push("繳費週期改為"+now.cycle);
+ if(now.pp&&prev.pp&&now.pp.p!==prev.pp.p)T.push("預付期間升級補差額");
  if(now.addon!==prev.addon)T.push(now.addon?"加購社區帳務模組":"停用社區帳務模組");
  if(now.addonCancel!==prev.addonCancel)T.push(now.addonCancel?"取消加購社區帳務模組（下期生效）":"保留社區帳務模組");
  if(now.line!==prev.line)T.push("LINE 官方帳號改為「"+now.line+"」");
@@ -2800,6 +2801,7 @@ function writeTenant(){if(PREVIEW||PLAT_APPLYING)return;const cur=planFields();i
  PSNAP.plan=cur;
  PCMP.updateTenant(t=>{t.ed=ED2R[PLAN.ed];t.tier=TIERS2[PLAN.tier]||t.tier;t.cycle=PLAN.cycle;t.st=so;t.addon=!!PLAN.addon;t.addonCancel=!!PLAN.addonCancel;
   t.down=PLAN.down?{ed:ED2R[PLAN.down.ed],tier:TIERS2[PLAN.down.tier]}:null;t.lineMode=LINEACC.mode;
+  if(PLAN.pp){t.prepaidFrom=PLAN.pp.from;t.prepaidUntil=PLAN.pp.until;t.prepayPrice=PLAN.pp.price;t.prepayDisc=PLAN.pp.disc;}else{delete t.prepaidFrom;delete t.prepaidUntil;delete t.prepayPrice;delete t.prepayDisc;}
   t.hist=newH.map(h=>({d:h.d,txt:h.t,by:h.by})).concat(t.hist||[]);if(so==="正式")t.trialEnd=null;},
   {src:"後台",who:ME,text:T.join("；")||"更新訂閱設定",link:"admin.html#billing"});
  if(so!==t0.st&&so==="已終止")PCMP.update("exits",L=>{let e=L.find(x=>x.tid===TID&&x.st==="唯讀保留中");const fin=BK.find(b=>b.type==="最終");
@@ -2917,6 +2919,81 @@ function checkTerms(){const p=termsPending();TOS_OK=!p.length;if(!p.length)retur
  icons();};}
 const flagOn=k=>{const f=(PCMP.get("flags")||[]).find(x=>x.key===k);return !!f&&(f.mode==="全部開啟"||(f.mode==="指定租戶"&&(f.tids||[]).includes(TID)));};
 {const o=renderHelp;renderHelp=function(){o();const h=$("#helpBody");if(h&&flagOn("voice_input"))h.insertAdjacentHTML("afterbegin",`<div class="alert" style="cursor:default;margin-bottom:16px"><span class="i tag t-ok"><i data-lucide="mic"></i></span><div><b>平台已開放：交接日誌語音輸入</b><small>總幹事與保全可在 LINE 交接日誌按麥克風說話，系統自動轉成文字。</small></div></div>`);icons();};}
+
+/* ---------- 3 年預付（P-BILL-11）與企業方案洽詢（P-ENT） ---------- */
+const PP_DISC=.85;
+const todayStr=()=>PCMP.now().slice(0,10);
+const pdate=s=>{const [y,m,d]=String(s).split("/").map(Number);return new Date(y,(m||1)-1,d||1);};
+const fdate=d=>`${d.getFullYear()}/${pad2(d.getMonth()+1)}/${pad2(d.getDate())}`;
+const addD=(s,n)=>fdate(new Date(pdate(s).getTime()+n*864e5));
+function ppUntil(from){const d=pdate(from);return fdate(new Date(d.getFullYear()+3,d.getMonth(),d.getDate()-1));}
+function ppLeft(){if(!PLAN.pp||!/^\d{4}\//.test(String(PLAN.pp.until)))return 0;const a=pdate(todayStr()),b=pdate(PLAN.pp.until);
+ let m=(b.getFullYear()-a.getFullYear())*12+(b.getMonth()-a.getMonth());if(b.getDate()>=a.getDate())m+=1;return Math.max(0,Math.min(36,m));}
+const onPP=()=>PLAN.cycle==="3年預付"&&!!PLAN.pp;
+function cycleCmp(m){const mo=m*36,yr=Math.round(m*12*.9)*3,pp=Math.round(m*36*PP_DISC);return {mo,yr,pp,saveMo:mo-pp,saveYr:yr-pp};}
+const ppDown=n=>RANK[n.ed]<RANK[PLAN.ed]||n.tier<PLAN.tier;
+const ppDiff=n=>{const left=ppLeft(),np=PRICE[n.ed][n.tier],op=PLAN.pp.price;return {left,np,op,diff:Math.round(np*left*PLAN.pp.disc-op*left*PLAN.pp.disc)};};
+const PP_RULES=`<ul class="hint" style="margin:8px 0 0;padding-left:1.2em;line-height:1.8"><li>預付期間價格不調整</li><li>期間可升級，按剩餘月數補差額（同樣 85 折）</li><li>不可降級退費，也不能改回月繳或年繳</li><li>期間退租的退費方式依服務條款辦理</li></ul>`;
+function ppCards(){const m=monthly(),c=cycleCmp(m),cur=PLAN.cycle;
+ const row=(k,lbl,amt,save)=>`<tr style="${cur===k?"background:var(--accent-soft);font-weight:700":""}"><td>${lbl}${cur===k?` ${tag("目前","t-ok")}`:""}</td><td class="num">NT$ ${fmt(amt)}</td><td class="num">${save?"NT$ "+fmt(save):"—"}</td></tr>`;
+ return `<div class="grid g-2" id="ppCards" style="margin-top:16px">
+  <div class="card"><h3><span class="l"><i data-lucide="calendar-range"></i>繳費週期比較（以目前方案、36 個月計）</span></h3>
+   <div class="tbl-wrap"><table><thead><tr><th>繳費方式</th><th class="num">36 個月合計</th><th class="num">比月繳省下</th></tr></thead><tbody>
+   ${row("月繳","月繳",c.mo,0)}${row("年繳","年繳（九折）× 3 年",c.yr,c.mo-c.yr)}${row("3年預付","3 年預付（85 折）",c.pp,c.saveMo)}</tbody></table></div>
+   ${onPP()?`<div class="alert" style="cursor:default;margin-top:12px"><span class="i tag t-ok"><i data-lucide="lock"></i></span><div><b>3 年預付・至 ${PLAN.pp.until}（剩 ${ppLeft()} 個月）</b><small>價格鎖定為每月 NT$ ${fmt(PLAN.pp.price)}（85 折計），期間可升級補差額。</small></div></div>`
+    :`<div class="actions" style="margin-top:12px"><button class="btn primary" data-act="ppBuy"><i data-lucide="badge-percent"></i>改為 3 年預付（省 NT$ ${fmt(c.saveMo)}）</button></div>`}
+   ${PP_RULES}</div>
+  <div class="card"><h3><span class="l"><i data-lucide="building-2"></i>企業方案</span></h3>
+   <p style="margin:0">60 個社區以上，或資料需放在自有環境，可洽詢企業方案（專屬環境、授權＋維護）。</p>
+   <p class="hint">授權費一次付清、前 3 年需購買年度維護（版本更新、資安修補、客服）。</p>
+   <div class="actions" style="margin-top:12px"><button class="btn" data-act="entInfo"><i data-lucide="info"></i>了解企業方案</button></div></div></div>`;}
+{const o=renderBilling;renderBilling=function(){o.apply(this,arguments);const body=$("#billBody");if(!body)return;
+ const btn=body.querySelector('[data-act="toggleCycle"]');if(btn)btn.textContent=onPP()?"繳費週期（3 年預付中）":"變更繳費週期";
+ if(onPP()){const k=body.querySelectorAll(".card.kpi")[1];if(k)k.innerHTML=`<div class="lbl">3 年預付（85 折）</div><div class="val">NT$ ${fmt(Math.round(PLAN.pp.price*36*PLAN.pp.disc))}</div><div class="delta">至 ${PLAN.pp.until}（剩 ${ppLeft()} 個月）· 價格鎖定</div>`;}
+ const old=$("#ppCards");if(old)old.remove();const demo=body.querySelector(".card.demo");
+ if(demo)demo.insertAdjacentHTML("beforebegin",ppCards());else body.insertAdjacentHTML("beforeend",ppCards());icons();};}
+A.toggleCycle=function(){
+ if(onPP()){modal("3 年預付期間",`<p style="margin-top:0">目前為 3 年預付（${PLAN.pp.from}～${PLAN.pp.until}，剩 ${ppLeft()} 個月），預付期間不能改回月繳或年繳。期滿前 60 天會提醒您選擇續約預付，或改為月繳、年繳。</p>${PP_RULES}`,[{label:"知道了"}]);return;}
+ const m=monthly(),c=cycleCmp(m);const opt=(v,l,s)=>`<label class="row" style="cursor:pointer;gap:10px;justify-content:flex-start"><input type="radio" name="cyc" id="cyc_${v}" value="${v}" ${PLAN.cycle===v?"checked":""}><span style="flex:1"><b>${l}</b><br><small class="hint">${s}</small></span></label>`;
+ modal("變更繳費週期",opt("月繳","月繳",`每月 NT$ ${fmt(m)}`)+opt("年繳","年繳（九折）",`每年 NT$ ${fmt(Math.round(m*12*.9))}，3 年共 NT$ ${fmt(c.yr)}`)+opt("3年預付","3 年預付（85 折）",`一次 NT$ ${fmt(c.pp)}，比月繳省 NT$ ${fmt(c.saveMo)}`)+PP_RULES,
+ [{label:"取消"},{label:"確認",cls:"primary",fn:()=>{const r=document.querySelector('input[name="cyc"]:checked');const v=r?r.value:PLAN.cycle;
+  if(v==="3年預付"){closeAll();A.ppBuy();return;}if(v===PLAN.cycle){toast("繳費週期未變更");return;}
+  PLAN.cycle=v;PLANHIST.unshift({d:todayStr(),t:"繳費週期改為"+v,by:ME});closeAll();renderBilling();toast("已改為"+v);}}]);};
+A.ppBuy=function(){
+ if(PREVIEW){modal("預覽模式",`<p style="margin-top:0">目前是網址參數預覽模式，不會寫入共用資料，因此無法購買 3 年預付。請移除網址參數後再操作。</p>`,[{label:"知道了"}]);return;}
+ if(onPP()){A.toggleCycle();return;}
+ if(PLAN.st!=="正式"){modal("目前無法購買",`<p style="margin-top:0">訂閱狀態為「${PLAN.st}」，請先轉為正式訂閱或完成付款後，再改為 3 年預付。</p>`,[{label:"知道了"}]);return;}
+ const m=monthly(),c=cycleCmp(m),from=todayStr(),until=ppUntil(from),due=addD(from,10);
+ modal("購買 3 年預付",`<dl class="dl"><dt>方案</dt><dd>${planName()}</dd><dt>預付期間</dt><dd>${from}～${until}（36 個月）</dd><dt>月費（定價）</dt><dd>NT$ ${fmt(m)}</dd><dt>預付金額（85 折，未稅）</dt><dd><b>NT$ ${fmt(c.pp)}</b></dd><dt>比月繳省下</dt><dd>NT$ ${fmt(c.saveMo)}</dd><dt>比年繳省下</dt><dd>NT$ ${fmt(c.saveYr)}</dd><dt>繳費期限</dt><dd>${due}</dd></dl>${PP_RULES}`,
+ [{label:"取消"},{label:"確認購買",cls:"primary",fn:()=>stepUp(`購買 3 年預付（NT$ ${fmt(c.pp)}）`,()=>{
+   PLAN.cycle="3年預付";PLAN.pp={from,until,price:m,disc:PP_DISC};
+   PLANHIST.unshift({d:from,t:`購買 3 年預付：${planName()}，${from}～${until}，NT$ ${fmt(c.pp)}`,by:ME});
+   INVOICES.unshift({id:"INV-PP-"+from.replace(/\//g,"").slice(2),p:`${from}～${until}`,item:"3 年預付",amt:c.pp,st:"待付款",due,inv:"—"});
+   closeAll();renderAll();if(location.hash==="#billing")renderBilling();toast(`已購買 3 年預付，帳單 NT$ ${fmt(c.pp)}（${due} 前繳款）`);})}]);};
+{const o=planPreview;planPreview=function(){o();if(!onPP())return;const el=$("#cpPrev");if(!el)return;const n={ed:val("cp1"),tier:+val("cp2")};
+ if(n.ed===PLAN.ed&&n.tier===PLAN.tier){el.innerHTML="";el.dataset.block="";return;}
+ if(ppDown(n)){el.dataset.block="1";el.innerHTML=`<div class="alert" style="cursor:default"><span class="i tag t-bad"><i data-lucide="ban"></i></span><div><b>3 年預付期間不能降級</b><small>預付期滿（${PLAN.pp.until}）後才能改為較低的方案。</small></div></div>`;icons();return;}
+ const d=ppDiff(n);el.dataset.block="";el.innerHTML=`<div class="alert" style="cursor:default"><span class="i tag t-info"><i data-lucide="calculator"></i></span><div><b>補差額 NT$ ${fmt(d.diff)}</b><small>（新月費 ${fmt(d.np)} － 原月費 ${fmt(d.op)}）× 剩餘 ${d.left} 個月 × 85 折，升級立即生效，預付到期日不變。</small></div></div>`;icons();};}
+{const o=A.changePlan;A.changePlan=function(el){o.call(A,el);if(!onPP())return;
+ $("#mBody").insertAdjacentHTML("afterbegin",`<div class="alert" style="cursor:default;margin-bottom:12px"><span class="i tag t-ok"><i data-lucide="lock"></i></span><div><b>3 年預付期間（剩 ${ppLeft()} 個月，至 ${PLAN.pp.until}）</b><small>可以升級，補差額 =（新月費 － 原月費）× 剩餘月數 × 85 折；不能降級。</small></div></div>`);
+ FOOT[1]=()=>{const n={ed:val("cp1"),tier:+val("cp2")};if(n.ed===PLAN.ed&&n.tier===PLAN.tier){toast("方案未變更");return;}
+  if(ppDown(n)){modal("預付期間無法降級",`<p style="margin-top:0">3 年預付期間（至 ${PLAN.pp.until}）不能降級，也不會退還差額。期滿後可以選擇較低的方案。</p>`,[{label:"知道了"}]);return;}
+  const d=ppDiff(n),from=planName(),day=todayStr();PLAN.ed=n.ed;PLAN.tier=n.tier;PLAN.down=null;PLAN.pp.price=d.np;
+  PLANHIST.unshift({d:day,t:`預付期間升級：${from} → ${planName()}，補差額 NT$ ${fmt(d.diff)}（剩 ${d.left} 個月）`,by:ME});
+  INVOICES.unshift({id:PCMP.id("INV-PPU"),p:`${day}～${PLAN.pp.until}`,item:"3 年預付升級補差額",amt:d.diff,st:"待付款",due:addD(day,10),inv:"—"});
+  closeAll();renderAll();if(location.hash==="#billing")renderBilling();toast(`已升級為 ${planName()}，補差額 NT$ ${fmt(d.diff)}`);};
+ planPreview();};}
+A.entInfo=function(){
+ modal("企業方案",`<p style="margin-top:0">適合服務 <b>60 個社區以上</b>，或資料必須放在自有環境的公司。採「授權費＋年度維護」，前 3 年需購買維護（版本更新、資安修補、客服）。</p>
+  <div class="tbl-wrap"><table><thead><tr><th>提供方式</th><th>說明</th><th>是否提供</th></tr></thead><tbody>
+  <tr><td><b>專屬雲環境</b></td><td>部署在貴公司的雲端帳號或獨立環境，由平台代管更新、監控與備份</td><td>${tag("建議","t-ok")}</td></tr>
+  <tr><td>地端部署</td><td>安裝在貴公司機房，由貴公司資訊人員維運，需簽署資安責任分工</td><td>${tag("個案評估","t-warn")}</td></tr>
+  <tr><td>原始碼買斷</td><td>—</td><td>${tag("不提供","t-mute")}</td></tr></tbody></table></div>
+  <p class="hint">LINE 一律使用貴公司自有官方帳號；只支援最新版與前一版，維護到期後不再提供資安修補。</p>`,
+ [{label:"關閉"},{label:"請平台業務聯絡我",cls:"primary",fn:()=>{
+   if(PREVIEW){closeAll();toast("預覽模式不會送出洽詢；請移除網址參數後再操作");return;}
+   TICKETS.unshift({id:"new-ent-"+Date.now(),t:"企業方案洽詢",cat:"企業方案洽詢",st:"新進",d:todayStr(),src:"租戶後台",msg:[[ME,`想了解企業方案（專屬環境、授權＋維護）。目前服務中社區 ${svc()} 個，方案為 ${planName()}。`]]});
+   closeAll();if(location.hash==="#help")renderHelp();toast("已送出洽詢，平台業務將與您聯繫（可在說明中心查看進度）");}}]);};
 
 /* ---------- 讀入、寫出與即時更新 ---------- */
 const PLAT_KEYS=["tenants","invoices","tickets","grants","platformAnns","jobs","exits","archOrders","delCerts","terms","flags"];

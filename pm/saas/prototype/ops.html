@@ -494,6 +494,8 @@ html select:hover{border-color:var(--accent,#0ea5e9)}
 html select:focus-visible{outline:none;border-color:var(--accent,#0ea5e9);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent,#0ea5e9) 22%,transparent)}
 html select:disabled{opacity:.55;cursor:not-allowed}
 html select::-ms-expand{display:none}
+/* 開啟對話框或側欄時隱藏右下角連動徽章，避免遮住底部按鈕 */
+body:has(#drawer.on) #pcmpSync,body:has(#modal.on) #pcmpSync{display:none!important}
 </style>
 </head>
 <body>
@@ -582,6 +584,12 @@ html select::-ms-expand{display:none}
         <a href="#releases"><i data-lucide="rocket"></i>版本更新說明</a>
         <a href="#terms"><i data-lucide="scroll-text"></i>服務條款版本</a>
       </div></div></div>
+      <div class="sgrp" data-g="ent"><button class="sgrp-h" data-act="sideGrp" data-g="ent" aria-expanded="true"><i data-lucide="chevron-down"></i>企業方案<span class="cnt">4</span></button><div class="sgrp-b"><div>
+        <a href="#entCust"><i data-lucide="building"></i>企業客戶</a>
+        <a href="#entKeys"><i data-lucide="key-square"></i>授權金鑰簽發</a>
+        <a href="#entMaint"><i data-lucide="calendar-clock"></i>維護續約</a>
+        <a href="#entVer"><i data-lucide="git-branch"></i>版本分布</a>
+      </div></div></div>
       <div class="sgrp" data-g="sec"><button class="sgrp-h" data-act="sideGrp" data-g="sec" aria-expanded="true"><i data-lucide="chevron-down"></i>資安中心<span class="dotb" id="secDot"></span><span class="cnt">5</span></button><div class="sgrp-b"><div>
         <a href="#secEvents"><i data-lucide="siren"></i>資安事件監控</a>
         <a href="#secVulns"><i data-lucide="bug"></i>弱點與修補</a>
@@ -604,7 +612,7 @@ html select::-ms-expand{display:none}
     </nav>
     <div class="side-foot">
       <div class="who"><span class="av">張</span><div><b>張子豪</b><small>平台管理員 · 2FA Passkey</small></div></div>
-      <div class="ver">SaaS 原型 v0.2 · 需求書 v0.4</div>
+      <div class="ver">SaaS 原型 v0.3 · 需求書 v0.7</div>
     </div>
   </aside>
   <div class="drawer-bg" id="drawerBg" data-act="closeMenu"></div>
@@ -624,6 +632,7 @@ html select::-ms-expand{display:none}
         <div class="page-head"><div><div class="crumb">總覽 · 2026/11/06</div><h1>營運儀表板</h1></div>
           <div class="actions"><button class="btn" data-act="exportJob" data-name="營運儀表板"><i data-lucide="download"></i>匯出</button></div></div>
         <div class="grid g-6" id="dKpi"></div>
+        <div id="dEnt" style="margin-top:16px"></div>
         <div class="grid g-21" style="margin-top:16px">
           <div class="card chart"><h3><span class="l"><i data-lucide="bar-chart-3"></i>近 12 個月 MRR（萬元）與社區數</span></h3><div id="dChart"></div></div>
           <div class="card"><h3><span class="l"><i data-lucide="list-todo"></i>待處理清單</span><span class="tag t-bad" id="todoCnt"></span></h3><div class="alert-list" id="dTodo"></div></div>
@@ -706,6 +715,7 @@ html select::-ms-expand{display:none}
           <div class="actions"><button class="btn" data-act="newQuote"><i data-lucide="file-pen-line"></i>個別報價</button><button class="btn primary" data-act="newPriceVer"><i data-lucide="plus"></i>新增價格版本</button></div></div>
         <div class="tbl-wrap"><table><thead><tr><th>方案</th><th>社區數</th><th class="num">月費</th><th class="num">年費（九折）</th><th>可用模組</th><th>配額</th><th class="num">租戶數</th><th>銷售狀態</th><th></th></tr></thead><tbody id="pRows"></tbody></table></div>
         <div class="card" style="margin-top:16px" id="addonCard"></div>
+        <div class="card" style="margin-top:16px" id="prepayCard"></div>
         <div class="grid g-2" style="margin-top:16px">
           <div class="card"><h3><span class="l"><i data-lucide="history"></i>價格版本（P-SUB-10）</span></h3><div class="tbl-wrap"><table><thead><tr><th>方案</th><th>版本</th><th class="num">月費</th><th>生效日</th><th>既有租戶</th><th>狀態</th><th></th></tr></thead><tbody id="pvRows"></tbody></table></div></div>
           <div class="card"><h3><span class="l"><i data-lucide="file-pen-line"></i>個別報價（P-SUB-12）</span></h3><div class="tbl-wrap"><table><thead><tr><th>租戶</th><th>方案</th><th class="num">月費</th><th>原因</th><th>狀態</th><th></th></tr></thead><tbody id="qRows"></tbody></table></div></div>
@@ -918,6 +928,37 @@ html select::-ms-expand{display:none}
         </div>
         <div class="card" style="margin-top:16px"><h3><span class="l"><i data-lucide="flask-conical"></i>每季還原演練（NF-BAK-04）</span></h3>
           <div class="tbl-wrap"><table><thead><tr><th>季度</th><th>日期</th><th>範圍</th><th>實際 RTO</th><th>實際 RPO</th><th>結果</th><th>備註</th></tr></thead><tbody id="bdRows"></tbody></table></div></div>
+      </section>
+
+      <section class="screen" id="s-entCust">
+        <div class="page-head"><div><div class="crumb">企業方案</div><h1>企業客戶</h1></div>
+          <div class="actions"><button class="btn" data-act="entKeyNew"><i data-lucide="key-square"></i>申請簽發金鑰</button><button class="btn primary" data-act="entNew"><i data-lucide="plus"></i>新增企業客戶</button></div></div>
+        <div class="card" style="margin-bottom:16px"><div class="hint">買斷以「企業方案」提供（第三期之後、60 社區以上或資料需放在自有環境）：方式 A 專屬雲由平台代管，方式 B 地端由客戶維運；不提供原始碼（需求書 5.11、商業計畫書 6.5）。</div></div>
+        <div class="grid g-4" id="entKpi"></div>
+        <div class="tbl-wrap" style="margin-top:16px"><table><thead><tr><th>客戶</th><th>部署方式</th><th>環境位置</th><th>版本</th><th>授權</th><th>維護</th><th>健康回報</th></tr></thead><tbody id="entRows"></tbody></table></div>
+        <p class="hint" style="margin-top:8px">點選客戶查看授權、金鑰紀錄、責任分工與維護帳單。</p>
+      </section>
+
+      <section class="screen" id="s-entKeys">
+        <div class="page-head"><div><div class="crumb">企業方案</div><h1>授權金鑰簽發</h1></div>
+          <div class="actions"><button class="btn primary" data-act="entKeyNew"><i data-lucide="plus"></i>申請簽發金鑰</button></div></div>
+        <div class="card" style="margin-bottom:16px"><div class="hint">金鑰內含版本、加購模組、社區數上限與維護到期日，以數位簽章防竄改並可離線驗證（P-ENT-10）。簽發、擴充、續約都需<b>另一位主管核准</b>，並寫入平台稽核日誌（P-ENT-31）。</div></div>
+        <div class="card"><h3><span class="l"><i data-lucide="inbox"></i>金鑰申請</span></h3><div class="tbl-wrap"><table><thead><tr><th>編號</th><th>客戶</th><th>類型</th><th>內容</th><th>申請人</th><th>狀態</th><th></th></tr></thead><tbody id="ekRows"></tbody></table></div></div>
+        <div class="card" style="margin-top:16px"><h3><span class="l"><i data-lucide="history"></i>已簽發金鑰</span></h3><div class="tbl-wrap"><table><thead><tr><th>編號</th><th>客戶</th><th>類型</th><th>金鑰</th><th>申請 / 核准</th><th>簽發時間</th><th></th></tr></thead><tbody id="ekHist"></tbody></table></div></div>
+      </section>
+
+      <section class="screen" id="s-entMaint">
+        <div class="page-head"><div><div class="crumb">企業方案</div><h1>維護續約</h1></div></div>
+        <div class="card" style="margin-bottom:16px"><div class="hint">維護到期前 90／30／7 天提醒業務與客戶；維護費為授權費的 18～22%，前 3 年必須購買。維護到期後停止版本更新與資安修補（P-ENT-12、P-ENT-32）。</div></div>
+        <div class="card"><h3><span class="l"><i data-lucide="calendar-clock"></i>90 天內到期</span></h3><div class="tbl-wrap"><table><thead><tr><th>客戶</th><th>到期日</th><th>狀態</th><th>提醒階段</th><th class="num">年度維護費</th><th>通知</th><th></th></tr></thead><tbody id="emSoon"></tbody></table></div></div>
+        <div class="card" style="margin-top:16px"><h3><span class="l"><i data-lucide="alert-octagon"></i>維護已到期</span></h3><div class="tbl-wrap"><table><thead><tr><th>客戶</th><th>到期日</th><th>目前版本</th><th>風險</th><th></th></tr></thead><tbody id="emExp"></tbody></table></div></div>
+        <div class="card" style="margin-top:16px"><h3><span class="l"><i data-lucide="receipt"></i>維護費帳單</span></h3><div class="tbl-wrap"><table><thead><tr><th>帳單</th><th>客戶</th><th>期間</th><th class="num">金額</th><th>開立日</th><th>狀態</th><th></th></tr></thead><tbody id="emInv"></tbody></table></div></div>
+      </section>
+
+      <section class="screen" id="s-entVer">
+        <div class="page-head"><div><div class="crumb">企業方案</div><h1>版本分布</h1></div></div>
+        <div class="card" style="margin-bottom:16px" id="evNote"></div>
+        <div class="tbl-wrap"><table><thead><tr><th>客戶</th><th>部署方式</th><th>目前版本</th><th>支援狀態</th><th>風險</th><th>更新</th><th></th></tr></thead><tbody id="evRows"></tbody></table></div>
       </section>
     </main>
   </div>
@@ -1166,7 +1207,7 @@ const tName=id=>{const t=tById(id);if(t)return t.s;const l=LEADS.find(x=>x.id===
 const planOf=t=>PLANS.find(p=>p.id===t.ed+"-"+t.tier);
 const listPrice=(ed,tier)=>{const v=PVERS.filter(x=>x.pid===ed+"-"+tier&&x.st==="適用中");return v.length?v[v.length-1].m:PRICE[ed][tier];};
 const tPrice=t=>t.custom||t.locked||listPrice(t.ed,t.tier);
-const tMRR=t=>{if(!["正式","付款逾期"].includes(t.st))return 0;const base=t.cycle==="年繳"?tPrice(t)*.9:tPrice(t);return base+(t.addon&&t.ed!=="旗艦"?addonPrice(t.tier):0);};
+const tMRR=t=>{if(!["正式","付款逾期"].includes(t.st))return 0;const base=t.cycle==="3年預付"?(t.prepayPrice||tPrice(t))*(t.prepayDisc||.85):t.cycle==="年繳"?tPrice(t)*.9:tPrice(t);return base+(t.addon&&t.ed!=="旗艦"?addonPrice(t.tier):0);};
 const overdueInvs=t=>INVS.filter(i=>i.tid===t.id&&i.st==="未付"&&diff(TODAY,i.due)>0);
 const overdueDays=t=>Math.max(0,...overdueInvs(t).map(i=>diff(TODAY,i.due)));
 const openTickets=t=>TICKETS.filter(x=>x.tid===t.id&&!["已解決","結案"].includes(x.st)).length;
@@ -1175,7 +1216,7 @@ const health=t=>t.st==="已終止"?"—":healthScore(t)>=3?"危險":healthScore(
 const hTag=t=>health(t)==="—"?tag("—","t-mute"):stTag(health(t));
 const PTN_DESC=p=>p.model==="經銷"?`經銷折扣 ${p.rate}%`:p.kind==="比例"?`首 ${p.months} 個月訂閱費 ${p.rate}%${p.inclOT?"（含導入費）":""}`:p.kind==="固定金額"?`每成交一家 ${money(p.fixed)}`:`持續分潤 ${p.rate}%`;
 function audit(cat,obj,act,reason,g){AUDIT.unshift({t:now(),who:ME.n,cat,obj,act,reason:reason||"",g:g||""});}
-function nextBillDate(t){if(t.st==="試用中")return "試用至 "+t.trialEnd;if(t.st==="已終止")return "—";if(t.cycle==="年繳"){const x=dd(t.since);while(ymd(x)<=TODAY)x.setFullYear(x.getFullYear()+1);return ymd(x);}return "2026/12/01";}
+function nextBillDate(t){if(isPrepaid(t)&&t.st!=="已終止")return "預付至 "+t.prepaidUntil+"（剩 "+monthsLeft(t)+" 月）";if(t.st==="試用中")return "試用至 "+t.trialEnd;if(t.st==="已終止")return "—";if(t.cycle==="年繳"){const x=dd(t.since);while(ymd(x)<=TODAY)x.setFullYear(x.getFullYear()+1);return ymd(x);}return "2026/12/01";}
 
 /* modal / drawer */
 let FOOT={};
@@ -1243,7 +1284,7 @@ function renderFunnel(){const fs=val("fSrc")||"全部來源",fp=val("fPtn")||"�
 let tF="全部",tQ="";
 function renderTenants(){const sts=["全部","試用中","正式","付款逾期","唯讀","停權","已終止"];$("#tChips").innerHTML=chips(sts,tF,"tF")+(tQ?`<button class="chip on" data-act="clearQ">搜尋：${tQ} ✕</button>`:"");
  const ls=TENANTS.filter(t=>(tF==="全部"||t.st===tF)&&(!tQ||t.n.includes(tQ)||t.code.includes(tQ)||t.s.includes(tQ)));
- $("#tRows").innerHTML=ls.length?ls.map(t=>`<tr class="click" data-act="tenantOpen" data-t="${t.id}"><td><b>${t.s}</b><br><small class="hint">${t.n}</small></td><td>${t.code}</td><td>${t.ed}・${t.tier}${t.custom?" "+tag("個別報價","t-info"):""} ${addonTag(t)}</td><td>${lineTag(t)}</td><td>${stTag(t.st)}</td><td class="num">${t.sites}</td><td class="num">${t.users}</td><td class="num">${tMRR(t)?money(tMRR(t)):"—"}</td><td>${nextBillDate(t)}</td><td>${t.act}</td><td>${hTag(t)}</td></tr>`).join(""):empty(11,"沒有符合的租戶");}
+ $("#tRows").innerHTML=ls.length?ls.map(t=>`<tr class="click" data-act="tenantOpen" data-t="${t.id}"><td><b>${t.s}</b><br><small class="hint">${t.n}</small></td><td>${t.code}</td><td>${t.ed}・${t.tier}${t.custom?" "+tag("個別報價","t-info"):""} ${addonTag(t)}<br><small class="hint">${t.cycle}</small></td><td>${lineTag(t)}</td><td>${stTag(t.st)}</td><td class="num">${t.sites}</td><td class="num">${t.users}</td><td class="num">${tMRR(t)?money(tMRR(t)):"—"}</td><td>${nextBillDate(t)}</td><td>${t.act}</td><td>${hTag(t)}</td></tr>`).join(""):empty(11,"沒有符合的租戶");}
 let curT="T001",tTab="info";
 const TTABS=[["info","基本資料與法人"],["plan","方案"],["bill","帳單"],["usage","用量"],["adopt","使用率"],["onb","導入進度"],["sup","客服"],["log","聯繫紀錄"],["ptn","推薦夥伴"],["hist","異動紀錄"]];
 const SITE_NAMES={T001:["春暉苑","青山大境","河畔晴空","森林綠園","星河廣場","雲頂閱","翠堤灣","和平新城"]};
@@ -1252,7 +1293,7 @@ function renderTenant(){const t=tById(curT)||TENANTS[0];const p=planOf(t);
  $("#tTitle").innerHTML=`${t.n} ${stTag(t.st)}`;
  const acts=[];if(t.st==="試用中")acts.push(["extendTrial","延長試用","calendar-plus"],["toFormal","轉正式","badge-check"]);if(["付款逾期","唯讀","停權"].includes(t.st))acts.push(["toFormal","恢復正式","rotate-ccw"]);if(["正式","付款逾期","唯讀"].includes(t.st))acts.push(["suspend","暫停（停權）","pause-circle"]);if(t.st!=="已終止")acts.push(["changePlan","調整方案","layers"],["requestGrant","發出授權請求","key-round"],["terminate","終止","x-octagon"]);else acts.push(["reopen","重新開通","rotate-ccw"]);
  $("#tActs").innerHTML=acts.map(([a,l,i])=>`<button class="btn ${a==="terminate"?"":a==="toFormal"?"primary":""}" data-act="${a}"><i data-lucide="${i}"></i>${l}</button>`).join("");
- $("#tKpi").innerHTML=kpi("layers","方案",`${t.ed}・${t.tier}`,`月費 ${money(tPrice(t))}${t.cycle==="年繳"?"（年繳九折）":""}`)+kpi("map-pin","服務社區",`${t.sites} / ${TIER_MAX[t.tier]}`,`使用者 ${t.users}（不限）`)+kpi("activity","使用率",t.use+"%",`LINE 綁定率 ${t.line}%`)+kpi("heart-pulse","健康度",health(t),`逾期 ${overdueDays(t)} 天 · 未結客服 ${openTickets(t)}`);
+ $("#tKpi").innerHTML=kpi("layers","方案",`${t.ed}・${t.tier}`,`月費 ${money(tPrice(t))}${t.cycle==="年繳"?"（年繳九折）":t.cycle==="3年預付"?"（3 年預付 "+Math.round((t.prepayDisc||.85)*100)+" 折）":""}`)+kpi("map-pin","服務社區",`${t.sites} / ${TIER_MAX[t.tier]}`,`使用者 ${t.users}（不限）`)+kpi("activity","使用率",t.use+"%",`LINE 綁定率 ${t.line}%`)+kpi("heart-pulse","健康度",health(t),`逾期 ${overdueDays(t)} 天 · 未結客服 ${openTickets(t)}`);
  $("#tTabs").innerHTML=TTABS.map(([k,l])=>`<button data-act="tTab" data-tab="${k}" class="${k===tTab?"on":""}">${l}</button>`).join("");
  let h="";
  if(tTab==="info")h=`<div class="grid g-2"><div class="card"><h3><span class="l"><i data-lucide="building-2"></i>基本資料</span><button class="btn sm" data-act="editTenant">編輯</button></h3><dl class="dl"><dt>租戶代碼</dt><dd>${t.code}</dd><dt>聯絡人</dt><dd>${t.ct.n} · ${t.ct.tel}</dd><dt>Email</dt><dd>${t.ct.mail}</dd><dt>建立日</dt><dd>${t.since}</dd><dt>負責業務</dt><dd>${t.sales}</dd><dt>推薦夥伴</dt><dd>${t.ptn?pById(t.ptn).n:"—"}</dd><dt>LINE 官方帳號</dt><dd>${t.lineMode==="自有"?`${lineTag(t)} ${t.lineCh.at} · Channel ${t.lineCh.ch}<br><small class="hint">Secret／Token 存於金鑰管理服務（${t.lineCh.kms}），Webhook 驗證 ${t.lineCh.verified}；訊息費由租戶支付</small>`:`${lineTag(t)} 平台共用帳號 @pcmp-ops · 受方案推播配額限制`}</dd><dt>計費週期</dt><dd>${t.cycle}</dd><dt>優惠碼</dt><dd>${t.coupon||"—"}</dd></dl></div><div class="card"><h3><span class="l"><i data-lucide="landmark"></i>法人（${t.ents.length}）</span><span class="hint">由租戶自行維護</span></h3>${t.ents.map(e=>`<div class="row"><span>${e.n}</span><span class="hint">統編 ${e.tax}</span></div>`).join("")}</div></div>`;
@@ -1475,7 +1516,7 @@ const A={
   drawer(`${x.id} · ${t.s}`,`<dl class="dl"><dt>提問人</dt><dd>${x.by}（${x.src}）</dd><dt>類別／優先級</dt><dd>${x.cat} · ${x.pri}</dd><dt>建立</dt><dd>${x.created}</dd><dt>首次回應</dt><dd>${x.resp||"尚未回應"}（${t.tier}級距時限 ${QUOTA[t.tier].sla} 小時）</dd></dl>
   <div class="form-grid" style="margin:14px 0">${F("狀態",S("tkSt",["新進","處理中","待客戶回覆","已解決","結案"],x.st))}${F("處理人",S("tkWho",["—",...STAFF.filter(s=>s.role==="客服"&&s.on).map(s=>s.n),ME.n],x.who))}</div>
   <div class="msgs">${x.msgs.map(m=>`<div class="msg ${m.f==="s"?"me":m.f==="n"?"note":""}"><small>${m.n} · ${m.t}${m.f==="n"?" · 內部備註（客戶看不到）":""}</small>${m.x}</div>`).join("")}</div>
-  ${F("回覆內容",TA("tkMsg","","輸入回覆或內部備註…"),1)}`,[{label:"更新狀態／處理人",fn:()=>{x.st=val("tkSt");x.who=val("tkWho");audit("客服",x.id,"更新為 "+x.st+"，處理人 "+x.who);renderAll();A.ticketOpen({dataset:{s:x.id}});toast("已更新");}},{label:"發出授權請求",fn:()=>A.requestGrant({dataset:{t:x.tid}})},...(x.cat==="功能建議"?[{label:"合併到功能建議",fn:()=>A.sugMerge({dataset:{s:x.id}})}]:[]),{label:"內部備註",fn:()=>A.tkSend(x,"n")},{label:"回覆客戶",cls:"primary",fn:()=>A.tkSend(x,"s")}]);},
+  ${F("回覆內容",TA("tkMsg","","輸入回覆或內部備註…"),1)}`,[{label:"更新狀態／處理人",fn:()=>{x.st=val("tkSt");x.who=val("tkWho");audit("客服",x.id,"更新為 "+x.st+"，處理人 "+x.who);renderAll();A.ticketOpen({dataset:{s:x.id}});toast("已更新");}},{label:"發出授權請求",fn:()=>A.requestGrant({dataset:{t:x.tid}})},...(x.cat==="功能建議"?[{label:"合併到功能建議",fn:()=>A.sugMerge({dataset:{s:x.id}})}]:[]),...(x.cat==="企業方案洽詢"?[{label:x.lead?"查看商機 "+x.lead:"轉為企業方案商機",fn:()=>A.entLead(x)}]:[]),{label:"內部備註",fn:()=>A.tkSend(x,"n")},{label:"回覆客戶",cls:"primary",fn:()=>A.tkSend(x,"s")}]);},
  tkSend(x,f){if(!required(["tkMsg"]))return;const d=new Date();const tm=`11/06 ${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;x.msgs.push({f,n:ME.n,t:tm,x:val("tkMsg")});if(f==="s"){if(!x.resp)x.resp=now();if(x.st==="新進")x.st="處理中";if(x.who==="—")x.who=ME.n;}renderAll();A.ticketOpen({dataset:{s:x.id}});toast(f==="s"?"已回覆客戶（後台通知＋Email）":"已新增內部備註");},
  newTicket(el){modal("新增客服問題",`<div class="form-grid">${F("租戶",S("ntkT",TENANTS.filter(t=>t.st!=="已終止").map(t=>[t.id,t.s]),el?.dataset?.t||"T001"))}${F("提問人 *",I("ntkB"))}${F("來源",S("ntkS",["電話","Email","租戶後台","LIFF"],"電話"))}${F("類別",S("ntkC",["操作問題","資料匯入","錯誤回報","功能建議","帳務"],"操作問題"))}${F("優先級",S("ntkP",["高","中","低"],"中"))}${F("問題描述 *",TA("ntkX"),1)}</div>`,[{label:"取消"},{label:"建立",cls:"primary",fn:()=>{if(!required(["ntkB","ntkX"]))return;const id="S-"+(2042+TICKETS.length);TICKETS.unshift({id,tid:val("ntkT"),by:val("ntkB"),src:val("ntkS"),cat:val("ntkC"),pri:val("ntkP"),st:"新進",who:"—",created:now(),resp:null,msgs:[{f:"c",n:val("ntkB"),t:now().slice(5),x:val("ntkX")}]});closeAll();renderAll();A.ticketOpen({dataset:{s:id}});toast("已建立 "+id);}}]);},
  sugList(){modal("功能建議彙整（P-SUP-05）",`<div class="tbl-wrap"><table><thead><tr><th>建議</th><th class="num">次數</th><th>提出租戶</th></tr></thead><tbody>${SUGS.sort((a,b)=>b.cnt-a.cnt).map(s=>`<tr><td>${s.topic}</td><td class="num">${s.cnt}</td><td style="white-space:normal">${s.tenants.join("、")}</td></tr>`).join("")}</tbody></table></div>`,[{label:"關閉"}],true);},
@@ -1889,6 +1930,134 @@ function route(){
 }
 window.addEventListener("hashchange",route);
 /* =====================================================================
+   v0.7 企業方案（P-ENT-30～33、P-ENT-40）與 3 年預付（P-BILL-11）
+   企業客戶資料存於共用資料層自訂 key「ops.enterprise」（平台內部，租戶看不到）；
+   3 年預付寫在 tenants 紀錄：cycle='3年預付'、prepaidFrom、prepaidUntil、prepayPrice、prepayDisc，
+   並在 invoices 產生 kind='3 年預付' 的帳單。
+   ===================================================================== */
+let PREPAY={disc:.85};
+function addMonths(s,n){const x=dd(s);x.setMonth(x.getMonth()+n);x.setDate(x.getDate()-1);return ymd(x);}
+function monthsLeft(t){return Math.max(0,Math.round(diff(t.prepaidUntil,TODAY)/30.4));}
+function isPrepaid(t){return t.cycle==="3年預付"&&!!t.prepaidUntil;}
+function prepayTotal(price,disc){return Math.round(price*36*disc);}
+const ED_CODE={基本:"BASIC",專業:"PRO",旗艦:"FLAG"};
+const ENT_DEPLOYS=["專屬雲（平台帳號）","專屬雲（客戶雲端帳號）","地端"];
+const entMode=e=>e.deploy==="地端"?"B":"A";
+let ENTS=[
+ {id:"E01",n:"鼎盛物業管理集團股份有限公司",s:"鼎盛物業",deploy:"專屬雲（平台帳號）",loc:"雲端台灣區域・平台帳號 pcmp-ent-e01",ver:"v1.3.4",ed:"旗艦",mods:["社區帳務模組"],cap:150,used:128,licFee:1680000,maintRate:.2,maintExp:"2027/06/30",maintSt:"有效",since:"2025/07/01",
+  ct:{n:"高協理",tel:"02-2758-3300",mail:"it@dingsheng.example"},health:{opt:true,last:"11/06 09:58",st:"正常"},
+  keys:[{id:"LK-0007",kind:"新簽約",at:"2025/07/01 10:20",by:"張子豪",appr:"黃美華",key:"",payload:{ed:"旗艦",mods:["社區帳務模組"],cap:150,exp:"2026/06/30"}},{id:"LK-0012",kind:"續約維護",at:"2026/06/20 15:02",by:"黃美華",appr:"張子豪",key:"",payload:{ed:"旗艦",mods:["社區帳務模組"],cap:150,exp:"2027/06/30"}}],
+  reqs:[],invs:[{id:"MNT-2606-01",period:"2026/07/01～2027/06/30",amt:336000,st:"已付",issued:"2026/06/20",due:"2026/07/20",paidOn:"2026/07/08"}],notices:[],upd:null},
+ {id:"E02",n:"宏璟保全股份有限公司",s:"宏璟保全",deploy:"專屬雲（客戶雲端帳號）",loc:"客戶雲端帳號（台灣區域）・平台以代管角色維運",ver:"v1.3.0",ed:"專業",mods:[],cap:80,used:74,licFee:900000,maintRate:.18,maintExp:"2026/12/03",maintSt:"有效",since:"2024/12/04",
+  ct:{n:"蘇經理",tel:"04-2326-7788",mail:"mis@hongjing.example"},health:{opt:true,last:"11/06 09:41",st:"正常"},
+  keys:[{id:"LK-0004",kind:"新簽約",at:"2024/12/04 14:30",by:"林育成",appr:"張子豪",key:"",payload:{ed:"專業",mods:[],cap:80,exp:"2025/12/03"}},{id:"LK-0009",kind:"續約維護",at:"2025/11/20 11:05",by:"黃美華",appr:"張子豪",key:"",payload:{ed:"專業",mods:[],cap:80,exp:"2026/12/03"}}],
+  reqs:[{id:"KR-0013",eid:"E02",kind:"擴充社區數",by:"林育成",at:"2026/11/05 16:40",st:"待核准",reason:"新接 6 個社區，授權不足",payload:{cap:90}}],invs:[],notices:[],upd:null},
+ {id:"E03",n:"南方之星物業管理有限公司",s:"南方之星",deploy:"地端",loc:"客戶自有機房（高雄）・客戶資訊室維運",ver:"v1.2.6",ed:"專業",mods:[],cap:70,used:63,licFee:780000,maintRate:.2,maintExp:"2026/10/15",maintSt:"已到期",since:"2024/10/16",
+  ct:{n:"許主任",tel:"07-331-2468",mail:"it@southstar.example"},health:{opt:false,last:"—",st:"未啟用"},
+  keys:[{id:"LK-0003",kind:"新簽約",at:"2024/10/16 09:15",by:"張子豪",appr:"黃美華",key:"",payload:{ed:"專業",mods:[],cap:70,exp:"2026/10/15"}}],
+  reqs:[],invs:[],notices:[{t:"2026/09/15",x:"維護到期前 30 天通知（Email）"}],upd:null},
+];
+function keySig(s){let h=2166136261;for(const c of s){h^=c.codePointAt(0);h=Math.imul(h,16777619)>>>0;}let h2=h^0x5bd1e995;for(const c of s.split("").reverse().join("")){h2^=c.codePointAt(0);h2=Math.imul(h2,16777619)>>>0;}return (h.toString(16).padStart(8,"0")+h2.toString(16).padStart(8,"0")).toUpperCase();}
+function makeKey(e,p){const body=`PCMP-ENT-${e.id}-${ED_CODE[p.ed]||"PRO"}-${(p.mods||[]).length?"ACCT":"BASE"}-${p.cap}S-${String(p.exp).replace(/\//g,"")}`;return body+"-"+keySig(body);}
+ENTS.forEach(e=>e.keys.forEach(k=>{if(!k.key)k.key=makeKey(e,k.payload);}));
+const eById=id=>ENTS.find(e=>e.id===id);
+const maintDays=e=>diff(e.maintExp,TODAY);
+const maintTag=e=>{const d=maintDays(e);return d<0?tag("已到期 "+(-d)+" 天","t-bad"):d<=7?tag(d+" 天內到期","t-bad"):d<=30?tag(d+" 天內到期","t-warn"):d<=90?tag(d+" 天內到期","t-info"):tag("有效至 "+e.maintExp,"t-ok");};
+const verKey=v=>v.replace(/[^\d.]/g,"").split(".").map(n=>String(n).padStart(3,"0")).join(".");
+const supVers=()=>RELEASES.filter(r=>r.st==="已上線").map(r=>r.v).sort((a,b)=>verKey(b).localeCompare(verKey(a))).slice(0,2);
+const openCrit=()=>VULNS.filter(v=>v.sev==="Critical"&&v.st!=="已修補");
+function verInfo(e){const s=supVers();const i=s.indexOf(e.ver);const sup=i===0?tag("N 最新版","t-ok"):i===1?tag("N-1 支援中","t-info"):tag("不支援","t-bad");const crit=openCrit();const urgent=crit.length&&i!==0;return {sup,urgent,crit,supported:i>=0};}
+let ENT_TAB="info",entCur="E01";
+const RESP=[["應用程式更新與資安修補","平台部署","客戶依平台更新套件自行更新"],["作業系統與主機修補","平台","客戶"],["備份與還原演練","平台（每日備份、每季演練）","客戶"],["網路防護（WAF、防火牆、憑證）","平台","客戶"],["帳號與權限管理","客戶","客戶"],["資安事件通報","平台通報客戶並協處","客戶通報平台，平台協助分析"],["LINE 官方帳號與訊息費","客戶","客戶"],["主機與雲端費用","客戶（客戶雲端帳號）／平台代收（平台帳號）","客戶"]];
+
+function renderEntCust(){const box=$("#entKpi");if(!box)return;const soon=ENTS.filter(e=>{const d=maintDays(e);return d>=0&&d<=90;}).length;const pend=ENTS.reduce((a,e)=>a+e.reqs.filter(r=>r.st==="待核准").length,0);
+ box.innerHTML=kpi("building","企業客戶",ENTS.length+" 家",`授權社區合計 ${fmt(ENTS.reduce((a,e)=>a+e.cap,0))} 個`)+kpi("calendar-clock","90 天內維護到期",soon+" 家",`已到期 ${ENTS.filter(e=>maintDays(e)<0).length} 家`,"entMaint")+kpi("key-round","待核准金鑰",pend+" 件","需由另一位主管核准","entKeys")+kpi("shield-alert","需緊急更新",ENTS.filter(e=>verInfo(e).urgent||!verInfo(e).supported).length+" 家",`支援版本 ${supVers().join("、")}`,"entVer");
+ $("#entRows").innerHTML=ENTS.map(e=>{const vi=verInfo(e);return `<tr class="click" data-act="entOpen" data-e="${e.id}"><td><b>${e.s}</b><br><small class="hint">${e.n}</small></td><td>${tag(e.deploy,entMode(e)==="A"?"t-info":"t-warn")}<br><small class="hint">方式 ${entMode(e)}</small></td><td style="white-space:normal;max-width:220px"><small>${e.loc}</small></td><td>${e.ver} ${vi.sup}</td><td>${e.ed}版${e.mods.length?"＋"+e.mods.join("、"):""}<br><small class="hint">${e.used} / ${e.cap} 社區</small></td><td>${maintTag(e)}</td><td>${e.health.opt?tag("回報中","t-ok")+`<br><small class="hint">${e.health.last}</small>`:tag("未啟用","t-mute")}</td></tr>`;}).join("");}
+
+function entDrawerBody(e){const vi=verInfo(e);const tabs=[["info","基本與環境"],["lic","授權"],["keys","金鑰紀錄"],["resp","責任分工"],["bill","維護與帳單"]];
+ let h=`<div class="tabs" style="margin-bottom:12px">${tabs.map(([k,l])=>`<button data-act="entTab" data-tab="${k}" data-e="${e.id}" class="${k===ENT_TAB?"on":""}">${l}</button>`).join("")}</div>`;
+ if(ENT_TAB==="info")h+=`<dl class="dl"><dt>部署方式</dt><dd>${e.deploy}（方式 ${entMode(e)}）</dd><dt>環境位置</dt><dd>${e.loc}</dd><dt>目前版本</dt><dd>${e.ver} ${vi.sup}</dd><dt>聯絡人</dt><dd>${e.ct.n} · ${e.ct.tel}<br>${e.ct.mail}</dd><dt>簽約日</dt><dd>${e.since}</dd><dt>系統健康回報</dt><dd>${e.health.opt?`已同意（最近一次 ${e.health.last}・${e.health.st}）<br><small class="hint">只回報版本、授權狀態與健康狀態，不含業務資料或個資（P-ENT-23）</small>`:"客戶未同意回報"}</dd></dl>`;
+ if(ENT_TAB==="lic")h+=`<dl class="dl"><dt>版本</dt><dd>${e.ed}版</dd><dt>加購模組</dt><dd>${e.mods.join("、")||"—"}</dd><dt>社區數上限</dt><dd>${e.cap} 個（使用中 ${e.used}）</dd><dt>授權費</dt><dd>${money(e.licFee)}</dd><dt>年度維護費</dt><dd>${Math.round(e.maintRate*100)}%・${money(e.licFee*e.maintRate)}／年</dd><dt>維護到期</dt><dd>${maintTag(e)}</dd></dl><p class="hint">維護到期後系統照常使用，但停止版本更新與資安修補（P-ENT-12）。</p>`;
+ if(ENT_TAB==="keys")h+=`<div class="tbl-wrap"><table><thead><tr><th>編號</th><th>類型</th><th>申請／核准</th><th>內容</th><th></th></tr></thead><tbody>${e.keys.length?e.keys.map(k=>`<tr><td>${k.id}<br><small class="hint">${k.at}</small></td><td>${k.kind}</td><td>${k.by} / ${k.appr}</td><td><small>${k.payload.ed}版・${k.payload.cap} 社區・維護至 ${k.payload.exp}</small></td><td><button class="btn sm" data-act="entKeyView" data-e="${e.id}" data-k="${k.id}">檢視金鑰</button></td></tr>`).join(""):empty(5,"尚未簽發")}</tbody></table></div>${e.reqs.filter(r=>r.st==="待核准").length?`<p class="hint">有 ${e.reqs.filter(r=>r.st==="待核准").length} 件金鑰申請待核准，請到「授權金鑰簽發」處理。</p>`:""}`;
+ if(ENT_TAB==="resp")h+=`<p class="hint" style="margin-top:0">依部署方式自動帶入，合約附件以此為準（P-ENT-40）。此客戶為<b>方式 ${entMode(e)}</b>。</p><div class="tbl-wrap"><table><thead><tr><th>項目</th><th>方式 A：專屬雲（平台代管）</th><th>方式 B：地端</th></tr></thead><tbody>${RESP.map(([x,a,b])=>`<tr><td style="white-space:normal;min-width:120px">${x}</td><td style="white-space:normal;${entMode(e)==="A"?"font-weight:700":"color:var(--muted)"}">${a}</td><td style="white-space:normal;${entMode(e)==="B"?"font-weight:700":"color:var(--muted)"}">${b}</td></tr>`).join("")}</tbody></table></div>`;
+ if(ENT_TAB==="bill")h+=`<div class="tbl-wrap"><table><thead><tr><th>帳單</th><th>期間</th><th class="num">金額</th><th>狀態</th><th></th></tr></thead><tbody>${e.invs.length?e.invs.map(i=>`<tr><td>${i.id}</td><td>${i.period}</td><td class="num">${money(i.amt)}</td><td>${stTag(i.st)}</td><td>${i.st==="未付"?`<button class="btn sm" data-act="entPay" data-e="${e.id}" data-i="${i.id}">登記收款</button>`:i.paidOn||""}</td></tr>`).join(""):empty(5,"尚無維護費帳單")}</tbody></table></div><h4 style="margin:14px 0 6px">通知紀錄</h4>${e.notices.length?`<ul class="timeline">${[...e.notices].reverse().map(n=>`<li><b>${n.x}</b><small>${n.t}</small></li>`).join("")}</ul>`:'<p class="hint">尚無通知紀錄</p>'}`;
+ return h;}
+
+function renderEntKeys(){const box=$("#ekRows");if(!box)return;const reqs=ENTS.flatMap(e=>e.reqs.map(r=>({...r,e})));
+ box.innerHTML=reqs.length?reqs.sort((a,b)=>(a.st==="待核准"?0:1)-(b.st==="待核准"?0:1)||String(b.at).localeCompare(String(a.at))).map(r=>`<tr><td>${r.id}</td><td>${r.e.s}</td><td>${r.kind}</td><td style="white-space:normal;max-width:240px"><small>${reqDesc(r)}</small>${r.reason?`<br><small class="hint">${r.reason}</small>`:""}</td><td>${r.by}<br><small class="hint">${r.at}</small></td><td>${stTag(r.st)}${r.appr?`<br><small class="hint">${r.st==="已拒絕"?"拒絕":"核准"}：${r.appr}</small>`:""}</td><td>${r.st==="待核准"?`<button class="btn sm primary" data-act="entKeyApprove" data-e="${r.e.id}" data-r="${r.id}">核准並簽發</button> <button class="btn sm" data-act="entKeyReject" data-e="${r.e.id}" data-r="${r.id}">拒絕</button>`:r.kid?`<button class="btn sm" data-act="entKeyView" data-e="${r.e.id}" data-k="${r.kid}">檢視金鑰</button>`:""}</td></tr>`).join(""):empty(7,"沒有金鑰申請");
+ const all=ENTS.flatMap(e=>e.keys.map(k=>({...k,e}))).sort((a,b)=>String(b.at).localeCompare(String(a.at)));
+ $("#ekHist").innerHTML=all.map(k=>`<tr><td>${k.id}</td><td>${k.e.s}</td><td>${k.kind}</td><td><code style="font-size:12px">${k.key.slice(0,28)}…</code></td><td>${k.by} / ${k.appr}</td><td>${k.at}</td><td><button class="btn sm" data-act="entKeyView" data-e="${k.e.id}" data-k="${k.id}">檢視</button></td></tr>`).join("");}
+function reqDesc(r){const p=r.payload||{};if(r.kind==="擴充社區數")return `社區數上限 → ${p.cap} 個`;if(r.kind==="加購模組")return `加購：${p.mod}`;if(r.kind==="續約維護")return `維護延長至 ${p.exp}`;return `${p.ed}版・${p.cap} 社區・維護至 ${p.exp}`;}
+
+function renderEntMaint(){const box=$("#emSoon");if(!box)return;const soon=ENTS.filter(e=>{const d=maintDays(e);return d>=0&&d<=90;}).sort((a,b)=>maintDays(a)-maintDays(b));
+ box.innerHTML=soon.length?soon.map(e=>{const d=maintDays(e);return `<tr><td><b>${e.s}</b></td><td>${e.maintExp}</td><td>${maintTag(e)}</td><td>${d<=7?"7 天":d<=30?"30 天":"90 天"}提醒</td><td class="num">${money(e.licFee*e.maintRate)}</td><td>${e.notices.length?`<small class="hint">最近通知 ${e.notices[e.notices.length-1].t}</small>`:"—"}</td><td><button class="btn sm" data-act="entNotice" data-e="${e.id}">寄送續約通知</button> <button class="btn sm primary" data-act="entRenew" data-e="${e.id}">續約維護</button></td></tr>`;}).join(""):empty(7,"90 天內沒有到期的維護合約");
+ const exp=ENTS.filter(e=>maintDays(e)<0);
+ $("#emExp").innerHTML=exp.length?exp.map(e=>{const vi=verInfo(e);return `<tr><td><b>${e.s}</b></td><td>${e.maintExp}</td><td>${e.ver} ${vi.sup}</td><td>${!vi.supported?tag("停留在不支援版本","t-bad"):"—"}</td><td><button class="btn sm" data-act="entNotice" data-e="${e.id}">寄送續約通知</button> <button class="btn sm primary" data-act="entRenew" data-e="${e.id}">續約維護</button></td></tr>`;}).join(""):empty(5,"沒有維護已到期的客戶");
+ const invs=ENTS.flatMap(e=>e.invs.map(i=>({...i,e}))).sort((a,b)=>String(b.issued).localeCompare(String(a.issued)));
+ $("#emInv").innerHTML=invs.length?invs.map(i=>`<tr><td>${i.id}</td><td>${i.e.s}</td><td>${i.period}</td><td class="num">${money(i.amt)}</td><td>${i.issued}</td><td>${stTag(i.st)}</td><td>${i.st==="未付"?`<button class="btn sm" data-act="entPay" data-e="${i.e.id}" data-i="${i.id}">登記收款</button>`:i.paidOn||""}</td></tr>`).join(""):empty(7,"尚無維護費帳單");}
+
+function renderEntVer(){const box=$("#evRows");if(!box)return;const s=supVers();const crit=openCrit();
+ $("#evNote").innerHTML=`<div class="row"><span>支援版本（P-ENT-20）</span><span>${tag(s[0]+"（N）","t-ok")} ${s[1]?tag(s[1]+"（N-1）","t-info"):""}</span></div><div class="row"><span>未修補的重大弱點</span><span>${crit.length?crit.map(v=>tag(v.id+" "+v.comp,"t-bad")).join(" "):tag("無","t-ok")}</span></div><p class="hint">有未修補的 Critical 弱點時，非最新版的客戶標示「需緊急更新」；修補版發布後優先部署（P-ENT-33）。</p>`;
+ box.innerHTML=ENTS.map(e=>{const vi=verInfo(e);const exp=maintDays(e)<0;return `<tr><td><b>${e.s}</b></td><td>${e.deploy}</td><td>${e.ver}</td><td>${vi.sup}</td><td>${vi.urgent?tag("需緊急更新（"+vi.crit.map(v=>v.id).join("、")+"）","t-bad"):!vi.supported?tag("版本不支援","t-bad"):tag("正常","t-ok")}${exp?"<br>"+tag("維護已到期","t-warn"):""}</td><td>${e.upd?`${stTag(e.upd.st)}<br><small class="hint">${e.upd.to}・${e.upd.at}</small>`:"—"}</td><td>${entMode(e)==="A"?(e.upd&&e.upd.st==="已排程"?`<button class="btn sm primary" data-act="entUpdDone" data-e="${e.id}">完成更新（模擬）</button>`:`<button class="btn sm" data-act="entSched" data-e="${e.id}">排程更新</button>`):`<button class="btn sm" data-act="entUpdNotice" data-e="${e.id}">寄送更新通知</button>`}</td></tr>`;}).join("");}
+
+function renderPrepay(){const c=$("#prepayCard");if(!c)return;const ls=TENANTS.filter(isPrepaid);
+ c.innerHTML=`<h3><span class="l"><i data-lucide="calendar-range"></i>3 年預付（P-BILL-11）</span><button class="btn sm" data-act="prepayEdit">調整折扣</button></h3>
+ <div class="grid g-2"><div><dl class="dl"><dt>折扣</dt><dd><b>${Math.round(PREPAY.disc*100)} 折</b>（月費 × 36 × ${PREPAY.disc}）</dd><dt>價格保障</dt><dd>預付期間不調價</dd><dt>升級</dt><dd>可升級，按日補差額</dd><dt>降級／退費</dt><dd>不可降級退費；退租時依服務條款辦理</dd></dl></div>
+ <div><div class="hint" style="margin-bottom:6px">預付中的租戶（${ls.length}）</div>${ls.length?`<div class="tbl-wrap"><table><thead><tr><th>租戶</th><th>方案</th><th>預付至</th><th class="num">月均</th></tr></thead><tbody>${ls.map(t=>`<tr class="click" data-act="tenantOpen" data-t="${t.id}"><td>${t.s}</td><td>${t.ed}・${t.tier}</td><td>${t.prepaidUntil}（剩 ${monthsLeft(t)} 月）</td><td class="num">${money((t.prepayPrice||tPrice(t))*(t.prepayDisc||PREPAY.disc))}</td></tr>`).join("")}</tbody></table></div>`:'<p class="hint">目前沒有預付中的租戶</p>'}</div></div>`;}
+
+function prepayCardHtml(t){if(isPrepaid(t)){const price=t.prepayPrice||tPrice(t),disc=t.prepayDisc||PREPAY.disc;return `<div class="card" style="margin-bottom:16px"><h3><span class="l"><i data-lucide="calendar-range"></i>計費週期：3 年預付</span>${tag("剩 "+monthsLeft(t)+" 個月","t-info")}</h3><dl class="dl"><dt>預付期間</dt><dd>${t.prepaidFrom}～${t.prepaidUntil}</dd><dt>預付時月費</dt><dd>${money(price)}（價格保障，期間不調價）</dd><dt>折扣</dt><dd>${Math.round(disc*100)} 折・月均 ${money(price*disc)}</dd><dt>預付總額</dt><dd>${money(prepayTotal(price,disc))}</dd></dl></div>`;}
+ return `<div class="card" style="margin-bottom:16px"><h3><span class="l"><i data-lucide="calendar-range"></i>計費週期：${t.cycle}</span>${["正式","付款逾期"].includes(t.st)?`<button class="btn sm" data-act="tPrepay">設定 3 年預付</button>`:""}</h3><p class="hint" style="margin:0">3 年預付：一次付清 36 個月享 ${Math.round(PREPAY.disc*100)} 折，期間不調價（P-BILL-11）。</p></div>`;}
+
+/* 包裝既有畫面 */
+{const _rt=renderTenant;renderTenant=function(){_rt();if(tTab==="plan"){const t=tById(curT)||TENANTS[0];const b=$("#tBody");if(b&&t)b.insertAdjacentHTML("afterbegin",prepayCardHtml(t));}};}
+{const _rp=renderPlans;renderPlans=function(){_rp();renderPrepay();};}
+{const _rd=renderDash;renderDash=function(){_rd();const d=$("#dEnt");if(!d)return;const soon=ENTS.filter(e=>{const x=maintDays(e);return x>=0&&x<=90;}).length;const pend=ENTS.reduce((a,e)=>a+e.reqs.filter(r=>r.st==="待核准").length,0);
+ d.innerHTML=`<div class="card"><h3><span class="l"><i data-lucide="building"></i>企業方案</span><a href="#entCust" class="hint">企業客戶</a></h3><div class="row"><span>企業客戶 <b>${ENTS.length}</b> 家・90 天內維護到期 <b>${soon}</b> 家・維護已到期 <b>${ENTS.filter(e=>maintDays(e)<0).length}</b> 家・待核准金鑰 <b>${pend}</b> 件</span><span>${pend?`<button class="btn sm" data-act="go" data-go="entKeys">處理金鑰申請</button>`:""} <button class="btn sm" data-act="go" data-go="entMaint">維護續約</button></span></div></div>`;};}
+{const _ra=renderAll;renderAll=function(){_ra();renderEntCust();renderEntKeys();renderEntMaint();renderEntVer();icons();};}
+
+/* 動作 */
+Object.assign(A,{
+ entOpen(el){entCur=el.dataset.e;ENT_TAB=el.dataset.tab||"info";const e=eById(entCur);drawer(`${e.s} · 企業方案`,entDrawerBody(e),[{label:"申請簽發金鑰",fn:()=>A.entKeyNew({dataset:{e:e.id}})},{label:e.health.opt?"停用健康回報":"啟用健康回報",fn:()=>A.entHealth({dataset:{e:e.id}})},{label:"關閉"}]);},
+ entTab(el){ENT_TAB=el.dataset.tab;A.entOpen({dataset:{e:el.dataset.e,tab:el.dataset.tab}});},
+ entHealth(el){const e=eById(el.dataset.e);const on=!e.health.opt;confirmBox(on?"啟用系統健康回報":"停用系統健康回報",on?`記錄「${e.s}」已同意環境定期回報版本、授權狀態與健康狀態（不含業務資料或個資，P-ENT-23）。`:`記錄「${e.s}」撤回健康回報同意，之後不再接收回報。`,on?"記錄同意":"記錄撤回",()=>{e.health={opt:on,last:on?now().slice(5):"—",st:on?"正常":"未啟用"};audit("企業方案",e.s,on?"客戶同意系統健康回報":"客戶撤回系統健康回報");closeAll();renderAll();toast(on?"已啟用健康回報":"已停用健康回報");});},
+ entNew(){modal("新增企業客戶",`<div class="form-grid">${F("公司名稱 *",I("enN"))}${F("簡稱 *",I("enS"))}${F("部署方式",S("enD",ENT_DEPLOYS,ENT_DEPLOYS[0]))}${F("環境位置 *",I("enL","","例：雲端台灣區域・平台帳號"))}${F("版本",S("enE",["基本","專業","旗艦"],"專業"))}${F("社區數上限 *",I("enC","60","","number"))}${F("授權費 *",I("enF","","例：900000","number"))}${F("年度維護費比例",S("enR",[["0.18","18%"],["0.2","20%"],["0.22","22%"]],"0.2"))}${F("聯絡人",I("enCt"))}${F("Email",I("enM"))}</div><p class="hint">建立後請到「授權金鑰簽發」申請新簽約金鑰，經另一位主管核准後簽發。前 3 年必須購買維護（商業計畫書 6.5.4）。</p>`,[{label:"取消"},{label:"建立",cls:"primary",fn:()=>{if(!required(["enN","enS","enL","enC","enF"]))return;stepUp("新增企業客戶",()=>{const id="E"+String(ENTS.length+1).padStart(2,"0");const exp=addMonths(TODAY,12);ENTS.push({id,n:val("enN"),s:val("enS"),deploy:val("enD"),loc:val("enL"),ver:supVers()[0],ed:val("enE"),mods:[],cap:Number(val("enC")),used:0,licFee:Number(val("enF")),maintRate:Number(val("enR")),maintExp:exp,maintSt:"待簽發金鑰",since:TODAY,ct:{n:val("enCt")||"—",tel:"—",mail:val("enM")||"—"},health:{opt:false,last:"—",st:"未啟用"},keys:[],reqs:[{id:"KR-"+String(Date.now()).slice(-4),eid:id,kind:"新簽約",by:ME.n,at:now(),st:"待核准",reason:"新企業客戶簽約",payload:{ed:val("enE"),mods:[],cap:Number(val("enC")),exp}}],invs:[],notices:[],upd:null});audit("企業方案",val("enS"),"新增企業客戶並申請新簽約金鑰");closeAll();renderAll();toast("已新增企業客戶，新簽約金鑰待另一位主管核准");});}}]);},
+ entKeyNew(el){const cur=el?.dataset?.e||ENTS[0].id;modal("申請簽發授權金鑰（P-ENT-31）",`<div class="form-grid">${F("企業客戶",S("ekE",ENTS.map(e=>[e.id,e.s]),cur))}${F("類型",S("ekK",["擴充社區數","加購模組","續約維護","新簽約"],"擴充社區數"))}${F("新的社區數上限",I("ekC","","擴充社區數／新簽約時填寫","number"))}${F("加購模組",S("ekM",["社區帳務模組","公司經營分析"],"社區帳務模組"))}${F("維護延長至",I("ekX","","續約維護／新簽約時填寫，例：2027/12/31"))}${F("申請原因 *",TA("ekR"),1)}</div><p class="hint">申請送出後，需由<b>另一位</b>平台管理員或平台財務核准才會產生金鑰；申請與核准都寫入平台稽核日誌。</p>`,[{label:"取消"},{label:"送出申請",cls:"primary",fn:()=>{if(!required(["ekR"]))return;const e=eById(val("ekE")),k=val("ekK");const p={};
+  if(k==="擴充社區數"||k==="新簽約"){const c=Number(val("ekC"));if(!c||c<=e.used){toast(`社區數上限需大於目前使用的 ${e.used} 個`);return;}p.cap=c;}
+  if(k==="加購模組"){p.mod=val("ekM");if(e.mods.includes(p.mod)||(p.mod==="社區帳務模組"&&e.ed==="旗艦")){toast("此客戶已有「"+p.mod+"」");return;}}
+  if(k==="續約維護"||k==="新簽約"){const x=val("ekX");if(!/^\d{4}\/\d{2}\/\d{2}$/.test(x)||x<=e.maintExp&&k==="續約維護"){toast("請輸入晚於目前到期日（"+e.maintExp+"）的日期，格式 YYYY/MM/DD");return;}p.exp=x;}
+  if(k==="新簽約"){p.ed=e.ed;p.mods=e.mods.slice();}
+  stepUp("申請簽發授權金鑰",()=>{const id="KR-"+String(Date.now()).slice(-5);e.reqs.push({id,eid:e.id,kind:k,by:ME.n,at:now(),st:"待核准",reason:val("ekR"),payload:p});audit("企業方案",e.s,`申請簽發授權金鑰（${k}）`,val("ekR"));closeAll();renderAll();location.hash="entKeys";toast("已送出申請 "+id+"，待另一位主管核准");});}}]);},
+ entKeyApprove(el){const e=eById(el.dataset.e),r=e.reqs.find(x=>x.id===el.dataset.r);const mgrs=STAFF.filter(s=>s.on&&["平台管理員","平台財務"].includes(s.role)).map(s=>s.n);const def=mgrs.find(n=>n!==r.by)||mgrs[0];
+  modal("核准並簽發授權金鑰",`<dl class="dl"><dt>客戶</dt><dd>${e.s}</dd><dt>類型</dt><dd>${r.kind}</dd><dt>內容</dt><dd>${reqDesc(r)}</dd><dt>申請人</dt><dd>${r.by}（${r.at}）</dd></dl><div class="form-grid" style="margin-top:12px">${F("核准人（需為另一位主管）",S("ekA",mgrs,def))}</div><p class="hint">核准人不得與申請人相同（雙人覆核）。核准後立即產生數位簽章金鑰。</p>`,[{label:"取消"},{label:"核准並簽發",cls:"primary",fn:()=>{const ap=val("ekA");if(ap===r.by){toast("不能核准自己的申請，需由另一位主管核准");return;}
+   stepUp("核准並簽發授權金鑰",()=>{const p=r.payload||{};if(p.cap)e.cap=p.cap;if(p.mod&&!e.mods.includes(p.mod))e.mods.push(p.mod);if(p.exp){e.maintExp=p.exp;if(e.maintSt!=="有效（續約帳單未付）")e.maintSt="有效";}if(r.kind==="新簽約")e.maintSt="有效";
+    const payload={ed:e.ed,mods:e.mods.slice(),cap:e.cap,exp:e.maintExp};const kid="LK-"+String(ENTS.reduce((a,x)=>a+x.keys.length,0)+1).padStart(4,"0");const key=makeKey(e,payload);
+    e.keys.unshift({id:kid,kind:r.kind,at:now(),by:r.by,appr:ap,key,payload});r.st="已簽發";r.appr=ap;r.kid=kid;audit("企業方案",e.s,`核准並簽發授權金鑰 ${kid}（${r.kind}）`,`申請人 ${r.by}，核准人 ${ap}`);closeAll();renderAll();A.entKeyView({dataset:{e:e.id,k:kid}});});}}]);},
+ entKeyReject(el){const e=eById(el.dataset.e),r=e.reqs.find(x=>x.id===el.dataset.r);reasonBox("拒絕金鑰申請",`拒絕「${e.s}」的「${r.kind}」金鑰申請？`,"拒絕",why=>{r.st="已拒絕";r.appr=ME.n;r.why=why;audit("企業方案",e.s,`拒絕金鑰申請 ${r.id}`,why);closeAll();renderAll();toast("已拒絕");},true);},
+ entKeyView(el){const e=eById(el.dataset.e),k=e.keys.find(x=>x.id===el.dataset.k);modal(`授權金鑰 ${k.id} · ${e.s}`,`<label class="field full"><span>金鑰（貼到客戶系統後台「授權」頁即生效，不需停機）</span><input class="input" id="entKeyTxt" value="${k.key}" readonly style="font-family:var(--mono,ui-monospace),monospace;font-size:13px"></label><dl class="dl" style="margin-top:12px"><dt>版本</dt><dd>${k.payload.ed}版</dd><dt>加購模組</dt><dd>${(k.payload.mods||[]).join("、")||"—"}</dd><dt>社區數上限</dt><dd>${k.payload.cap} 個</dd><dt>維護到期</dt><dd>${k.payload.exp}</dd><dt>申請／核准</dt><dd>${k.by} / ${k.appr}・${k.at}</dd><dt>驗證</dt><dd>數位簽章，可離線驗證（P-ENT-10）</dd></dl>`,[{label:"關閉"},{label:"複製金鑰",cls:"primary",fn:()=>A.entCopy()}]);},
+ entCopy(){const inp=$("#entKeyTxt");if(!inp)return;const v=inp.value;const fb=()=>{inp.focus();inp.select();toast("已選取金鑰，請按 Ctrl+C 複製");};try{if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(v).then(()=>toast("已複製金鑰")).catch(fb);else fb();}catch(e){fb();}audit("企業方案",inp.value.slice(9,12),"複製授權金鑰");},
+ entNotice(el){const e=eById(el.dataset.e);const d=maintDays(e);const what=d<0?"維護已到期續約通知":`維護到期前 ${d<=7?7:d<=30?30:90} 天續約通知`;confirmBox("寄送續約通知",`寄送「${what}」給 ${e.ct.n}（${e.ct.mail}），副本給負責業務？`,"寄送",()=>{e.notices.push({t:TODAY,x:what+"（Email）"});audit("企業方案",e.s,"寄送"+what);closeAll();renderAll();toast("已寄送續約通知");});},
+ entRenew(el){const e=eById(el.dataset.e);const from=maintDays(e)<0?TODAY:addDays(e.maintExp,1);const to=addMonths(from,12);
+  modal("續約維護（P-ENT-32）",`<dl class="dl"><dt>客戶</dt><dd>${e.s}</dd><dt>授權費</dt><dd>${money(e.licFee)}</dd><dt>續約期間</dt><dd>${from}～${to}</dd></dl><div class="form-grid" style="margin-top:12px">${F("維護費比例",S("erR",[["0.18","18%"],["0.2","20%"],["0.22","22%"]],String(e.maintRate)))}</div><p class="hint" id="erAmt">本期維護費：${money(e.licFee*e.maintRate)}</p>${maintDays(e)<0?`<p class="hint">維護已中斷 ${-maintDays(e)} 天；依政策需補繳中斷期間維護費（商業計畫書 6.5.5），請另以一次性費用開立。</p>`:""}`,[{label:"取消"},{label:"建立維護費帳單",cls:"primary",fn:()=>{const rate=Number(val("erR"));stepUp("續約維護並開立帳單",()=>{const id="MNT-"+TODAY.slice(2,4)+TODAY.slice(5,7)+"-"+String(e.invs.length+1).padStart(2,"0")+e.id.slice(1);e.maintRate=rate;e.invs.unshift({id,period:`${from}～${to}`,amt:Math.round(e.licFee*rate),st:"未付",issued:TODAY,due:addDays(TODAY,30),paidOn:null});e.maintExp=to;e.maintSt="有效（續約帳單未付）";audit("企業方案",e.s,`續約維護至 ${to}，開立帳單 ${id}`,`維護費 ${Math.round(rate*100)}%`);closeAll();renderAll();toast(`已開立維護費帳單 ${id}（${money(e.licFee*rate)}），維護延長至 ${to}`);});}}]);
+  const sel=$("#erR");if(sel)sel.addEventListener("change",()=>{$("#erAmt").textContent="本期維護費："+money(e.licFee*Number(sel.value));});},
+ entPay(el){const e=eById(el.dataset.e),i=e.invs.find(x=>x.id===el.dataset.i);confirmBox("登記收款",`登記「${e.s}」維護費帳單 ${i.id}（${money(i.amt)}）已收款？`,"登記",()=>{i.st="已付";i.paidOn=TODAY;if(String(e.maintSt).includes("未付"))e.maintSt="有效";audit("企業方案",e.s,`維護費帳單 ${i.id} 收款`);closeAll();renderAll();toast("已登記收款");});},
+ entSched(el){const e=eById(el.dataset.e);if(maintDays(e)<0){toast("維護已到期，需先續約才能取得版本更新與資安修補");return;}const s=supVers();
+  modal("排程更新（專屬雲・平台部署）",`<div class="form-grid">${F("目標版本",S("esV",s,s[0]))}${F("更新時間",I("esT",addDays(TODAY,3)+" 02:00"))}</div><p class="hint">依維護排程於夜間部署，事先通知客戶；資料庫結構變更已於還原演練環境驗證可回復（P-ENT-21、G7）。</p>`,[{label:"取消"},{label:"排程",cls:"primary",fn:()=>{const to=val("esV");if(to===e.ver){toast("客戶已是 "+to);return;}if(!required(["esT"]))return;stepUp("排程更新企業客戶環境",()=>{e.upd={to,at:val("esT"),st:"已排程"};e.notices.push({t:TODAY,x:`更新排程通知：${val("esT")} 更新至 ${to}`});audit("企業方案",e.s,`排程更新至 ${to}（${val("esT")}）`);closeAll();renderAll();toast("已排程更新並通知客戶");});}}]);},
+ entUpdDone(el){const e=eById(el.dataset.e);confirmBox("完成更新",`記錄「${e.s}」已更新至 ${e.upd.to}，健康檢查通過？`,"記錄完成",()=>{const from=e.ver;e.ver=e.upd.to;e.upd.st="已完成";if(e.health.opt)e.health.last=now().slice(5);audit("企業方案",e.s,`更新完成：${from} → ${e.ver}`);closeAll();renderAll();toast("已更新至 "+e.ver);});},
+ entUpdNotice(el){const e=eById(el.dataset.e);const s=supVers();confirmBox("寄送更新通知",`通知「${e.s}」（地端）下載 ${s[0]} 更新套件與更新前檢查工具，並說明資安修補的急迫程度？${maintDays(e)<0?"<br><br>此客戶維護已到期，通知內容會附上續約說明。":""}`,"寄送",()=>{e.notices.push({t:TODAY,x:`更新通知：請更新至 ${s[0]}${maintDays(e)<0?"（附續約說明）":""}`});e.upd={to:s[0],at:TODAY,st:"已通知"};audit("企業方案",e.s,`寄送更新通知（${s[0]}）`);closeAll();renderAll();toast("已寄送更新通知");});},
+ prepayEdit(){modal("調整 3 年預付折扣",`<div class="form-grid">${F("折扣",S("ppD",[["0.8","8 折"],["0.85","85 折"],["0.9","9 折"]],String(PREPAY.disc)))}</div><p class="hint">只影響之後新購買的預付；已預付的租戶維持購買時的折扣與月費（價格保障）。</p>`,[{label:"取消"},{label:"儲存",cls:"primary",fn:()=>{const v=Number(val("ppD"));stepUp("調整預付折扣（定價）",()=>{const old=PREPAY.disc;PREPAY.disc=v;if(window.PCMP)PCMP.set("ops.prepay",PREPAY,{src:"平台",who:ME.n,text:`調整 3 年預付折扣：${Math.round(old*100)} 折 → ${Math.round(v*100)} 折`,internal:true});audit("方案與價格","3 年預付",`折扣 ${old} → ${v}`);closeAll();renderAll();toast("已更新預付折扣");});}}]);},
+ tPrepay(){const t=tById(curT);const price=tPrice(t),disc=PREPAY.disc;const until=addMonths(TODAY,36);
+  modal("設定 3 年預付",`<dl class="dl"><dt>租戶</dt><dd>${t.s}</dd><dt>方案</dt><dd>${t.ed}版・${t.tier}</dd><dt>目前月費</dt><dd>${money(price)}</dd><dt>折扣</dt><dd>${Math.round(disc*100)} 折</dd><dt>預付期間</dt><dd>${TODAY}～${until}</dd><dt>預付總額</dt><dd><b>${money(prepayTotal(price,disc))}</b></dd></dl><p class="hint">適用業務議定的預付方案。設定後開立「3 年預付」帳單，月費於預付期間不調整；可升級補差額，不可降級退費。</p>`,[{label:"取消"},{label:"設定並開立帳單",cls:"primary",fn:()=>stepUp("設定 3 年預付",()=>{t.cycle="3年預付";t.prepaidFrom=TODAY;t.prepaidUntil=until;t.prepayPrice=price;t.prepayDisc=disc;t.hist.push({d:TODAY,txt:`改為 3 年預付（${TODAY}～${until}，${Math.round(disc*100)} 折）`,by:ME.n});
+   const id="INV-PP-"+t.id+"-"+TODAY.replace(/\//g,"").slice(2);inv(id,t.id,`${TODAY}～${until}`,"3 年預付",prepayTotal(price,disc),TODAY,addDays(TODAY,14),"未付",null,null);audit("方案與帳務",t.s,`設定 3 年預付並開立帳單 ${id}`);closeAll();renderAll();toast(`已設定 3 年預付，開立帳單 ${id}`);})}]);},
+ entLead(x){if(x.lead){closeAll();location.hash="leads";toast("已轉為商機 "+x.lead);return;}const t=tById(x.tid);const mx=LEADS.reduce((a,l)=>Math.max(a,Number(String(l.id).replace(/\D/g,""))||0),0);const id="L"+String(mx+1).padStart(2,"0");
+  LEADS.unshift({id,n:(t?t.n:x.by)+"（企業方案）",ct:x.by,tel:t?t.ct.tel:"—",src:t&&t.ptn?"推薦夥伴":"官網",pid:t?t.ptn:null,stage:"已聯繫",sales:"林育成",est:t?Math.max(60,t.sites):60,next:addDays(TODAY,2),tid:null,lost:null,d:TODAY,ent:true,logs:[{d:TODAY,way:"系統",txt:`由客服問題 ${x.id} 轉入（企業方案洽詢）：${(x.msgs[0]||{}).x||""}`}]});
+  x.lead=id;if(x.st==="新進")x.st="處理中";audit("客戶開發",x.id,`企業方案洽詢轉為商機 ${id}`);closeAll();renderAll();toast(`已建立企業方案商機 ${id}，指派給林育成`);},
+});
+
+Object.assign(ST_C,{"已簽發":"t-ok","已拒絕":"t-mute","已排程":"t-info","已完成":"t-ok","已通知":"t-info","待簽發金鑰":"t-warn"});
+/* 共用資料層：企業客戶與預付折扣（平台內部） */
+if(window.PCMP){if(!PCMP.get("ops.enterprise"))PCMP.set("ops.enterprise",ENTS,null);const pp=PCMP.get("ops.prepay");if(pp&&pp.disc)PREPAY=pp;else PCMP.set("ops.prepay",PREPAY,null);}
+
+/* =====================================================================
    v0.3 跨雛型連動（shared-store.js）
    平台層資料改由共用資料層讀寫：租戶、帳單、客服問題、授權、平台公告、
    試用申請、退租、刪除證明、加值服務、背景工作、條款、功能開關、
@@ -1915,6 +2084,7 @@ const PSYNC = (() => {
     partners: [() => PARTNERS, v => { PARTNERS = v; }, r => r.id, '推薦夥伴'],
     commissions: [() => COMMS, v => { COMMS = v; }, r => r.id, '佣金'],
     payouts: [() => PAYOUTS, v => { PAYOUTS = v; }, r => r.id, '佣金撥付'],
+    'ops.enterprise': [() => ENTS, v => { ENTS = v; }, r => r.id, '企業客戶'],
   };
   const KEYS = Object.keys(V);
   const SNAP = {};
@@ -1938,6 +2108,7 @@ const PSYNC = (() => {
     if (k === 'jobs') list.forEach(j => { if (!j.st) j.st = '排隊'; if (!j.at) j.at = PCMP.short(); });
     if (k === 'exits') list.forEach(e => { if (!e.fb) e.fb = { st: '未下載', d: null }; if (!e.rem) e.rem = { 30: null, 7: null, 1: null }; if (!e.st) e.st = '唯讀保留中'; });
     if (k === 'tenants') list.forEach(t => { if (!t.hist) t.hist = []; if (!t.logs) t.logs = []; });
+    if (k === 'ops.enterprise') list.forEach(e => { ['keys', 'reqs', 'invs', 'notices'].forEach(x => { if (!e[x]) e[x] = []; }); if (!e.health) e.health = { opt: false, last: '—', st: '未啟用' }; if (!e.mods) e.mods = []; });
     if (k === 'invoices') list.forEach(i => { if (i.credit == null) i.credit = 0; if (!i.dun) i.dun = []; });
     return list;
   }
@@ -2128,6 +2299,7 @@ const PSYNC = (() => {
   return { init, syncIn, syncOut, renderLive, flush };
 })();
 PSYNC.init();
+(function seedPrepay(){if(!window.PCMP)return;if(TENANTS.some(t=>t.id!=="T001"&&t.cycle==="3年預付"))return;const cand=TENANTS.filter(t=>t.id!=="T001"&&t.st==="正式").slice(0,2);["2025/12/01","2026/03/01"].forEach((from,i)=>{const t=cand[i];if(!t)return;t.cycle="3年預付";t.prepaidFrom=from;t.prepaidUntil=addMonths(from,36);t.prepayPrice=tPrice(t);t.prepayDisc=.85;t.hist.push({d:from,txt:"改為 3 年預付（"+from+"～"+t.prepaidUntil+"，85 折）",by:"林育成"});});PSYNC.syncOut();})();
 try{if(sessionStorage.getItem("pcmp-ops"))$("#login").style.display="none"}catch(e){}
 applySide();renderAll();renderParams();route();
 </script>
