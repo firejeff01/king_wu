@@ -1394,7 +1394,7 @@ const USAGE={line:1240,gb:6.8};
 let lockBox=(ed,what)=>`<div class="lockbox"><i data-lucide="lock"></i><h3 style="margin:10px 0 4px;color:var(--text);justify-content:center">${what}屬於${EDN[ed]}以上方案</h3><p style="margin:0 0 14px">目前方案：${planName()}</p><button class="btn primary" data-act="upgradeTo" data-ed="${ed}">查看方案與升級</button></div>`;
 const usageBar=(l,u,q,unit)=>`<div style="margin:12px 0"><div style="display:flex;justify-content:space-between"><span>${l}</span><span><b>${fmt(u)}</b> / ${fmt(q)} ${unit}</span></div><div class="bar" style="margin-top:6px"><i style="width:${Math.min(100,u/q*100)}%;${u/q>=.8?"background:#f59e0b":""}"></i></div></div>`;
 const overdueOn=()=>PLAN.st==="付款逾期"||PLAN.st==="唯讀";
-const invSt=v=>v.id==="INV-202610-0052"&&overdueOn()?tag("逾期 27 天","t-bad"):tag(v.st,v.st==="已付款"?"t-ok":"t-info");
+const invSt=v=>v.st!=="已付款"&&overdueOn()?tag("逾期","t-bad"):tag(v.st,v.st==="已付款"?"t-ok":"t-info");
 const planTag=st=>tag(st,st==="正式"?"t-ok":st==="試用中"?"t-info":"t-bad");
 
 /* ---- 頂端提示列與選單 ---- */
@@ -1800,7 +1800,7 @@ const PKG=[["結構化資料","所有模組（社區、合約、員工、排班�
 const BKMODS=["社區與合約","人事與證照","排班與出勤","報修、事件與交接","巡邏與稽核","住戶與管理費","社區財務","稽核日誌與登入紀錄"];
 let BK=[{id:"EXP-1031-01",type:"手動",sc:"指定模組：人事與證照",size:"0.4 GB",t:"2026/10/31 18:02",st:"已過期",exp:"11/07",dl:2,pw:true},{id:"BAK-1101-M",type:"定期",sc:"全部資料",size:"18.2 GB",t:"2026/11/01 03:00",st:"可下載",exp:"12/01",dl:0,pw:true}];
 let BKS={scope:"全部",auto:true,freq:"每月 1 日 03:00",keep:3,dest:{on:false,type:"SFTP",host:"",path:"/backup/pcmp",user:"",saved:false,test:""}};
-const bkSt=b=>b.st==="產生中"?tag("產生中…","t-info"):b.st==="已過期"?tag("已過期","t-mute"):b.dl>=5?tag("已達下載上限","t-warn"):tag("可下載","t-ok");
+const bkSt=b=>b.st==="失敗"?tag("失敗","t-bad"):b.st==="已取消"?tag("已取消","t-mute"):b.st==="產生中"?tag("產生中…","t-info"):b.st==="已過期"?tag("已過期","t-mute"):b.dl>=5?tag("已達下載上限","t-warn"):tag("可下載","t-ok");
 function renderBackup(){const d=BKS.dest;
  $("#bkBody").innerHTML=`<div class="grid g-21">
  <div class="card"><h3><span class="l"><i data-lucide="download-cloud"></i>建立完整匯出</span>${tag("限租戶擁有者與系統管理員","t-info")}</h3>
@@ -2654,7 +2654,7 @@ document.addEventListener("change",()=>setTimeout(syncOut,0));
 setInterval(syncOut,1500);
 window.addEventListener("beforeunload",syncOut);
 PCMP.on("*",(k,meta,remote)=>{
- if(k==="activity"){if(remote&&meta&&meta.text){NOTIS.unshift({i:meta.src==="LINE"?"message-circle":"monitor-smartphone",c:"t-info",b:`${meta.src||""} · ${meta.who||""}：${meta.text}`,s:"剛剛",go:syncHash(meta.link)});const d=$("#bellDot");if(d)d.style.display="";}renderActivity();return;}
+ if(k==="activity"){if(remote&&meta&&meta.text&&!meta.internal&&(!meta.tid||meta.tid===PCMP.TID)){NOTIS.unshift({i:meta.src==="LINE"?"message-circle":"monitor-smartphone",c:"t-info",b:`${meta.src||""} · ${meta.who||""}：${meta.text}`,s:"剛剛",go:syncHash(meta.link)});const d=$("#bellDot");if(d)d.style.display="";}renderActivity();return;}
  if(!remote)return;
  if(SH[k]||k==="perms"){syncOut();syncIn([k]);syncRender();}
  if(k==="shiftLogs"&&location.hash==="#site"&&typeof curTab!=="undefined"&&curTab==="shift")renderTab("shift");});
@@ -2710,7 +2710,7 @@ Object.assign(A,{
   <h3 style="margin:18px 0 8px;font-size:14px">閱讀狀況（${ts.filter(p=>a.readBy[p.id]).length}/${ts.length}）</h3><div class="tbl-wrap"><table><thead><tr><th>人員</th><th>職位</th><th>社區</th><th>已讀時間</th></tr></thead><tbody>${ts.map(p=>`<tr><td>${p.n}</td><td>${p.title}</td><td>${p.sites.join("、")}</td><td>${a.readBy[p.id]?tag(a.readBy[p.id],"t-ok"):tag("未讀","t-mute")}</td></tr>`).join("")}</tbody></table></div>`,
   [{label:"提醒未讀人員",fn:()=>{const un=ts.filter(p=>!a.readBy[p.id]);un.forEach(p=>pushTo(p.id,"news","請閱讀公告："+a.title,a.body,"#news"));toast(un.length?"已推播提醒 "+un.length+" 位未讀人員":"全部人員都已讀");}},{label:"關閉",cls:"primary"}]);},
  actGo(el){location.hash=el.dataset.to;},
- actAll(){const L=PCMP.get("activity");modal("跨系統動態",L.length?`<div class="tbl-wrap"><table><thead><tr><th>時間</th><th>來源</th><th>人員</th><th>內容</th></tr></thead><tbody>${L.slice(0,60).map(x=>`<tr><td style="white-space:nowrap">${x.at.slice(5)}</td><td>${actSrc(x.src)}</td><td>${escH(x.who)}</td><td>${escH(x.text)}</td></tr>`).join("")}</tbody></table></div>`:`<p class="hint">尚無動態</p>`,[{label:"關閉"}],1);},
+ actAll(){const L=PCMP.tenantActivity();modal("跨系統動態",L.length?`<div class="tbl-wrap"><table><thead><tr><th>時間</th><th>來源</th><th>人員</th><th>內容</th></tr></thead><tbody>${L.slice(0,60).map(x=>`<tr><td style="white-space:nowrap">${x.at.slice(5)}</td><td>${actSrc(x.src)}</td><td>${escH(x.who)}</td><td>${escH(x.text)}</td></tr>`).join("")}</tbody></table></div>`:`<p class="hint">尚無動態</p>`,[{label:"關閉"}],1);},
 });
 function leaveBadge(){const n=LEAVES.filter(l=>l.st==="待核准").length,b=$("#leaveCnt");if(b){b.textContent=n;b.style.display=n?"":"none";}}
 const newsTargets=a=>people().filter(p=>FRONT_ROLES.includes(p.role)&&(a.target==="全部社區"||p.sites.includes(a.target)));
@@ -2727,8 +2727,8 @@ TABS.shift=s=>{const L=(PCMP.get("shiftLogs")||[]).filter(x=>x.site===s.n);
   <div style="margin-top:4px">${(x.items||[]).map(t=>"• "+escH(t)).join("<br>")}${x.note?`<div class="hint">備註：${escH(x.note)}</div>`:""}</div></li>`).join("")}</ul>`:`<p class="hint">此社區尚無交接日誌</p>`);};
 /* 儀表板：跨系統動態＋即時預警 */
 {const r=$("#dashAttend");if(r&&r.parentElement)r.parentElement.insertAdjacentHTML("afterend",`<div class="card" id="dashActivity" style="margin-top:16px"></div>`);}
-const actSrc=s=>s==="LINE"?`<span class="tag t-ok"><i data-lucide="message-circle"></i> LINE</span>`:s==="網頁前台"?`<span class="tag t-info"><i data-lucide="monitor-smartphone"></i> 網頁前台</span>`:`<span class="tag t-mute"><i data-lucide="building-2"></i> 後台</span>`;
-function renderActivity(){const el=$("#dashActivity");if(!el)return;const L=PCMP.get("activity")||[];
+const actSrc=s=>s==="平台"?`<span class="tag t-warn"><i data-lucide="server-cog"></i> 平台</span>`:s==="LINE"?`<span class="tag t-ok"><i data-lucide="message-circle"></i> LINE</span>`:s==="網頁前台"?`<span class="tag t-info"><i data-lucide="monitor-smartphone"></i> 網頁前台</span>`:`<span class="tag t-mute"><i data-lucide="building-2"></i> 後台</span>`;
+function renderActivity(){const el=$("#dashActivity");if(!el)return;const L=PCMP.tenantActivity()||[];
  el.innerHTML=`<h3><span class="l"><i data-lucide="activity"></i>跨系統動態</span><span style="display:flex;gap:8px;align-items:center"><span class="hint" style="font-size:12px">租戶後台・LINE 前台・網頁前台即時同步</span><button class="linkbtn" data-act="actAll">查看全部</button></span></h3>`+
  (L.length?`<div class="act-list">${L.slice(0,10).map(x=>`<button class="act-row" data-act="actGo" data-to="${syncHash(x.link)}">${actSrc(x.src)}<span class="act-txt"><b>${escH(x.who)}</b> ${escH(x.text)}</span><span class="act-t">${String(x.at).slice(5)}</span></button>`).join("")}</div>`:
  `<p class="hint" style="margin:6px 0 0">尚無動態。在 LINE 前台或網頁前台送出報修、請假、打卡、履約登記，或在後台核准、指派後，會即時顯示在這裡。</p>`);icons();}
@@ -2761,6 +2761,184 @@ fsWhat.change="更新合約單價或服務範圍，寫入版本歷史";
  return _fa(x);};}
 PCMP.mountBadge();
 syncIn();
+
+/* =====================================================================
+   v0.8 平台營運後台連動：方案與狀態、帳單、平台公告、問題回報、客服授權、
+   匯出工作、退租與刪除、條款同意（資料來源：shared-store.js 平台層資料）
+   ===================================================================== */
+const PREVIEW=["edition","status","addon"].some(k=>QS.has(k));
+const TID=PCMP.TID;
+const ED2={旗艦:"flag",專業:"pro",基本:"basic"},ED2R={flag:"旗艦",pro:"專業",basic:"基本"},TIERS2=["入門","標準","進階"];
+const ST_IN={正式:"正式",試用中:"試用中",付款逾期:"付款逾期",唯讀:"唯讀",停權:"唯讀",已終止:"退租唯讀",已刪除:"已刪除"};
+const pad2=n=>String(n).padStart(2,"0");
+const fmtDT=d=>`${d.getFullYear()}/${pad2(d.getMonth()+1)}/${pad2(d.getDate())} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+const plusHours=h=>fmtDT(new Date(Date.now()+h*3600e3));
+let PSNAP={};let PLAT_APPLYING=false;let PENDING_GRANTS=[];
+
+/* ---------- 方案與訂閱狀態 ---------- */
+const planFields=()=>JSON.stringify({ed:PLAN.ed,tier:PLAN.tier,cycle:PLAN.cycle,st:PLAN.st,susp:!!PLAN.susp,addon:!!PLAN.addon,addonCancel:!!PLAN.addonCancel,down:PLAN.down?{ed:PLAN.down.ed,tier:PLAN.down.tier}:null,line:LINEACC.mode,hist:PLANHIST.length});
+const stOut=()=>PLAN.st==="退租唯讀"?"已終止":PLAN.st==="唯讀"&&PLAN.susp?"停權":PLAN.st;
+const finalBk=()=>({id:"FIN-"+PCMP.now().slice(5,10).replace("/","")+"-01",type:"最終",sc:"全部資料",size:"18.6 GB",t:PCMP.now(),st:"可下載",exp:EXIT_END,dl:0,pw:false});
+function applyTenant(){const t=PCMP.tenant();if(!t)return;
+ if(!PREVIEW){PLAN.ed=ED2[t.ed]||"flag";PLAN.tier=Math.max(0,TIERS2.indexOf(t.tier));PLAN.cycle=t.cycle||"月繳";PLAN.st=ST_IN[t.st]||"正式";PLAN.susp=t.st==="停權";
+  PLAN.addon=!!t.addon;PLAN.addonCancel=!!t.addonCancel;PLAN.down=t.down?{ed:ED2[t.down.ed]||t.down.ed,tier:Math.max(0,TIERS2.indexOf(t.down.tier))}:null;PLAN.trialEnd=t.trialEnd||null;
+  LINEACC.mode=t.lineMode||"共用";
+  PLANHIST.length=0;(t.hist||[]).forEach(h=>PLANHIST.push({d:h.d,t:h.txt||h.t||"",by:h.by||"平台"}));
+  if(PLAN.st==="退租唯讀"){PLAN.exitFee=monthly();if(!BK.some(b=>b.type==="最終"))BK.unshift(finalBk());}}
+ PSNAP.plan=planFields();}
+function writeTenant(){if(PREVIEW||PLAT_APPLYING)return;const cur=planFields();if(cur===PSNAP.plan)return;
+ const prev=JSON.parse(PSNAP.plan),now=JSON.parse(cur),t0=PCMP.tenant(),so=stOut(),T=[];
+ if(now.ed!==prev.ed||now.tier!==prev.tier)T.push("方案改為 "+planName());
+ if(now.down&&JSON.stringify(now.down)!==JSON.stringify(prev.down))T.push(`排定降級為 ${EDN[now.down.ed]} · ${TIERS[now.down.tier].n}級距（${PLAN.next} 生效）`);
+ if(!now.down&&prev.down)T.push("取消排定的降級");
+ if(now.cycle!==prev.cycle)T.push("繳費週期改為"+now.cycle);
+ if(now.addon!==prev.addon)T.push(now.addon?"加購社區帳務模組":"停用社區帳務模組");
+ if(now.addonCancel!==prev.addonCancel)T.push(now.addonCancel?"取消加購社區帳務模組（下期生效）":"保留社區帳務模組");
+ if(now.line!==prev.line)T.push("LINE 官方帳號改為「"+now.line+"」");
+ if(so!==t0.st)T.push("訂閱狀態改為「"+so+"」");
+ const newH=PLANHIST.slice(0,Math.max(0,PLANHIST.length-(t0.hist||[]).length));
+ PSNAP.plan=cur;
+ PCMP.updateTenant(t=>{t.ed=ED2R[PLAN.ed];t.tier=TIERS2[PLAN.tier]||t.tier;t.cycle=PLAN.cycle;t.st=so;t.addon=!!PLAN.addon;t.addonCancel=!!PLAN.addonCancel;
+  t.down=PLAN.down?{ed:ED2R[PLAN.down.ed],tier:TIERS2[PLAN.down.tier]}:null;t.lineMode=LINEACC.mode;
+  t.hist=newH.map(h=>({d:h.d,txt:h.t,by:h.by})).concat(t.hist||[]);if(so==="正式")t.trialEnd=null;},
+  {src:"後台",who:ME,text:T.join("；")||"更新訂閱設定",link:"admin.html#billing"});
+ if(so!==t0.st&&so==="已終止")PCMP.update("exits",L=>{let e=L.find(x=>x.tid===TID&&x.st==="唯讀保留中");const fin=BK.find(b=>b.type==="最終");
+  if(!e){e={tid:TID,term:PCMP.now().slice(0,10),fb:{st:"未下載",d:null},rem:{"1":null,"7":null,"30":null},st:"唯讀保留中",by:ME,src:"租戶後台"};L.unshift(e);}
+  if(fin&&fin.dl>0)e.fb={st:"已下載",d:PCMP.now().slice(0,10)};},{src:"後台",who:ME,text:"申請退租：已產生最終完整備份，進入 90 天唯讀保留",link:"admin.html#exit"});
+ if(so!==t0.st&&t0.st==="已終止"&&so==="正式")PCMP.update("exits",L=>{const e=L.find(x=>x.tid===TID&&x.st==="唯讀保留中");if(e){e.st="已重新訂閱";e.reSub=PCMP.now();}},{src:"後台",who:ME,text:"重新訂閱，資料恢復可用",link:"admin.html#billing"});}
+
+/* ---------- 帳單 ---------- */
+function invFromStore(){const L=(PCMP.get("invoices")||[]).filter(v=>v.tid===TID).sort((a,b)=>String(b.issued||b.due||"").localeCompare(String(a.issued||a.due||"")));
+ INVOICES=L.map(v=>({id:v.id,p:v.period||"—",item:v.item||v.kind||"—",amt:v.amt,st:v.st==="已付"?"已付款":"待付款",due:v.due||"—",inv:v.einv||"—",paidOn:v.paidOn||""}));
+ PSNAP.inv=JSON.stringify(INVOICES);}
+function writeInvoices(){if(PLAT_APPLYING)return;const cur=JSON.stringify(INVOICES);if(cur===PSNAP.inv)return;
+ const prev=new Map(JSON.parse(PSNAP.inv||"[]").map(v=>[v.id,v]));const L=PCMP.get("invoices")||[];const T=[];
+ INVOICES.forEach(v=>{const p=prev.get(v.id);let s=L.find(x=>x.id===v.id);
+  if(!p){if(s&&s.tid!==TID){v.id=PCMP.id("INV");s=null;}if(!s){L.unshift({id:v.id,tid:TID,period:v.p,kind:v.item,item:v.item,amt:v.amt,credit:0,issued:PCMP.now().slice(0,10),due:v.due,st:v.st==="已付款"?"已付":"未付",paidOn:v.st==="已付款"?PCMP.now().slice(0,10):null,method:"銀行轉帳",einv:v.inv==="—"?null:v.inv,dun:[],src:"租戶後台"});T.push(`新增帳單 ${v.id}（${v.item}，NT$ ${fmt(v.amt)}）`);}return;}
+  if(s&&p.st!==v.st){s.st=v.st==="已付款"?"已付":"未付";if(s.st==="已付"){s.paidOn=PCMP.now().slice(0,10);s.method=s.method||"銀行轉帳";}T.push(`帳單 ${v.id} ${v.st}`);}});
+ PSNAP.inv=JSON.stringify(INVOICES);if(T.length)PCMP.set("invoices",L,{src:"後台",who:ME,text:T.join("；"),link:"admin.html#billing"});}
+A.payNow=function(){const due=INVOICES.filter(v=>v.st!=="已付款");const sum=due.reduce((a,v)=>a+v.amt,0);
+ modal("立即付款",`${due.length?`<div class="tbl-wrap"><table><thead><tr><th>帳單</th><th>項目</th><th class="num">金額</th></tr></thead><tbody>${due.map(v=>`<tr><td class="mono">${v.id}</td><td>${v.item}</td><td class="num">${fmt(v.amt)}</td></tr>`).join("")}</tbody></table></div><p>應繳合計（含稅）<b>NT$ ${fmt(Math.round(sum*1.05))}</b></p>`:`<p style="margin-top:0">目前沒有未付帳單；平台若已標示逾期，付款確認後會恢復正常。</p>`}<dl class="dl"><dt>轉帳帳號</dt><dd>（822）中國信託 9910-2026-0052</dd><dt>戶名</dt><dd>物業社區管理平台</dd></dl><p class="hint">按「我已完成轉帳」後，帳單標示為已付款並通知平台財務入帳；帳號若因逾期轉為唯讀或停權，會立即恢復正常。</p>`,
+ [{label:"付款方式",fn:()=>A.payMethod()},{label:"我已完成轉帳",cls:"primary",fn:()=>{due.forEach(v=>{v.st="已付款";v.inv="AB-"+String(20481540+INVOICES.indexOf(v));});writeInvoices();
+   if(["付款逾期","唯讀"].includes(PLAN.st)){PLAN.st="正式";PLAN.susp=false;PLANHIST.unshift({d:PCMP.now().slice(0,10),t:"完成付款，帳號恢復正常",by:ME});}
+   closeAll();renderAll();if(location.hash==="#billing")renderBilling();toast("已付款，已通知平台財務並恢復正常使用");}}]);};
+
+/* ---------- 平台公告 ---------- */
+const ANN_KEY="pcmp.admin.annDismissed";
+const annForMe=()=>{const t=PCMP.tenant()||{};return (PCMP.get("platformAnns")||[]).filter(a=>a.st==="已發布"&&(a.ch||[]).includes("後台")&&(a.target==="全部租戶"||(a.tids||[]).includes(TID)||String(a.target||"").includes(t.ed||"~")||String(a.target||"").includes(t.s||"~")||String(a.target||"").includes(TID))).sort((a,b)=>String(b.at).localeCompare(String(a.at)));};
+function syncAnns(){const L=annForMe();ANNS.length=0;L.forEach(a=>ANNS.push([String(a.at).slice(0,10),a.title,a.body,a.id]));let dis="";try{dis=localStorage.getItem(ANN_KEY)||"";}catch(e){}ANN.on=!!L.length&&dis!==L[0].id;}
+{const o=A.annClose;A.annClose=function(){try{if(ANNS[0])localStorage.setItem(ANN_KEY,ANNS[0][3]);}catch(e){}o.apply(A,arguments);};}
+{const o=A.annList;A.annList=function(){if(!ANNS.length){modal("平台公告",`<p class="hint" style="margin:0">目前沒有平台公告</p>`,[{label:"關閉",cls:"primary"}]);return;}o.apply(A,arguments);};}
+
+/* ---------- 問題回報 ---------- */
+function tkFromStore(){const L=(PCMP.get("tickets")||[]).filter(t=>t.tid===TID);
+ TICKETS=L.map(t=>({id:t.id,t:t.title||(((t.msgs||[])[0]||{}).x||t.cat||"").slice(0,30),cat:t.cat,st:t.st,d:String(t.created||"").slice(0,10),src:t.src,
+  msg:(t.msgs||[]).filter(m=>m.f!=="n").map(m=>[m.f==="s"?m.n+"（平台客服）":m.n,m.x])}));PSNAP.tk=JSON.stringify(TICKETS);}
+function writeTickets(){if(PLAT_APPLYING)return;const cur=JSON.stringify(TICKETS);if(cur===PSNAP.tk)return;
+ const prev=new Map(JSON.parse(PSNAP.tk||"[]").map(t=>[t.id,t]));const L=PCMP.get("tickets")||[];const T=[];
+ TICKETS.forEach(t=>{const p=prev.get(t.id);let s=L.find(x=>x.id===t.id);
+  if(!p&&!s){const id=PCMP.id("S");t.id=id;L.unshift({id,tid:TID,title:t.t,by:ME,src:"租戶後台",cat:t.cat||"操作問題",pri:"中",st:"新進",who:"—",created:PCMP.now(),resp:null,msgs:(t.msg||[]).map(([n,x])=>({f:"c",n,t:PCMP.short(),x}))});T.push(`回報問題 ${id}：${t.t}`);return;}
+  if(!s||!p)return;const add=(t.msg||[]).slice(p.msg.length);
+  if(add.length){s.msgs=(s.msgs||[]).concat(add.map(([n,x])=>({f:"c",n,t:PCMP.short(),x})));if(s.st==="待客戶回覆")s.st="處理中";t.st=s.st;T.push(`回覆問題 ${s.id}`);}
+  else if(t.st!==p.st){s.st=t.st;T.push(`問題 ${s.id} 標記為「${t.st}」`);}});
+ PSNAP.tk=JSON.stringify(TICKETS);if(T.length)PCMP.set("tickets",L,{src:"後台",who:ME,text:T.join("；"),link:"admin.html#help"});}
+
+/* ---------- 平台客服授權 ---------- */
+function grantsFromStore(){const G=(PCMP.get("grants")||[]).filter(g=>g.tid===TID);const act=G.find(g=>g.st==="有效中");
+ SUPPORT=act?{on:true,until:act.to,scope:act.reason,id:act.id}:{on:false,until:"",scope:"",id:""};
+ const rows=[];G.forEach(g=>{const day=String(g.from||"").slice(5,10);
+  if(g.from&&g.st!=="待租戶同意"&&g.st!=="已拒絕")rows.push([String(g.from).slice(5),g.src==="租戶"?ME+"（租戶）":"客服 "+g.by,g.id,`開啟授權至 ${g.to}（${g.reason||""}）`]);
+  (g.ops||[]).forEach(o=>rows.push([String(o.t).length<=5?day+" "+o.t:String(o.t).slice(-11),"客服 "+g.by,g.id,o.x]));
+  if(g.st==="已撤銷")rows.push([String(g.revokedAt||"").slice(5),(g.revokedBy||"租戶")+"（租戶）",g.id,"撤銷授權"]);
+  if(g.st==="已拒絕")rows.push([String(g.decidedAt||"").slice(5),(g.decidedBy||"租戶")+"（租戶）",g.id,"拒絕授權申請"]);});
+ rows.sort((a,b)=>String(b[0]).localeCompare(String(a[0])));SUPLOG.length=0;rows.forEach(r=>SUPLOG.push(r));
+ PENDING_GRANTS=G.filter(g=>g.st==="待租戶同意");PSNAP.sup=JSON.stringify(SUPPORT);}
+function writeGrants(){if(PLAT_APPLYING)return;const cur=JSON.stringify(SUPPORT);if(cur===PSNAP.sup)return;const prev=JSON.parse(PSNAP.sup||"{}");PSNAP.sup=cur;
+ const L=PCMP.get("grants")||[];const act=L.find(g=>g.tid===TID&&g.st==="有效中");
+ if(SUPPORT.on&&!act){let id=SUPPORT.id;if(!id||L.some(g=>g.id===id))id=PCMP.id("G");SUPPORT.id=id;PSNAP.sup=JSON.stringify(SUPPORT);
+  L.unshift({id,tid:TID,by:"（待平台指派）",reason:SUPPORT.scope||"租戶主動開啟授權",h:24,from:PCMP.now(),to:SUPPORT.until,st:"有效中",ops:[],src:"租戶"});
+  PCMP.set("grants",L,{src:"後台",who:ME,text:`開啟平台客服授權至 ${SUPPORT.until}`,link:"admin.html#settings"});return;}
+ if(!SUPPORT.on&&act){act.st="已撤銷";act.revokedAt=PCMP.now();act.revokedBy=ME;PCMP.set("grants",L,{src:"後台",who:ME,text:`撤銷平台客服授權 ${act.id}`,link:"admin.html#settings"});return;}
+ if(SUPPORT.on&&act&&prev.until!==SUPPORT.until){act.to=SUPPORT.until;PCMP.set("grants",L,{src:"後台",who:ME,text:`平台客服授權延長至 ${SUPPORT.until}`,link:"admin.html#settings"});}}
+const pendGrantHtml=()=>PENDING_GRANTS.map(g=>`<div class="alert" style="cursor:default;margin-bottom:8px"><span class="i tag t-warn"><i data-lucide="key-round"></i></span><div style="flex:1"><b>平台客服申請存取授權 · ${g.id}</b><small>${escH(g.by)}：${escH(g.reason||"")}（${g.h||24} 小時）</small></div><button class="btn sm" data-act="grantDeny" data-id="${g.id}">拒絕</button><button class="btn sm primary" data-act="grantApprove" data-id="${g.id}">同意授權</button></div>`).join("");
+Object.assign(A,{
+ grantApprove(el){const id=el.dataset.id;const g=PENDING_GRANTS.find(x=>x.id===id);if(!g){toast("此申請已處理");return;}
+  stepUp(`同意平台客服存取授權（${g.h||24} 小時）`,()=>{PCMP.update("grants",L=>{const x=L.find(y=>y.id===id);if(x){x.st="有效中";x.from=PCMP.now();x.to=plusHours(x.h||24);x.approvedBy=ME;x.decidedAt=PCMP.now();}},{src:"後台",who:ME,text:`同意平台客服授權 ${id}（${g.h||24} 小時）`,link:"admin.html#settings"});
+   grantsFromStore();audit("同意平台客服授權",id);platRender();toast("已同意授權，到期後自動失效");});},
+ grantDeny(el){const id=el.dataset.id;confirmBox("拒絕授權申請",`拒絕後平台客服無法存取貴公司資料，可改以截圖或文字說明協助排查。`,"拒絕",()=>{PCMP.update("grants",L=>{const x=L.find(y=>y.id===id);if(x){x.st="已拒絕";x.decidedAt=PCMP.now();x.decidedBy=ME;}},{src:"後台",who:ME,text:`拒絕平台客服授權申請 ${id}`,link:"admin.html#settings"});grantsFromStore();closeAll();platRender();toast("已拒絕授權申請");},1);},
+});
+{const o=A.setSupport;A.setSupport=function(){o.apply(A,arguments);const b=$("#mBody");if(b&&PENDING_GRANTS.length)b.insertAdjacentHTML("afterbegin",`<h3 style="margin:0 0 8px;font-size:14px">待同意的授權申請</h3>${pendGrantHtml()}`);icons();};}
+
+/* ---------- 匯出工作（背景工作） ---------- */
+const JOB_IN={完成:"可下載",失敗:"失敗",執行中:"產生中",排隊:"產生中",已取消:"已取消"};
+function jobsIn(){const J=PCMP.get("jobs")||[];BK.forEach(b=>{if(!b.jobId)return;const j=J.find(x=>x.id===b.jobId);if(!j)return;const st=JOB_IN[j.st]||b.st;if(st!==b.st){b.st=st;if(st==="可下載"&&(!b.exp||b.exp==="—"))b.exp="11/14";}});
+ PSNAP.bk=JSON.stringify(BK.map(b=>[b.id,b.st,b.dl,b.jobId||""]));}
+function writeBk(){if(PLAT_APPLYING)return;const cur=JSON.stringify(BK.map(b=>[b.id,b.st,b.dl,b.jobId||""]));if(cur===PSNAP.bk)return;
+ const prev=new Map(JSON.parse(PSNAP.bk||"[]").map(r=>[r[0],r]));const J=PCMP.get("jobs")||[];let jc=false;const T=[];
+ BK.forEach(b=>{const p=prev.get(b.id);
+  if(b.type!=="最終"&&!b.jobId&&b.st==="產生中"){b.jobId=PCMP.id("J");J.unshift({id:b.jobId,type:"完整匯出",tid:TID,st:"執行中",at:PCMP.short(),dur:"",msg:b.sc,bk:b.id});jc=true;T.push(`建立匯出工作 ${b.jobId}（${b.sc}）`);}
+  else if(b.jobId&&p&&p[1]!==b.st){const j=J.find(x=>x.id===b.jobId);if(j&&b.st==="可下載"&&(j.st==="執行中"||j.st==="排隊")){j.st="完成";j.dur="1 分 12 秒";j.msg=b.sc+"（"+b.size+"）";jc=true;T.push(`匯出完成 ${b.id}`);}}});
+ if(jc)PCMP.set("jobs",J,{src:"後台",who:ME,text:T.join("；"),link:"admin.html#backup"});
+ const fin=BK.find(b=>b.type==="最終"),pf=fin&&prev.get(fin.id);
+ if(fin&&fin.dl>0&&(!pf||!pf[2])){PCMP.update("exits",L=>{const e=L.find(x=>x.tid===TID&&x.st==="唯讀保留中");if(e&&e.fb.st!=="已下載")e.fb={st:"已下載",d:PCMP.now().slice(0,10)};},{src:"後台",who:ME,text:"下載最終完整備份 "+fin.id,link:"admin.html#exit"});}
+ PSNAP.bk=JSON.stringify(BK.map(b=>[b.id,b.st,b.dl,b.jobId||""]));}
+
+/* ---------- 延長封存與離線交付 ---------- */
+function archIn(){const L=(PCMP.get("archOrders")||[]).filter(o=>o.tid===TID);const off=L.find(o=>o.kind==="離線交付");const arc=L.find(o=>/^延長封存/.test(o.kind));
+ OFFLINE=off?{id:off.id,st:off.st}:null;if(arc)PLAN.archive=arc.kind.replace("延長封存 ","");PSNAP.arc=JSON.stringify([PLAN.archive,OFFLINE]);}
+function writeArch(){if(PLAT_APPLYING)return;const cur=JSON.stringify([PLAN.archive,OFFLINE]);if(cur===PSNAP.arc)return;const [pa,po]=JSON.parse(PSNAP.arc||"[null,null]");PSNAP.arc=cur;
+ const L=PCMP.get("archOrders")||[];const T=[];
+ if(PLAN.archive&&PLAN.archive!==pa){const kind="延長封存 "+PLAN.archive;L.unshift({id:PCMP.id("AO"),tid:TID,kind,amt:PLAN.exitFee*(PLAN.archive==="3 年"?5:2),st:"待付款",at:PCMP.now()});T.push("購買"+kind);}
+ if(OFFLINE&&(!po||po.id!==OFFLINE.id)&&!L.some(o=>o.id===OFFLINE.id)){const id=PCMP.id("AO");OFFLINE={id,st:"待處理"};L.unshift({id,tid:TID,kind:"離線交付",amt:5000,st:"待處理",at:PCMP.now()});T.push("申請離線交付 "+id);}
+ PSNAP.arc=JSON.stringify([PLAN.archive,OFFLINE]);if(T.length)PCMP.set("archOrders",L,{src:"後台",who:ME,text:T.join("；"),link:"admin.html#exit"});}
+
+/* ---------- 刪除證明 ---------- */
+{const o=renderDeleted;renderDeleted=function(){o();const c=(PCMP.get("delCerts")||[]).find(x=>x.tid===TID);if(!c)return;const b=$("#delBody");if(!b)return;
+ b.innerHTML=b.innerHTML.split("DEL-20270301-0007").join(c.id).replace("2027/03/01 03:12",c.d).replace("2027/04/05",c.bkEnd||"2027/04/05");icons();};}
+{const o=A.certVerify;A.certVerify=function(){const c=(PCMP.get("delCerts")||[]).find(x=>x.tid===TID);if(!c){o.apply(A,arguments);return;}
+ modal("驗證刪除證明",`${F("證明編號",I("cv1",c.id))}`,[{label:"取消"},{label:"驗證",cls:"primary",fn:()=>{const ok=val("cv1")===c.id;modal("驗證結果",ok?`<div class="alert" style="cursor:default"><span class="i tag t-ok"><i data-lucide="badge-check"></i></span><div><b>證明有效</b><small>由平台核發（${c.d}），數位簽章相符，內容未被修改。</small></div></div>`:`<div class="alert" style="cursor:default"><span class="i tag t-bad"><i data-lucide="x-circle"></i></span><div><b>查無此證明編號</b><small>請確認編號是否正確。</small></div></div>`,[{label:"關閉",cls:"primary"}]);}}]);};}
+
+/* ---------- 條款同意 ---------- */
+const termsPending=()=>(PCMP.get("terms")||[]).filter(t=>t.st==="生效中"&&!(t.acc||{})[TID]);
+function platTermsModal(p){modal("服務條款已更新",`<p style="margin-top:0">以下文件已更新，請重新閱讀並同意後繼續使用：</p><ul style="line-height:1.9">${p.map(t=>`<li><b>${t.kind} ${t.v}</b>（${t.eff} 生效）${t.sum?"：<span class=\"hint\">"+escH(t.sum)+"</span>":""}</li>`).join("")}</ul><label style="display:flex;gap:8px;align-items:center;margin-top:12px"><input type="checkbox" id="tosChk2"> 我已閱讀並同意上述文件</label>`,
+ [{label:"檢視全文",fn:()=>A.tosFull()},{label:"同意並繼續",cls:"primary",fn:()=>{if(!$("#tosChk2").checked){toast("請先勾選同意");return;}const who=PCMP.now().slice(0,10)+" "+ME;
+   PCMP.update("terms",L=>{L.forEach(t=>{if(t.st==="生效中"&&!(t.acc||{})[TID]){t.acc=t.acc||{};t.acc[TID]=who;}});},{src:"後台",who:ME,text:"同意新版條款："+p.map(t=>t.kind+" "+t.v).join("、"),link:"admin.html#help"});
+   TOS_OK=true;closeAll();if(location.hash==="#help")renderHelp();toast("已記錄同意（"+who+"）");}}]);}
+function checkTerms(){const p=termsPending();TOS_OK=!p.length;if(!p.length)return;const lg=$("#login");if(lg&&lg.style.display!=="none")return;if($("#modal").classList.contains("on")&&$("#mTitle").textContent==="服務條款已更新")return;platTermsModal(p);}
+{const o=A.tosModal;A.tosModal=function(){const p=termsPending();if(p.length)platTermsModal(p);else o.apply(A,arguments);};}
+
+/* ---------- 頂端提示列、說明中心 ---------- */
+{const o=renderBanners;renderBanners=function(){syncAnns();o();const b=$("#banners");if(!b)return;
+ const ab=b.querySelector(".bn.info");if(ab&&ANN.on&&ANNS[0]){const sp=ab.querySelector("span");if(sp)sp.innerHTML=`<b>平台公告</b>　<b>${escH(ANNS[0][1])}</b>：${escH(ANNS[0][2])}`;}
+ if(PLAN.st==="試用中"&&PLAN.trialEnd){const w=[...b.querySelectorAll(".bn.warn")].find(x=>x.textContent.includes("試用期剩"));const left=Math.max(0,Math.ceil((new Date(PLAN.trialEnd.replace(/\//g,"-"))-Date.now())/864e5));if(w){const sp=w.querySelector("span");if(sp)sp.innerHTML=`試用期剩 <b>${left} 天</b>（至 ${PLAN.trialEnd}），期滿未轉正式將改為唯讀。`;}}
+ if(PLAN.susp)b.insertAdjacentHTML("afterbegin",`<div class="bn bad"><i data-lucide="ban"></i><span>帳號已<b>停權</b>（帳款逾期超過 60 天）：可登入查詢與匯出資料，付款確認後立即恢復。</span><span class="sp"></span><button class="btn sm danger" data-act="payNow">立即付款</button></div>`);
+ if(PENDING_GRANTS.length)b.insertAdjacentHTML("afterbegin",`<div class="bn warn"><i data-lucide="key-round"></i><span><b>平台客服申請存取授權</b>　${escH(PENDING_GRANTS[0].by)}：${escH(PENDING_GRANTS[0].reason||"")}（${PENDING_GRANTS[0].h||24} 小時）</span><span class="sp"></span><button class="btn sm" data-act="grantDeny" data-id="${PENDING_GRANTS[0].id}">拒絕</button><button class="btn sm primary" data-act="grantApprove" data-id="${PENDING_GRANTS[0].id}">同意授權</button></div>`);
+ if(PREVIEW)b.insertAdjacentHTML("afterbegin",`<div class="bn info"><i data-lucide="eye"></i><span><b>預覽模式（網址參數）</b>— 不與其他雛型連動</span><span class="sp"></span><a class="linkbtn" href="admin.html">清除參數</a></div>`);
+ icons();};}
+const flagOn=k=>{const f=(PCMP.get("flags")||[]).find(x=>x.key===k);return !!f&&(f.mode==="全部開啟"||(f.mode==="指定租戶"&&(f.tids||[]).includes(TID)));};
+{const o=renderHelp;renderHelp=function(){o();const h=$("#helpBody");if(h&&flagOn("voice_input"))h.insertAdjacentHTML("afterbegin",`<div class="alert" style="cursor:default;margin-bottom:16px"><span class="i tag t-ok"><i data-lucide="mic"></i></span><div><b>平台已開放：交接日誌語音輸入</b><small>總幹事與保全可在 LINE 交接日誌按麥克風說話，系統自動轉成文字。</small></div></div>`);icons();};}
+
+/* ---------- 讀入、寫出與即時更新 ---------- */
+const PLAT_KEYS=["tenants","invoices","tickets","grants","platformAnns","jobs","exits","archOrders","delCerts","terms","flags"];
+function platIn(keys){PLAT_APPLYING=true;try{const has=k=>!keys||keys.includes(k);
+ if(has("tenants"))applyTenant();if(has("invoices"))invFromStore();if(has("tickets"))tkFromStore();if(has("grants"))grantsFromStore();
+ if(has("jobs"))jobsIn();if(has("archOrders"))archIn();if(has("terms"))TOS_OK=!termsPending().length;}finally{PLAT_APPLYING=false;}}
+function platOut(){writeTenant();writeInvoices();writeTickets();writeGrants();writeBk();writeArch();}
+function platRender(st0){renderAll();if(st0!==undefined&&st0!==PLAN.st)route();const h=location.hash;
+ if(h==="#billing")renderBilling();if(h==="#help")renderHelp();if(h==="#exit"&&$("#exitBody"))renderExit();if(h==="#backup"&&$("#bkBody"))renderBackup();if(PLAN.st==="已刪除"&&$("#delBody"))renderDeleted();
+ renderBanners();renderNav();
+ const mt=$("#mTitle");if(mt&&$("#modal").classList.contains("on")&&mt.textContent==="平台客服授權"&&!(document.activeElement&&/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)))A.setSupport();
+ const dt=$("#dTitle");if(dt&&$("#drawer").classList.contains("on")){const t=TICKETS.findIndex(x=>x.id===dt.textContent);if(t>=0&&!(document.activeElement&&document.activeElement.id==="tkR"))A.ticket({dataset:{i:t}});}
+ icons();}
+PCMP.on("*",(k,meta,remote)=>{if(!remote||!PLAT_KEYS.includes(k))return;platOut();const st0=PLAN.st;platIn([k]);platRender(st0);if(k==="terms")checkTerms();});
+document.addEventListener("click",()=>setTimeout(platOut,0));
+document.addEventListener("change",()=>setTimeout(platOut,0));
+{const _tp=toast;toast=function(){const r=_tp.apply(this,arguments);setTimeout(platOut,0);return r;};}
+setInterval(platOut,1500);
+window.addEventListener("beforeunload",platOut);
+platIn();
+setTimeout(checkTerms,700);
+{const o=A.loginOtp;A.loginOtp=function(el){TOS_OK=!termsPending().length;o.call(A,el);};}
 
 window.addEventListener("hashchange",route);
 try{if(sessionStorage.getItem("pcmp-admin"))$("#login").style.display="none"}catch(e){}

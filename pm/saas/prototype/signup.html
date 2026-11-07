@@ -204,6 +204,7 @@ html select:hover{border-color:var(--accent,#0ea5e9)}
 html select:focus-visible{outline:none;border-color:var(--accent,#0ea5e9);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent,#0ea5e9) 22%,transparent)}
 html select:disabled{opacity:.55;cursor:not-allowed}
 html select::-ms-expand{display:none}
+.apst{display:flex;gap:12px;align-items:flex-start;text-align:left;margin:14px 0;padding:12px 14px;border-radius:12px;border:1px solid var(--border)}.apst div{display:flex;flex-direction:column;gap:4px}.apst span{color:var(--muted);font-size:14px}.apst .lbtn{align-self:flex-start;margin-top:6px}.apst.ok{background:color-mix(in srgb,#10b981 12%,var(--panel,#fff))}.apst.no{background:color-mix(in srgb,#f59e0b 12%,var(--panel,#fff))}
 </style>
 </head>
 <body>
@@ -274,6 +275,7 @@ html select::-ms-expand{display:none}
         <li><b>3</b><span>線上說明會（約 30 分鐘），協助匯入社區與員工資料</span></li>
         <li><b>4</b><span>員工加入 LINE 官方帳號，開始試用 30 天</span></li>
       </ul>
+      <div class="apst" id="appStBox" style="display:none"></div>
       <div class="btnrow"><a class="lbtn" href="activate.html"><i data-lucide="key-round"></i>預覽開通連結頁</a><button class="btn" data-act="again"><i data-lucide="rotate-ccw"></i>再填一份</button></div>
     </div>
   </div>
@@ -292,6 +294,7 @@ html select::-ms-expand{display:none}
 <div class="modal" id="modal" role="dialog" aria-modal="true"><div class="m-head"><h2 id="mTitle"></h2><button class="iconbtn" data-act="closeAll" aria-label="關閉"><i data-lucide="x"></i></button></div><div class="m-body" id="mBody"></div><div class="m-foot" id="mFoot"></div></div>
 <div class="toast" id="toast"></div>
 
+<script src="shared-store.js"></script>
 <script>
 const PARTNERS={"HY-CHEN":"宏遠物業 陳董","TPA-01":"北市物業管理協進會","AJ-SEC":"安捷保全設備有限公司","CX-CPA":"誠信聯合會計師事務所"};
 const EXISTING_TAX=["24536806","22099131"];/* 已有租戶或近期試用（後台資料，畫面不透露） */
@@ -334,13 +337,20 @@ const A={
   submits++;
   const now=new Date();
   app={no:"AP-"+now.toISOString().slice(5,10).replace("-","")+"-"+String(40+submits),co:val("fCo"),mail:val("fMail"),ref:val("fRef").toUpperCase(),dup:EXISTING_TAX.includes(val("fTax")),agreed:now.toLocaleString("zh-TW",{hour12:false})};
+  /* 寫入共用資料：平台營運後台「試用申請」即時出現（重複申請也照常寫入，由平台審核時偵測） */
+  {const mmdd=app.no.slice(3,7),same=PCMP.get("applications").filter(x=>String(x.id).startsWith("AP-"+mmdd+"-")).length;
+   app.no="AP-"+mmdd+"-"+String(same+1).padStart(2,"0");
+   const d=now.getFullYear()+"/"+String(now.getMonth()+1).padStart(2,"0")+"/"+String(now.getDate()).padStart(2,"0");
+   PCMP.update("applications",L=>{L.unshift({id:app.no,d,n:app.co,tax:val("fTax"),ct:val("fName")+(val("fTitle")?"（"+val("fTitle")+"）":""),tel:val("fTel"),mail:app.mail,sites:val("fSites"),tool:val("fTool")||"—",ref:app.ref||"",st:"待審核",bot:0.93,ev:false,ip:"127.0.0.1（示範）",src:"官網"});},{src:"官網",who:val("fName"),text:"新的試用申請："+app.co,internal:true,link:"ops.html#apps"});}
   /* 不論是否為既有公司，畫面訊息完全一致（NF-REG-06） */
   $("#vMail").textContent=maskMail(app.mail);$("#dupNote").style.display=app.dup?"":"none";
   startCooldown();show("verifyCard");toast("已寄出驗證信");},
  resend(){const left=Math.ceil((cooldownUntil-Date.now())/1000);if(left>0){toast("請於 "+left+" 秒後再重寄");return;}startCooldown();toast("已重寄驗證信（舊連結已失效）");},
  editMail(){show("formCard");$("#fMail").focus();toast("請修改 Email 後重新送出");},
  verifyLink(){if(!app)return;
-  $("#doneKv").innerHTML=`<span>申請編號</span><b>${app.no}</b><span>公司</span><b>${app.co}</b>${app.ref&&PARTNERS[app.ref]?`<span>推薦人</span><b>${PARTNERS[app.ref]}（僅作歸屬）</b>`:""}<span>Email</span><b>${maskMail(app.mail)}（已驗證）</b><span>同意條款</span><b>服務條款 ${TERMS_VER}、隱私權政策 ${TERMS_VER}</b><span>同意時間</span><b>${app.agreed}・IP 203.0.113.x</b><span>狀態</span><b>已進入審核</b>`;
+  $("#doneKv").innerHTML=`<span>申請編號</span><b>${app.no}</b><span>公司</span><b>${app.co}</b>${app.ref&&PARTNERS[app.ref]?`<span>推薦人</span><b>${PARTNERS[app.ref]}（僅作歸屬）</b>`:""}<span>Email</span><b>${maskMail(app.mail)}（已驗證）</b><span>同意條款</span><b>服務條款 ${TERMS_VER}、隱私權政策 ${TERMS_VER}</b><span>同意時間</span><b>${app.agreed}・IP 203.0.113.x</b><span>狀態</span><b id="appSt">已進入審核</b>`;
+  PCMP.update("applications",L=>{const a=L.find(x=>x.id===app.no);if(a)a.ev=true;},{src:"官網",who:"申請人",text:"試用申請 "+app.no+" Email 已驗證",internal:true,link:"ops.html#apps"});
+  renderAppSt();
   $("#doneMail").textContent=maskMail(app.mail);show("doneCard");},
  again(){["fCo","fTax","fName","fTitle","fTel","fMail"].forEach(id=>$("#"+id).value="");$("#fSites").value="";$("#fTool").value="";$("#fAgree").checked=false;document.querySelectorAll(".err").forEach(e=>e.classList.remove("on"));document.querySelectorAll(".input.bad").forEach(e=>e.classList.remove("bad"));app=null;show("formCard");checkRef();},
  fillDemo(){show("formCard");$("#fCo").value="康和物業管理有限公司";$("#fTax").value="53212539";$("#fSites").value="11～30";$("#fName").value="林先生";$("#fTitle").value="總經理";$("#fTel").value="02-2345-6789";$("#fMail").value="lin@kanghe-pm.com.tw";$("#fAgree").checked=true;document.querySelectorAll(".err").forEach(e=>e.classList.remove("on"));document.querySelectorAll(".input.bad").forEach(e=>e.classList.remove("bad"));toast("已填入範例資料");},
@@ -353,6 +363,15 @@ document.addEventListener("keydown",e=>{if(e.key==="Escape")closeAll();});
 $("#fRef").addEventListener("input",checkRef);
 $("#fTax").addEventListener("input",e=>{e.target.value=e.target.value.replace(/\D/g,"");});
 try{const r=QS.get("ref");if(r){$("#fRef").value=r.toUpperCase();checkRef();}}catch(e){}
+/* 平台審核結果即時顯示 */
+function renderAppSt(){if(!app)return;const a=PCMP.get("applications").find(x=>x.id===app.no);const st=a?a.st:"待審核",el=$("#appSt"),box=$("#appStBox");if(!el||!box)return;
+ if(st==="已核准"){el.textContent="已核准・開通信已寄出";box.style.display="";box.className="apst ok";box.innerHTML='<i data-lucide="mail-check"></i><div><b>試用申請已核准，開通信已寄出</b><span>請至 '+maskMail(app.mail)+' 收信，72 小時內點擊開通連結，設定密碼並綁定雙因子驗證。</span><a class="lbtn" href="activate.html"><i data-lucide="key-round"></i>開啟開通連結（示範）</a></div>';}
+ else if(st==="已建立"){el.textContent="審核中・業務將與您聯繫";box.style.display="";box.className="apst";box.innerHTML='<i data-lucide="phone-call"></i><div><b>已收到您的申請，業務將與您聯繫</b><span>我們會先了解貴公司的需求，再為您開通試用帳號。</span></div>';}
+ else if(st==="已婉拒"||st==="已退件"){el.textContent="未通過審核";box.style.display="";box.className="apst no";box.innerHTML='<i data-lucide="info"></i><div><b>感謝您的申請</b><span>很抱歉，這次無法為貴公司開通試用。如有疑問，歡迎來信 service@pcmp.example，我們會由專人說明。</span></div>';}
+ else{el.textContent=a&&a.ev?"已進入審核（待業務審核）":"已進入審核";box.style.display="none";}
+ lucide.createIcons();}
+PCMP.on("applications",()=>renderAppSt());
+PCMP.mountBadge();
 renderBot();
 lucide.createIcons();
 </script>

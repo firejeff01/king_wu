@@ -31,7 +31,8 @@ ul{margin:12px 0 0;padding-left:20px;color:var(--muted);line-height:1.8;font-siz
 .sync .tag{background:#064e3b;color:#6ee7b7}
 .sync .open{display:flex;flex-wrap:wrap;gap:10px;margin:14px 0 4px}
 .sync .open a{display:inline-flex;align-items:center;gap:6px;color:#0b1220;background:#7dd3fc;font-weight:800;font-size:14px;text-decoration:none;border-radius:999px;padding:8px 16px}
-.sync .open a.l{background:#86efac}.sync .open a.s{background:#fcd34d}
+.sync .open a.l{background:#86efac}.sync .open a.s{background:#fcd34d}.sync .open a.o{background:#fdba74}.sync .open a.g{background:#c4b5fd}
+.sync h3.sub2{margin:22px 0 0;font-size:17px;color:#e2e8f0}
 .sync ol{margin:16px 0 0;padding-left:0;list-style:none;counter-reset:st;display:grid;grid-template-columns:1fr 1fr;gap:10px 18px}
 .sync ol li{counter-increment:st;position:relative;padding:10px 12px 10px 46px;background:rgba(11,18,32,.55);border:1px solid var(--border);border-radius:14px;color:var(--text);font-size:14px;line-height:1.7}
 .sync ol li::before{content:counter(st);position:absolute;left:12px;top:10px;width:24px;height:24px;border-radius:50%;background:#0ea5e9;color:#fff;font-weight:800;font-size:13px;display:grid;place-items:center}
@@ -154,9 +155,9 @@ html select::-ms-expand{display:none}
   <p class="sub">v0.2 · 三個端：平台營運後台（我們）、租戶後台與前台（物業公司），另含官網申請與租戶開通頁。每個按鈕皆可操作，資料皆為虛構，對應《SaaS 版需求規劃書》v0.6。<b style="color:#e2e8f0">租戶後台、LINE 前台、網頁前台的資料互相連動</b>，見下方「連動展示」。</p>
   <section class="sync" aria-labelledby="syncH">
     <span class="tag">連動展示</span>
-    <h2 id="syncH">三個雛型共用同一份資料</h2>
-    <div class="d">租戶後台、LINE 前台、網頁前台在<b style="color:#e2e8f0">同一個瀏覽器</b>（Chrome 或 Edge，直接開啟檔案即可）共用資料：在一個頁面操作後，其他已開啟的頁面會<b style="color:#e2e8f0">即時更新</b>，右下角會出現「↻ 來源・誰・做了什麼」提示。建議把三個頁面開在不同分頁或並排的視窗，一邊操作一邊看另一邊變化。</div>
-    <div class="open"><a href="admin.html" target="_blank" rel="noopener">開啟租戶後台</a><a class="l" href="liff.html" target="_blank" rel="noopener">開啟 LINE 前台</a><a class="s" href="site.html" target="_blank" rel="noopener">開啟網頁前台</a></div>
+    <h2 id="syncH">四個雛型共用同一份資料</h2>
+    <div class="d">平台營運後台、租戶後台、LINE 前台、網頁前台（以及官網試用申請頁）在<b style="color:#e2e8f0">同一個瀏覽器</b>（Chrome 或 Edge，直接開啟檔案即可）共用資料：在一個頁面操作後，其他已開啟的頁面會<b style="color:#e2e8f0">即時更新</b>，右下角會出現「↻ 來源・誰・做了什麼」提示。建議把四個頁面開在不同分頁或並排的視窗，一邊操作一邊看另一邊變化。</div>
+    <div class="open"><a class="o" href="ops.html" target="_blank" rel="noopener">開啟平台營運後台</a><a href="admin.html" target="_blank" rel="noopener">開啟租戶後台</a><a class="l" href="liff.html" target="_blank" rel="noopener">開啟 LINE 前台</a><a class="s" href="site.html" target="_blank" rel="noopener">開啟網頁前台</a><a class="g" href="signup.html" target="_blank" rel="noopener">開啟官網試用申請</a></div>
     <ol>
       <li><b>報修：</b>LINE 前台切換為<b>保全</b>，拍照送出報修。<span>租戶後台「報修與事件」、網頁前台首頁「今日社區動態」立即出現。</span></li>
       <li><b>派工：</b>租戶後台把這張報修指派給<b>機電 王志強</b>。<span>LINE 前台切換為機電，收到推播，在「我的工單」回報完工。</span></li>
@@ -167,7 +168,18 @@ html select::-ms-expand{display:none}
       <li><b>廠商合約：</b>網頁前台（個人登入・總幹事）新增合約草稿並送出 → 租戶後台「廠商與合約 › 前台送出」確認或退回。<span>網頁前台與 LINE 的合約狀態同步更新，退回時顯示原因。</span></li>
       <li><b>改善單：</b>租戶後台督導稽核開立改善單 → 總幹事在 LINE 或網頁前台拍照回覆 → 後台複查結案。<span>每一步都會出現在三端的操作紀錄。</span></li>
     </ol>
-    <div class="tip">每個頁面右下角都有「<b>資料連動中</b>」標示與「<b>重置示範資料</b>」按鈕，按下後三個雛型都會回到初始狀態。<br>注意：<b>Firefox 直接開啟檔案時，每個檔案的資料是獨立的，無法連動</b>；展示請使用 Chrome 或 Edge。平台營運後台（ops.html）、官網試用申請與開通頁不在連動範圍內。</div>
+    <h3 class="sub2">平台營運後台連動</h3>
+    <ol>
+      <li><b>試用申請：</b>官網試用申請頁填寫並送出，點「模擬點擊驗證連結」。<span>平台營運後台「試用申請」立即出現；平台核准後，申請頁即時顯示「已核准・開通信已寄出」。</span></li>
+      <li><b>改方案：</b>平台營運後台把<b>永信物業</b>的方案改成<b>專業版</b>（不加購帳務模組）。<span>租戶後台的管理費、社區財務立即上鎖；LINE 前台的「支出拍照」改為鎖定，網頁前台的帳務功能隱藏。</span></li>
+      <li><b>問題回報：</b>租戶後台或 LINE 前台送出問題回報。<span>平台「客服中心」出現新問題；客服回覆後，租戶後台與 LINE 聊天室都收到回覆。</span></li>
+      <li><b>平台公告：</b>平台營運後台發布公告（後台＋LINE）。<span>租戶後台與網頁前台出現公告橫幅，LINE 聊天室出現「平台公告」卡片。</span></li>
+      <li><b>客服授權：</b>平台向永信物業申請限時授權 → 租戶後台核准。<span>平台客服進入協助，操作紀錄即時出現在租戶後台的授權紀錄。</span></li>
+      <li><b>退租與刪除：</b>租戶後台申請退租 → 平台「退租與資料刪除」出現倒數 → 平台執行刪除。<span>租戶後台顯示刪除證明；LINE 與網頁前台顯示「服務已終止」，寫入動作改為說明。</span></li>
+      <li><b>功能開關：</b>平台把「交接日誌語音輸入」關閉或只開給特定租戶。<span>LINE 前台的語音輸入按鈕即時隱藏或出現。</span></li>
+      <li><b>帳單與狀態：</b>平台把永信物業設為「唯讀」或登記收款恢復正式。<span>三個租戶端頁面即時出現或移除唯讀橫幅。</span></li>
+    </ol>
+    <div class="tip">每個頁面右下角都有「<b>資料連動中</b>」標示與「<b>重置示範資料</b>」按鈕，按下後三個雛型都會回到初始狀態。<br>注意：<b>Firefox 直接開啟檔案時，每個檔案的資料是獨立的，無法連動</b>；展示請使用 Chrome 或 Edge。開通頁（activate.html）是固定示範，不在連動範圍內。</div>
   </section>
   <div class="grid">
     <a class="card" href="ops.html">

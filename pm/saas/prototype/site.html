@@ -931,8 +931,8 @@ let state={pkg:12,repairs:[{id:"R-28812",t:"電梯門感應器",st:"待料",who:
   leaves:[["10/15","特休 1 天","已核准"]],patrol:3};
 /* SaaS：依租戶方案顯示模組（網址參數 ?edition=basic|pro|flag，預設旗艦版） */
 const QS=new URLSearchParams(location.search);
-const EDITION=({basic:"basic",pro:"pro",flag:"flag"})[QS.get("edition")]||"flag";
-const ADDON_ACCT=QS.get("addon")==="acct";
+let EDITION=({basic:"basic",pro:"pro",flag:"flag"})[QS.get("edition")]||"flag";
+let ADDON_ACCT=QS.get("addon")==="acct";
 const ERANK={basic:0,pro:1,flag:2},EDN={basic:"基本版",pro:"專業版",flag:"旗艦版"};
 const MODED={fee:"flag",fin:"flag",expense:"flag",petty:"flag",pettycount:"flag",bank:"flag",report:"flag",patrol:"pro",improve:"pro"};
 const ACCT=["fee","fin","expense","petty","pettycount","bank","report"];
@@ -1415,7 +1415,7 @@ function vSync(){
   VPEND=VSUBS.filter(s=>s.kind==="svclog").map(s=>{const p=s.payload||s.log||{},st=subSt(s);return {id:s.id,c:s.contract||s.cid,d:(p.d||"").slice(5)||(s.t||"").slice(0,5),by:s.who,src:s.src,ph:p.ph||1,note:(p.c||s.desc||"")+(st==="returned"&&subWhy(s)?"（退回："+subWhy(s)+"）":""),st:st==="pending"?"待確認":st==="confirmed"?"已確認":"已退回"};});
   VREQ=VSUBS.filter(s=>s.kind!=="svclog").map(s=>{const st=subSt(s),ap=s.apply||s.payload||{};return {id:s.id,c:s.contract||s.cid,type:KIND_T[s.kind]||s.type,st:st==="pending"?"待督導確認":st==="confirmed"?"督導已確認":"督導退回",
     detail:s.desc||"",reason:ap.reason||ap.r||ap.note||s.intent||"—",by:s.who,src:s.src,tm:s.t,res:!!(ap.res||/決議/.test(s.desc||"")),back:st==="returned"?subWhy(s):"",isNew:s.kind==="draft"};});
-  const acts=PCMP.get("activity").filter(a=>/VC-|廠商|履約|合約|權限/.test(a.text)||/vnd|vendors/.test(a.link||"")).map(a=>({tm:(a.at||"").slice(5),src:a.src,by:a.who,txt:a.text}));
+  const acts=PCMP.tenantActivity().filter(a=>/VC-|廠商|履約|合約|權限/.test(a.text)||/vnd|vendors/.test(a.link||"")).map(a=>({tm:(a.at||"").slice(5),src:a.src,by:a.who,txt:a.text}));
   const seeded=VSUBS.filter(s=>!acts.some(a=>a.txt.includes(s.id))).map(s=>({tm:s.t,src:s.src,by:s.who,txt:(s.type||KIND_T[s.kind])+"："+(s.contract||s.cid)+"（"+s.id+"）"}));
   VACT=acts.concat(seeded);
 }
@@ -1592,6 +1592,46 @@ let sRT=null;const sSoon=ms=>{clearTimeout(sRT);sRT=setTimeout(sRerender,ms);};
 SYNC_KEYS.forEach(k=>PCMP.on(k,(kk,m,remote)=>remote?sSoon(150):sRerender()));
 window.addEventListener("storage",e=>{if(e.key&&e.key.indexOf("pcmp.saas.v1:")===0&&SYNC_KEYS.includes(e.key.slice(13)))sSoon(30);});
 PCMP.mountBadge();
+
+
+/* =====================================================================
+   平台連動（與平台營運後台）：租戶方案與狀態、平台公告、動態紀錄
+   - 方案與加購來自 PCMP.tenant()；網址參數 ?edition= / ?addon= 為「本頁預覽」，不寫回
+   - 租戶唯讀／終止時顯示橫幅，寫入動作改顯示說明
+   ===================================================================== */
+const PREVIEW=QS.has("edition")||QS.has("addon");
+const ED_MAP={"基本":"basic","專業":"pro","旗艦":"flag"};
+const RO_STS=["唯讀","已終止","停權","已刪除"];
+function sTen(){return PCMP.tenant()||{ed:"旗艦",st:"正式",addon:false};}
+function sRO(){return RO_STS.includes(sTen().st);}
+function sRoText(){return sTen().st==="已刪除"?"服務已終止":"貴公司帳號目前為唯讀，請洽公司管理者";}
+function sAnnForMe(a){if(!a||a.st!=="已發布"||!(a.ch||[]).includes("後台"))return false;const tg=String(a.target||""),t=sTen();
+ if(/全部/.test(tg))return true;if(tg.includes(PCMP.TID)||tg.includes(t.s||"永信")||tg.includes(t.code||"yongxin"))return true;
+ const m=tg.match(/方案[：:]\s*(基本|專業|旗艦)/);if(m)return m[1]===t.ed;return false;}
+function annDismissed(id){try{return (sessionStorage.getItem("pcmp-site-ann")||"").split(",").includes(id);}catch(e){return false;}}
+function applyTenantSite(){
+ const t=sTen();
+ if(!PREVIEW){EDITION=ED_MAP[t.ed]||"flag";ADDON_ACCT=!!t.addon;}
+ $("#edTxt").textContent="方案："+EDN[EDITION]+(ADDON_ACCT&&EDITION!=="flag"?"＋社區帳務模組":"")+(PREVIEW?"（網址預覽，不連動）":"");
+ const b=$("#tenBanner");if(b){const ro=sRO();b.style.display=ro?"":"none";b.querySelector("span").textContent=ro?(t.st==="已刪除"?"服務已終止：資料已依約刪除，僅供查看":"貴公司帳號目前為「"+t.st+"」，僅能查看資料，暫時不能新增或修改"):"";}
+ const ab=$("#platAnn");if(ab){const a=MODE==="personal"?PCMP.get("platformAnns").filter(sAnnForMe).filter(x=>!annDismissed(x.id))[0]:null;
+  ab.style.display=a?"":"none";if(a){ab.dataset.id=a.id;ab.querySelector("b").textContent="平台公告："+a.title;ab.querySelector("span").textContent=a.body||"";}}
+ if($("#app").style.display!=="none"){renderHome();const id=(location.hash||"#home").slice(1)||"home";if(TILES.some(x=>x.id===id)&&!allowed(id))go("home");}
+}
+(function(){const lb=$("#lineBar");if(!lb)return;
+ const b=document.createElement("div");b.id="tenBanner";b.className="tenbar";b.style.display="none";b.innerHTML='<i data-lucide="lock"></i><span></span><button type="button" class="tb-x" data-act="tenRoWhy">說明</button>';lb.insertAdjacentElement("afterend",b);
+ const a=document.createElement("div");a.id="platAnn";a.className="annbar";a.style.display="none";a.innerHTML='<i data-lucide="megaphone"></i><div class="tx"><b></b><span></span></div><button type="button" class="tb-x" data-act="platAnnClose" aria-label="關閉平台公告">知道了</button>';b.insertAdjacentElement("afterend",a);
+ const st=document.createElement("style");st.textContent='.tenbar,.annbar{display:flex;align-items:center;gap:10px;padding:8px 16px;font-size:.88rem;font-weight:600}.tenbar{background:#92400e;color:#fff}.annbar{background:color-mix(in srgb,#6366f1 14%,var(--panel,#fff));color:var(--text);border-bottom:1px solid var(--border)}.annbar .tx{flex:1;min-width:0}.annbar .tx b{display:block}.annbar .tx span{font-weight:400;color:var(--muted);font-size:.84rem}.tenbar span{flex:1}.tb-x{border:1px solid currentColor;background:transparent;color:inherit;border-radius:8px;padding:4px 10px;font:inherit;font-size:.8rem;cursor:pointer}';document.head.appendChild(st);})();
+/* 唯讀時擋下寫入動作 */
+const S_RO_BLOCK=new Set(["pkginDone","pkoutDone","visitorIn","visitorOut","repairDone","incidentSend","feeDone","dayClose","handoverDone","scan","expDone","pettyTopup","pcDone","bankDone","closeMonth","reportDone","improveDone","leaveDone","vNew","vEdit","vSubmit","vSupNew","vReq","vSupReq","vLog","vPendOk","vPendNo","vEval","vFiles","rpClose","slConfirm"]);
+document.addEventListener("click",e=>{if(!sRO())return;const a=e.target.closest("[data-act]");if(!a||!S_RO_BLOCK.has(a.dataset.act))return;e.preventDefault();e.stopImmediatePropagation();A.tenRoWhy();},true);
+Object.assign(A,{
+ tenRoWhy(){dialog(sTen().st==="已刪除"?"服務已終止":"帳號唯讀",`<p><b>${sRoText()}</b></p><p class="note">目前狀態：${sTen().st}。可以查看資料，暫時不能新增或修改；如有疑問請由公司系統管理員聯絡平台客服。</p>`,[{label:"我知道了",cls:"primary",fn:closeDlg}]);},
+ platAnnClose(){const id=$("#platAnn").dataset.id;try{const s=(sessionStorage.getItem("pcmp-site-ann")||"").split(",").filter(Boolean);s.push(id);sessionStorage.setItem("pcmp-site-ann",s.join(","));}catch(e){}$("#platAnn").style.display="none";},
+});
+["tenants","platformAnns"].forEach(k=>PCMP.on(k,()=>applyTenantSite()));
+login=(orig=>function(){orig.apply(this,arguments);applyTenantSite();})(login);
+applyTenantSite();
 
 /* ---------- 啟動 ---------- */
 let saved=null;try{saved=sessionStorage.getItem("pcmp-site-user")}catch(e){}

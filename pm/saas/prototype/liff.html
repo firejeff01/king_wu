@@ -370,6 +370,9 @@ html select::-ms-expand{display:none}
 .pchk small{display:block;color:var(--muted);font-size:11.5px;margin-top:1px}
 .pchk.dis{opacity:.62;cursor:not-allowed}
 .li.sel{border-color:var(--line);box-shadow:inset 0 0 0 1px var(--line)}
+.card .ch.k-plat{background:linear-gradient(90deg,#4f46e5,#7c3aed)}
+#phone.novoice [data-act="voice"]{display:none!important}
+.disabled-banner.ro{background:#92400e;cursor:pointer}
 </style>
 </head>
 <body>
@@ -1684,6 +1687,95 @@ doPush=(orig=>k=>{
 
 /* ---------- 共用資料徽章：放進控制面板頂端 ---------- */
 function mountSync(){PCMP.mountBadge();const b=$("#pcmpSync"),c=$(".ctrl");if(b&&c){b.style.cssText+=";position:static;margin:0 0 14px;justify-content:space-between;width:100%;box-shadow:none";c.prepend(b);}}
+
+
+/* =====================================================================
+   平台連動（與平台營運後台）：租戶方案與狀態、平台公告、客服問題、功能開關
+   ===================================================================== */
+const ED2P={"基本":1,"專業":2,"旗艦":3},P2ED={1:"基本",2:"專業",3:"旗艦"};
+const RO_ST=["唯讀","已終止","停權","已刪除"];
+function ten(){return PCMP.tenant()||{ed:"旗艦",st:"正式",lineMode:"共用",addon:false};}
+function tenRO(){return RO_ST.includes(ten().st);}
+function tenRoText(){return ten().st==="已刪除"?"服務已終止":"貴公司帳號目前為唯讀，請洽公司管理者";}
+function voiceOn(){const f=(PCMP.get("flags")||[]).find(x=>x.key==="voice_input");if(!f)return true;return f.mode==="全部開啟"||(f.mode==="指定租戶"&&(f.tids||[]).includes(PCMP.TID));}
+function annForMe(a){if(!a||a.st!=="已發布"||!(a.ch||[]).includes("LINE"))return false;const tg=String(a.target||""),t=ten();
+ if(/全部/.test(tg))return true;if(tg.includes(PCMP.TID)||tg.includes(t.s||"永信")||tg.includes(t.code||"yongxin"))return true;
+ const m=tg.match(/方案[：:]\s*(基本|專業|旗艦)/);if(m)return m[1]===t.ed;return false;}
+const PAGE_NEED_EXPENSE=PAGES.expense?PAGES.expense.need:3;
+
+/* 從共用資料取租戶方案、帳號模式、我的客服問題 */
+pull=(orig=>()=>{orig();if(!S)return;const t=ten();
+ S.plan=ED2P[t.ed]||3;S.addon=!!t.addon;S.oa=t.lineMode==="自有"?"own":"shared";
+ if(PAGES.expense)PAGES.expense.need=S.addon?1:PAGE_NEED_EXPENSE; /* 加購社區帳務模組＝支出拍照可用 */
+ const u=user();
+ S.tickets=PCMP.get("tickets").filter(x=>x.tid===PCMP.TID&&(x.whoId===u.id||(x.src==="LIFF"&&x.by===u.n))).map(x=>({id:x.id,cat:x.cat,text:((x.msgs||[]).find(m=>m.f==="c")||{}).x||"",st:x.st,raw:x}));
+})(pull);
+
+/* 平台公告 → 聊天室卡片（每位使用者只出現一次） */
+function pullAnns(){if(!S||!S.bound)return false;const u=user();S.annSeen=S.annSeen||{};let ch=false;
+ PCMP.get("platformAnns").filter(annForMe).forEach(a=>{const k=u.id+"|"+a.id;if(S.annSeen[k])return;S.annSeen[k]=1;
+  S.chat.push({k:"card",kind:"k-plat",ic:"megaphone",title:"平台公告："+a.title,body:a.body||"",small:"來自：物業社區管理平台"+(a.type?"（"+a.type+"）":""),p:null,tm:String(a.at||"").slice(11)||now(),emp:u.id,ann:a.id});ch=true;});
+ return ch;}
+
+/* 客服回覆推播：卡片一律開啟「問題回報」頁 */
+MSG_KIND.support=["k-info","headset"];
+pullInbox=(orig=>()=>{const r=orig();if(!S)return r;const kinds={};PCMP.get("inbox").forEach(m=>{kinds[m.id]=m;});
+ S.chat.forEach(c=>{const m=c.inbox&&kinds[c.inbox];if(m&&(m.kind==="support"||/feedback|ticket/.test(String(m.link||"")))){c.p="feedback";c.small=(m.from?"來自：客服 "+m.from:"來自：平台客服");if(m.ticket)c.ticket=m.ticket;}});
+ return r;})(pullInbox);
+
+/* 唯讀／終止橫幅、語音功能開關、控制面板同步 */
+function applyPlatform(){if(!S)return;
+ const ph=$("#phone");if(ph)ph.classList.toggle("novoice",!voiceOn());
+ const b=$("#tenBanner");if(b){const ro=tenRO();b.style.display=ro?"":"none";b.textContent=ro?(ten().st==="已刪除"?"服務已終止：資料已依約刪除":"貴公司帳號目前為「"+ten().st+"」，僅能查看資料"):"";}
+ const n=$("#tenNote");if(n){const t=ten();n.innerHTML=`與平台營運後台同步：<b>${esc(t.s||"永信物業")}</b>・${esc(t.ed)}版${t.addon?"＋社區帳務模組":""}・${esc(t.st)}・LINE ${esc(t.lineMode||"共用")}帳號`;}
+}
+renderAll=(orig=>()=>{orig();if(pullAnns())renderChat();applyPlatform();})(renderAll);
+function platformSync(){if(!S)return;pull();const a=pullAnns(),i=pullInbox();if(a||i)renderChat();renderCtrl();renderMenu();renderReq();applyPlatform();renderQuota();if(S.page&&!S.disabled&&!S.sessExpired&&!S.authErr)openLiffKeep();}
+["tenants","flags","platformAnns","tickets"].forEach(k=>PCMP.on(k,()=>platformSync()));
+
+/* 控制面板切換方案／帳號模式 → 寫回租戶資料（平台營運後台同步看到） */
+document.addEventListener("change",e=>{const c=e.target.dataset&&e.target.dataset.change;if(!c)return;
+ if(c==="plan"){const ed=P2ED[+e.target.value];if(ed&&ed!==ten().ed)PCMP.updateTenant(t=>{t.ed=ed;},{src:"LINE",who:"原型展示",text:"租戶方案切換為"+ed+"版",link:"liff.html"});}
+ if(c==="oa"){const lm=e.target.value==="own"?"自有":"共用";if(lm!==ten().lineMode)PCMP.updateTenant(t=>{t.lineMode=lm;},{src:"LINE",who:"原型展示",text:"LINE 官方帳號模式切換為"+lm,link:"liff.html"});}
+},true);
+
+/* 唯讀時擋下手機內的寫入動作（改顯示說明，不會變成無作用按鈕） */
+const RO_BLOCK=new Set(["takeover","shiftSubmit","repairSubmit","repairClose","repairReopen","incSubmit","incUpdate","incClose","patHit","patOk","patBad","lvSubmit","lvOk","lvNo","impSubmit","woAccept","woUpdate","woVendor","woDone","mtRecord","expSubmit","clockPunch","clockQr","clockQrOk","clockFix","vLogSubmit","vPendOk","vPendNo","vRenewSubmit","repAssign","repAssignTo","shiftAsNext","tkReply"]);
+document.addEventListener("click",e=>{if(!tenRO())return;const el=e.target.closest("[data-act]");if(!el||!el.closest("#phone"))return;
+ if(RO_BLOCK.has(el.dataset.act)){e.preventDefault();e.stopImmediatePropagation();A.tenRoMsg();}},true);
+
+/* 問題回報 → 平台客服中心 */
+function nextTicketId(){const n=PCMP.get("tickets").map(x=>+(String(x.id).match(/^S-(\d+)$/)||[])[1]||0);return "S-"+(Math.max(2041,...n)+1);}
+R.feedback=()=>{const u=user();
+ const mine=S.tickets.length?`<h4><i data-lucide="history"></i>我的問題</h4>`+S.tickets.map(x=>`<div class="li"><span class="ic"><i data-lucide="message-square-warning"></i></span><span class="tx"><b>${x.id}・${esc(x.cat)}</b><small>${esc(x.text)}</small><span class="acts"><button class="sb" data-act="tkOpen" data-id="${x.id}"><i data-lucide="messages-square"></i>查看對話${(x.raw.msgs||[]).some(m=>m.f==="s")?"（客服已回覆）":""}</button></span></span>${stTag(x.st)}</div>`).join(""):"";
+ if(S.done.feedback)return doneHero("已收到您的問題","編號 "+S.done.feedback+"，平台客服會在 1 個工作天內回覆",[["message-circle","回覆會傳到這個 LINE 聊天室"],["headset","平台營運後台的客服中心已收到"]])+`<button class="bb soft" data-act="fbAgain"><i data-lucide="plus"></i>再回報一個問題</button>`+mine;
+ return `<h4><span class="stp">1</span>問題類型</h4><div class="row2">${chips("fcat",[["操作問題","不會操作","circle-help"],["錯誤回報","畫面有錯誤","bug"],["功能建議","我有建議","lightbulb"],["其他","其他","ellipsis"]])}</div>
+ <h4><span class="stp">2</span>說明</h4><textarea class="ta" id="fText" placeholder="請描述遇到的狀況（可用語音）">${esc(S.form.fText||"")}</textarea>
+ <button class="bb soft" data-act="voice" data-t="fText" id="vb-fText" style="margin-top:8px"><i data-lucide="mic"></i>${t("voice")}</button>
+ <div class="photos" id="ph-shot" style="margin-top:10px">${S.form.shot?`<div class="ph" style="background:linear-gradient(160deg,#06c755,#0f172a)"><span>畫面截圖</span><button class="x" data-act="shotDel" aria-label="移除截圖"><i data-lucide="x"></i></button></div>`:""}</div>
+ <button class="bb soft" data-act="shot"><i data-lucide="image-plus"></i>附上目前畫面截圖</button>
+ <h4><span class="stp">3</span>${t("s_send")}</h4><button class="bb go" data-act="fbSubmit"><i data-lucide="send"></i>${t("submit")}</button>`+mine;};
+function tkThread(x){return (x.msgs||[]).filter(m=>m.f!=="n").map(m=>`<div style="display:flex;${m.f==="c"?"justify-content:flex-end":""};margin:6px 0"><div style="max-width:82%;padding:8px 12px;border-radius:14px;font-size:15px;${m.f==="c"?"background:var(--line,#06c755);color:#fff":"background:var(--panel-2,#f1f5f9);border:1px solid var(--border)"}"><small style="display:block;opacity:.8;font-size:12px">${esc(m.f==="c"?m.n:"客服 "+m.n)}・${esc(m.t||"")}</small>${esc(m.x)}</div></div>`).join("")||`<p class="small">尚無對話</p>`;}
+Object.assign(A,{
+ tenRoMsg:()=>modal(`<i data-lucide="lock"></i>${ten().st==="已刪除"?"服務已終止":"帳號唯讀"}`,`<p style="margin:0;font-size:18px;font-weight:700">${tenRoText()}</p><p class="small" style="font-size:14px;margin-top:8px">目前狀態：${esc(ten().st)}。可以查看資料與公告，暫時不能新增或修改。</p>`),
+ fbAgain:()=>{S.done.feedback=null;openLiffKeep();},
+ fbSubmit:()=>{keepForm();if(!S.form.fcat){toast("請選擇問題類型");return;}if(!S.form.fText){toast("請描述問題");return;}
+  const u=user(),id=nextTicketId(),cat=S.form.fcat,txt=S.form.fText+(S.form.shot?"（附畫面截圖）":"");
+  PCMP.update("tickets",L=>{L.unshift({id,tid:PCMP.TID,by:u.n,whoId:u.id,src:"LIFF",cat,pri:"中",st:"新進",who:"—",created:PCMP.now(),resp:null,site:site(),msgs:[{f:"c",n:u.n,t:PCMP.short(),x:txt}]});},{src:"LINE",who:u.n,text:"問題回報 "+id+"："+cat,link:"liff.html#feedback"});
+  S.done.feedback=id;S.form.fcat=null;S.form.fText="";S.form.shot=false;
+  addMsg({k:"bot",txt:"📨 已收到您的問題回報 "+id+"\n平台客服會在 1 個工作天內於此回覆。"});pull();openLiffKeep();},
+ tkOpen:el=>{const x=PCMP.get("tickets").find(k=>k.id===el.dataset.id);if(!x){toast("找不到這個問題");return;}
+  modal(`<i data-lucide="messages-square"></i>${x.id}・${esc(x.cat)}`,`<div style="margin-bottom:8px">${stTag(x.st)}</div>${tkThread(x)}<textarea class="ta" id="tkTxt" style="margin-top:10px" placeholder="補充說明或回覆客服"></textarea>`,
+   [{label:t("close")},{label:"送出回覆",cls:"primary",fn:()=>A.tkReply({dataset:{id:x.id}})}]);},
+ tkReply:el=>{if(tenRO()&&false)return;const v=formVal("tkTxt");if(!v){toast("請輸入內容");return;}const u=user(),id=el.dataset.id;
+  PCMP.update("tickets",L=>{const k=L.find(z=>z.id===id);if(k){(k.msgs=k.msgs||[]).push({f:"c",n:u.n,t:PCMP.short(),x:v});if(k.st==="待客戶回覆")k.st="處理中";}},{src:"LINE",who:u.n,text:"回覆客服問題 "+id,link:"liff.html#feedback"});
+  closeAll();pull();openLiffKeep();toast("已送出，客服會在此回覆");},
+});
+RO_BLOCK.delete("tkReply"); /* 唯讀時仍可聯絡客服 */
+
+/* 控制面板：方案旁顯示與平台同步的租戶狀態 */
+(function(){const sel=$("#cOa");if(sel&&!$("#tenNote")){const d=document.createElement("div");d.className="small";d.id="tenNote";d.style.marginTop="6px";sel.insertAdjacentElement("afterend",d);}
+ const dis=$("#disBanner");if(dis&&!$("#tenBanner")){const b=document.createElement("div");b.className="disabled-banner ro";b.id="tenBanner";b.style.display="none";b.setAttribute("data-act","tenRoMsg");b.setAttribute("role","button");b.tabIndex=0;dis.insertAdjacentElement("afterend",b);}})();
 
 initState();renderAll();route();mountSync();
 </script>

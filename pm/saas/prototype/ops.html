@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+<script src="shared-store.js"></script>
 <style>
 :root{
   --bg:#f4f6fa; --panel:#ffffff; --panel-2:#f8fafc; --text:#0f172a; --muted:#64748b; --border:#e2e8f0;
@@ -632,6 +633,7 @@ html select::-ms-expand{display:none}
           <div class="card"><h3><span class="l"><i data-lucide="layers"></i>方案分布</span><a href="#reports" class="hint">營運報表</a></h3><div id="dPlan"></div></div>
           <div class="card"><h3><span class="l"><i data-lucide="phone-call"></i>今日需跟進</span><a href="#leads" class="hint">潛在客戶</a></h3><div id="dFollow"></div></div>
         </div>
+        <div class="card" style="margin-top:16px"><h3><span class="l"><i data-lucide="radio"></i>跨系統即時動態</span><span class="hint">租戶後台、LINE、網頁前台、試用申請與平台操作（含平台內部）</span></h3><div id="dLive"></div></div>
       </section>
 
       <section class="screen" id="s-reports">
@@ -683,6 +685,7 @@ html select::-ms-expand{display:none}
         <div class="grid g-4" style="margin-bottom:16px" id="tKpi"></div>
         <div class="tabs" id="tTabs"></div>
         <div id="tBody"></div>
+        <div id="tLive" style="margin-top:16px"></div>
       </section>
 
       <section class="screen" id="s-health">
@@ -1142,7 +1145,7 @@ const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const fmt=n=>Number(n).toLocaleString("zh-TW",{maximumFractionDigits:1});
 const money=n=>"NT$"+Number(Math.round(n)).toLocaleString("zh-TW");
 const tag=(t,c)=>`<span class="tag ${c}">${t}</span>`;
-const ST_C={"正式":"t-ok","試用中":"t-info","付款逾期":"t-warn","唯讀":"t-warn","停權":"t-bad","已終止":"t-mute","已付":"t-ok","未付":"t-info","逾期":"t-bad","已折讓":"t-mute","待撥付":"t-warn","已撥付":"t-ok","追回":"t-bad","待審核":"t-warn","已建立":"t-ok","已婉拒":"t-mute","新進":"t-bad","處理中":"t-info","待客戶回覆":"t-warn","已解決":"t-ok","結案":"t-mute","有效中":"t-ok","待同意":"t-warn","已到期":"t-mute","已撤銷":"t-mute","已發布":"t-ok","已排程":"t-info","草稿":"t-mute","生效中":"t-ok","待生效":"t-warn","已停用":"t-mute","適用中":"t-ok","完成":"t-ok","失敗":"t-bad","執行中":"t-info","排隊":"t-mute","待核准":"t-warn","已核准":"t-ok","已駁回":"t-mute","良好":"t-ok","注意":"t-warn","危險":"t-bad","上架":"t-ok","下架":"t-mute","啟用":"t-ok","停用":"t-mute","成交":"t-ok","未成交":"t-mute"};
+const ST_C={"正式":"t-ok","試用中":"t-info","付款逾期":"t-warn","唯讀":"t-warn","停權":"t-bad","已終止":"t-mute","已付":"t-ok","未付":"t-info","逾期":"t-bad","已折讓":"t-mute","待撥付":"t-warn","已撥付":"t-ok","追回":"t-bad","待審核":"t-warn","已核准":"t-ok","已建立":"t-info","已婉拒":"t-mute","新進":"t-bad","處理中":"t-info","待客戶回覆":"t-warn","已解決":"t-ok","結案":"t-mute","有效中":"t-ok","待同意":"t-warn","待租戶同意":"t-warn","已拒絕":"t-mute","已刪除":"t-mute","已到期":"t-mute","已撤銷":"t-mute","已發布":"t-ok","已排程":"t-info","草稿":"t-mute","生效中":"t-ok","待生效":"t-warn","已停用":"t-mute","適用中":"t-ok","完成":"t-ok","失敗":"t-bad","執行中":"t-info","排隊":"t-mute","待核准":"t-warn","已核准":"t-ok","已駁回":"t-mute","良好":"t-ok","注意":"t-warn","危險":"t-bad","上架":"t-ok","下架":"t-mute","啟用":"t-ok","停用":"t-mute","成交":"t-ok","未成交":"t-mute"};
 const stTag=s=>tag(s,ST_C[s]||"t-mute");
 const icons=()=>lucide.createIcons();
 let tt;function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("on");clearTimeout(tt);tt=setTimeout(()=>t.classList.remove("on"),2800);}
@@ -1226,7 +1229,7 @@ function renderLeads(){$("#lvKb").className=leadView==="kb"?"on okb":"";$("#lvLi
  if(leadView==="kb"){$("#leadBox").innerHTML=`<div class="kb">${STAGES.map((s,si)=>{const ls=LEADS.filter(l=>l.stage===s);return `<div class="kcol"><h4><span>${s}</span><span class="hint">${ls.length}</span></h4>${ls.map(l=>`<div class="kcard" data-act="leadOpen" data-l="${l.id}"><b>${l.n}</b><small>${l.src}${l.pid?" · "+pById(l.pid).n:""}</small><small>約 ${l.est} 社區 · ${l.sales}</small>${l.next?`<small>下次跟進 ${l.next}${l.next<=TODAY?" "+tag("今天","t-warn"):""}</small>`:""}${l.lost?`<small>${tag(l.lost,"t-mute")}</small>`:""}${s!=="成交"&&s!=="未成交"?`<div class="kmove">${si>0?`<button data-act="leadMove" data-l="${l.id}" data-dir="-1">◀</button>`:""}<button data-act="leadMove" data-l="${l.id}" data-dir="1">${STAGES[si+1]} ▶</button></div>`:""}</div>`).join("")}</div>`}).join("")}</div>`;}
  else $("#leadBox").innerHTML=`<div class="tbl-wrap"><table><thead><tr><th>公司</th><th>聯絡人</th><th>來源</th><th>推薦夥伴</th><th>階段</th><th class="num">預估社區</th><th>負責業務</th><th>下次跟進</th></tr></thead><tbody>${LEADS.map(l=>`<tr class="click" data-act="leadOpen" data-l="${l.id}"><td>${l.n}</td><td>${l.ct}</td><td>${l.src}</td><td>${l.pid?pById(l.pid).n:"—"}</td><td>${stTag(l.stage)}</td><td class="num">${l.est}</td><td>${l.sales}</td><td>${l.next||"—"}</td></tr>`).join("")}</tbody></table></div>`;}
 let appF="全部";
-function renderApps(){$("#appChips").innerHTML=chips(["全部","待審核","已建立","已婉拒"],appF,"appF");const ls=APPS.filter(a=>appF==="全部"||a.st===appF);
+function renderApps(){$("#appChips").innerHTML=chips(["全部","待審核","已核准","已建立","已婉拒"],appF,"appF");const ls=APPS.filter(a=>appF==="全部"||a.st===appF);
  $("#appRows").innerHTML=ls.length?ls.map(a=>{const p=PARTNERS.find(p=>p.code===a.ref);return `<tr class="click" data-act="appOpen" data-a="${a.id}"><td>${a.id}</td><td>${a.d}</td><td>${a.n}</td><td>${a.ct}</td><td class="num">${a.sites}</td><td>${a.ref?a.ref+(p?` <span class="hint">${p.n}</span>`:""):"—"}</td><td>${stTag(a.st)}</td><td>${a.st==="待審核"?`<button class="btn sm primary" data-act="appApprove" data-a="${a.id}">核准開通</button>`:""}</td></tr>`}).join(""):empty(8,"沒有符合的申請");}
 function renderFunnel(){const fs=val("fSrc")||"全部來源",fp=val("fPtn")||"全部夥伴",fsl=val("fSales")||"全部業務";
  if(!$("#fSrc").options.length){$("#fSrc").innerHTML=["全部來源",...SRCS].map(o=>`<option>${o}</option>`).join("");$("#fPtn").innerHTML=["全部夥伴",...PARTNERS.map(p=>p.n)].map(o=>`<option>${o}</option>`).join("");$("#fSales").innerHTML=["全部業務","林育成","吳佩珊"].map(o=>`<option>${o}</option>`).join("");}
@@ -1265,7 +1268,7 @@ function renderTenant(){const t=tById(curT)||TENANTS[0];const p=planOf(t);
  $("#tBody").innerHTML=h;}
 function renderHealth(){const ls=TENANTS.filter(t=>t.st!=="已終止").sort((a,b)=>healthScore(b)-healthScore(a));
  $("#hRows").innerHTML=ls.map(t=>`<tr><td><b>${t.s}</b> ${stTag(t.st)}</td><td>${hTag(t)} <span class="hint">${healthScore(t)} 分</span></td><td class="num">${t.use}%</td><td class="num">${t.line}%</td><td class="num">${overdueDays(t)||"—"}</td><td class="num">${openTickets(t)}</td><td>${t.next||"—"}</td><td><button class="btn sm" data-act="healthTask" data-t="${t.id}">建立跟進</button> <button class="btn sm" data-act="tenantOpen" data-t="${t.id}">詳情</button></td></tr>`).join("");}
-function renderGrants(){$("#gRows").innerHTML=GRANTS.map(g=>`<tr><td>${g.id}</td><td>${tName(g.tid)}</td><td>${g.by}</td><td>${g.reason}</td><td>${g.h} 小時</td><td>${g.from}<br><small class="hint">至 ${g.to}</small></td><td>${stTag(g.st)}</td><td class="num">${g.ops.length}</td><td><button class="btn sm" data-act="grantOpen" data-g="${g.id}">明細</button>${g.st==="待同意"?` <button class="btn sm primary" data-act="grantApprove" data-g="${g.id}">模擬租戶同意</button>`:""}${g.st==="有效中"?` <button class="btn sm primary" data-act="grantEnter" data-g="${g.id}">進入租戶</button> <button class="btn sm" data-act="grantRevoke" data-g="${g.id}">撤銷</button>`:""}</td></tr>`).join("");}
+function renderGrants(){$("#gRows").innerHTML=GRANTS.map(g=>`<tr><td>${g.id}</td><td>${tName(g.tid)}</td><td>${g.by}</td><td>${g.reason}</td><td>${g.h} 小時</td><td>${g.from}<br><small class="hint">至 ${g.to}</small></td><td>${stTag(g.st)}</td><td class="num">${g.ops.length}</td><td><button class="btn sm" data-act="grantOpen" data-g="${g.id}">明細</button>${(g.st==="待同意"||g.st==="待租戶同意")?` <button class="btn sm primary" data-act="grantApprove" data-g="${g.id}">模擬租戶同意</button>`:""}${g.st==="有效中"?` <button class="btn sm primary" data-act="grantEnter" data-g="${g.id}">進入租戶</button> <button class="btn sm" data-act="grantRevoke" data-g="${g.id}">撤銷</button>`:""}</td></tr>`).join("");}
 function renderPlans(){$("#pRows").innerHTML=PLANS.map(p=>{const n=TENANTS.filter(t=>t.ed===p.ed&&t.tier===p.tier&&t.st!=="已終止").length;const m=listPrice(p.ed,p.tier);return `<tr><td><b>${p.ed}版・${p.tier}</b></td><td>${TIER_RANGE[p.tier]}</td><td class="num">${money(m)}</td><td class="num">${money(m*12*.9)}</td><td>${p.mods.length} 項</td><td>${p.gb} GB · ${fmt(p.line)} 則</td><td class="num">${n}</td><td>${p.sale?tag("銷售中","t-ok"):tag("停售","t-mute")}</td><td><button class="btn sm" data-act="planEdit" data-p="${p.id}">編輯</button></td></tr>`}).join("")+`<tr><td><b>企業方案</b></td><td>60 以上</td><td class="num">另行報價</td><td class="num">—</td><td>依合約</td><td>依合約</td><td class="num">0</td><td>${tag("報價制","t-info")}</td><td><button class="btn sm" data-act="newQuote">報價</button></td></tr>`;
  $("#pvRows").innerHTML=PVERS.filter(v=>v.v>1||v.st!=="適用中").concat(PVERS.filter(v=>v.v===1&&v.st==="適用中").slice(0,3)).map(v=>{const i=PVERS.indexOf(v);return `<tr><td>${v.pid.replace("-","版・")}</td><td>v${v.v}</td><td class="num">${money(v.m)}</td><td>${v.eff}</td><td>${v.policy}</td><td>${stTag(v.st)}</td><td>${v.st==="待生效"?`<button class="btn sm primary" data-act="pvApply" data-i="${i}">立即生效</button> <button class="btn sm" data-act="pvCancel" data-i="${i}">取消</button>`:""}</td></tr>`}).join("")+`<tr><td colspan="7" class="hint">僅列出最近版本；其餘方案皆為 v1（2026/01/01 生效）</td></tr>`;
  $("#qRows").innerHTML=QUOTES.map((q,i)=>`<tr><td>${tName(q.tid)}</td><td>${q.plan.replace("-","版・")}</td><td class="num">${money(q.m)}</td><td style="white-space:normal">${q.reason}</td><td>${stTag(q.st)}</td><td>${q.st==="待核准"?`<button class="btn sm primary" data-act="quoteOk" data-i="${i}">核准</button> <button class="btn sm" data-act="quoteNo" data-i="${i}">駁回</button>`:`<span class="hint">${q.by}</span>`}</td></tr>`).join("");}
@@ -1397,7 +1400,7 @@ const A={
  appOpen(el){const a=APPS.find(x=>x.id===el.dataset.a);const p=PARTNERS.find(p=>p.code===a.ref);const btns=[{label:"關閉"}];if(a.st==="待審核")btns.push({label:"婉拒",cls:"danger",fn:()=>A.appReject({dataset:{a:a.id}})},{label:"只轉為潛在客戶",fn:()=>A.appToLead({dataset:{a:a.id}})},{label:"核准並開通試用",cls:"primary",fn:()=>A.appApprove({dataset:{a:a.id}})});
   drawer(a.id,`<dl class="dl"><dt>申請日</dt><dd>${a.d}</dd><dt>公司</dt><dd>${a.n}</dd><dt>統編</dt><dd>${a.tax}</dd><dt>聯絡人</dt><dd>${a.ct} · ${a.tel}</dd><dt>Email</dt><dd>${a.mail}</dd><dt>服務社區數</dt><dd>${a.sites}</dd><dt>目前工具</dt><dd>${a.tool||"—"}</dd><dt>推薦碼</dt><dd>${a.ref?a.ref+(p?"（"+p.n+"）":"（查無此碼）"):"—"}</dd><dt>狀態</dt><dd>${stTag(a.st)}${a.reason?" "+a.reason:""}</dd></dl>`,btns);},
  appToLead(el,withTrial){const a=APPS.find(x=>x.id===el.dataset.a);const p=PARTNERS.find(p=>p.code===a.ref);const id="L"+String(LEADS.length+1).padStart(2,"0");const l={id,n:a.n,ct:a.ct,tel:a.tel,src:p?"推薦夥伴":"官網",pid:p?p.id:null,stage:"已聯繫",sales:"吳佩珊",est:a.sites==="1～10"?6:a.sites==="11～30"?20:40,next:addDays(TODAY,1),tid:null,lost:null,d:a.d,logs:[{d:TODAY,way:"系統",txt:"由試用申請 "+a.id+" 建立"}]};LEADS.unshift(l);a.st="已建立";a.lead=id;
-  if(withTrial){const t=createTrialTenant({code:a.mail.split("@")[1].split(".")[0].slice(0,10),n:a.n,ed:"旗艦",tier:l.est<=10?"入門":l.est<=30?"標準":"進階",days:PARAMS.trial,sales:l.sales,pid:l.pid,ct:a.ct,tel:a.tel,mail:a.mail,tax:a.tax,reason:"核准試用申請 "+a.id});l.tid=t.id;l.stage="試用中";closeAll();renderAll();toast(`已開通試用租戶 ${t.code}，通知已寄至 ${a.mail}`);}
+  if(withTrial){const t=createTrialTenant({code:a.mail.split("@")[1].split(".")[0].slice(0,10),n:a.n,ed:"旗艦",tier:l.est<=10?"入門":l.est<=30?"標準":"進階",days:PARAMS.trial,sales:l.sales,pid:l.pid,ct:a.ct,tel:a.tel,mail:a.mail,tax:a.tax,reason:"核准試用申請 "+a.id});l.tid=t.id;l.stage="試用中";a.st="已核准";a.tid=t.id;closeAll();renderAll();toast(`已開通試用租戶 ${t.code}，通知已寄至 ${a.mail}`);}
   else{closeAll();renderAll();toast("已轉為潛在客戶，指派給 "+l.sales);}},
  appApprove(el){A.appToLead(el,true);},
  appReject(el){const a=APPS.find(x=>x.id===el.dataset.a);reasonBox("婉拒試用申請",`婉拒「${a.n}」的申請。`,"婉拒",r=>{a.st="已婉拒";a.reason=r;audit("客戶開發",a.id,"婉拒試用申請",r);closeAll();renderAll();toast("已婉拒");},true);},
@@ -1417,7 +1420,7 @@ const A={
  terminate(){const t=tById(curT);reasonBox("終止租戶",`終止後租戶唯讀保留 ${PARAMS.keep} 天供匯出，期滿刪除全部資料並提供刪除證明（P-EXIT-02）。${t.ptn?"<br>若在佣金追回期間內，推薦佣金將追回。":""}`,"終止租戶",r=>{if(val("tmC")!==t.code){toast("請輸入正確的租戶代碼以確認");$("#tmC").style.borderColor="var(--bad)";return;}closeAll();JOBS.unshift({id:"J-"+(88142+JOBS.length),type:"資料匯出（退租）",tid:t.id,st:"排隊",at:now().slice(5),dur:"—",msg:"產生完整匯出檔供租戶下載"});setStatus(t,"已終止",r);toast("已終止，並排入退租資料匯出工作");},true,F(`請輸入租戶代碼「${t.code}」確認`,I("tmC"),1));},
  changePlan(){const t=tById(curT);modal("調整方案",`<div class="form-grid">${F("版本",S("cpEd",EDS,t.ed))}${F("級距",S("cpTier",TIERN,t.tier))}${F("計費週期",S("cpCyc",["月繳","年繳"],t.cycle))}${F("生效",S("cpWhen",["升級立即生效（按日補差額）","下一計費週期生效"],"升級立即生效（按日補差額）"))}${F("原因（必填）",TA("cpR"),1)}</div><p class="hint" id="cpHint">目前 ${t.ed}・${t.tier}，社區 ${t.sites} 個。</p>`,[{label:"取消"},{label:"確認調整",cls:"primary",fn:()=>{if(!required(["cpR"]))return;const ed=val("cpEd"),ti=val("cpTier");if(t.sites>TIER_MAX[ti]){toast(`社區數 ${t.sites} 超過「${ti}」上限 ${TIER_MAX[ti]}，無法降級`);return;}const lost=planOf(t).mods.filter(m=>!PLANS.find(p=>p.id===ed+"-"+ti).mods.includes(m));const old=`${t.ed}・${t.tier}`;const up=listPrice(ed,ti)>listPrice(t.ed,t.tier);t.ed=ed;t.tier=ti;t.cycle=val("cpCyc");t.locked=null;const diffAmt=up&&val("cpWhen").startsWith("升級")?Math.round((listPrice(ed,ti)-listPrice(...old.split("・")))*24/30):0;if(diffAmt>0)INVS.push({id:"INV-2611-UP"+t.id.slice(2),tid:t.id,period:"2026/11/07～11/30",kind:"其他",amt:diffAmt,credit:0,issued:TODAY,due:addDays(TODAY,10),st:"未付",paidOn:null,method:null,einv:null,dun:[]});t.hist.push({d:TODAY,txt:`方案：${old} → ${ed}・${ti}（${val("cpWhen")}）`,by:ME.n});audit("方案",t.s,`方案 ${old} → ${ed}・${ti}`,val("cpR"));closeAll();renderAll();toast(`方案已調整${diffAmt?"，已產生補差額帳單 "+money(diffAmt):""}${lost.length?"；將停用模組："+lost.join("、"):""}`);}}]);},
  applyCoupon(){const t=tById(curT);modal("套用優惠碼",`${F("優惠碼",S("acC",COUPONS.filter(c=>c.on).map(c=>c.code),COUPONS[0].code))}`,[{label:"取消"},{label:"套用",cls:"primary",fn:()=>{const c=COUPONS.find(x=>x.code===val("acC"));if(c.used>=c.max){toast("此優惠碼已達使用上限");return;}c.used++;t.coupon=c.code;t.hist.push({d:TODAY,txt:"方案：套用優惠碼 "+c.code,by:ME.n});audit("方案",t.s,"套用優惠碼 "+c.code);closeAll();renderAll();toast("已套用 "+c.code);}}]);},
- requestGrant(el){const tid=el?.dataset?.t||curT;const t=tById(tid);modal("發出授權請求",`<p style="margin-top:0">請求「${t.s}」的租戶管理者同意限時授權。對方同意前無法查看任何業務資料。</p><div class="form-grid">${F("時數",S("grH",["4","24","72"],"24"))}${F("關聯客服問題",S("grS",["—",...TICKETS.filter(x=>x.tid===tid).map(x=>x.id)],"—"))}${F("原因（必填，租戶可見）",TA("grR"),1)}</div>`,[{label:"取消"},{label:"送出請求",cls:"primary",fn:()=>{if(!required(["grR"]))return;const id="G-0"+(302+GRANTS.length);GRANTS.unshift({id,tid,by:ME.n,reason:(val("grS")!=="—"?val("grS")+" ":"")+val("grR"),h:Number(val("grH")),from:"—",to:"—",st:"待同意",ops:[]});audit("授權存取",t.s,"發出授權請求 "+id,val("grR"),id);closeAll();renderAll();toast("已通知租戶管理者，同意後即可進入");}}]);},
+ requestGrant(el){const tid=el?.dataset?.t||curT;const t=tById(tid);modal("發出授權請求",`<p style="margin-top:0">請求「${t.s}」的租戶管理者同意限時授權。對方同意前無法查看任何業務資料。</p><div class="form-grid">${F("時數",S("grH",["4","24","72"],"24"))}${F("關聯客服問題",S("grS",["—",...TICKETS.filter(x=>x.tid===tid).map(x=>x.id)],"—"))}${F("原因（必填，租戶可見）",TA("grR"),1)}</div>`,[{label:"取消"},{label:"送出請求",cls:"primary",fn:()=>{if(!required(["grR"]))return;const id="G-0"+(302+GRANTS.length);GRANTS.unshift({id,tid,by:ME.n,reason:(val("grS")!=="—"?val("grS")+" ":"")+val("grR"),h:Number(val("grH")),from:"—",to:"—",st:"待租戶同意",ops:[]});audit("授權存取",t.s,"發出授權請求 "+id,val("grR"),id);closeAll();renderAll();toast("已通知租戶管理者，同意後即可進入");}}]);},
  newGrant(){modal("發出授權請求",F("租戶",S("ngT",TENANTS.filter(t=>t.st!=="已終止").map(t=>[t.id,t.s]),"T001")),[{label:"取消"},{label:"下一步",cls:"primary",fn:()=>A.requestGrant({dataset:{t:val("ngT")}})}]);},
  grantOpen(el){const g=GRANTS.find(x=>x.id===el.dataset.g);drawer(g.id+" 授權明細",`<dl class="dl"><dt>租戶</dt><dd>${tName(g.tid)}</dd><dt>申請人</dt><dd>${g.by}</dd><dt>原因</dt><dd>${g.reason}</dd><dt>期間</dt><dd>${g.from} ～ ${g.to}</dd><dt>狀態</dt><dd>${stTag(g.st)}</dd></dl><h3 style="font-size:14px;margin:18px 0 8px">授權期間操作（同步至租戶稽核日誌）</h3>${g.ops.length?`<ul class="timeline">${g.ops.map(o=>`<li>${o.x}<small>${o.t}</small></li>`).join("")}</ul>`:'<p class="hint">尚無操作</p>'}`,[{label:"關閉"}]);},
  grantApprove(el){const g=GRANTS.find(x=>x.id===el.dataset.g);g.st="有效中";g.from=now();const e=new Date();e.setHours(e.getHours()+g.h);g.to=addDays(TODAY,Math.floor((new Date().getHours()+g.h)/24))+" "+String(e.getHours()).padStart(2,"0")+":"+String(e.getMinutes()).padStart(2,"0");audit("授權存取",tName(g.tid),"租戶同意授權 "+g.h+" 小時（模擬）","",g.id);renderAll();toast("租戶已同意（模擬），授權至 "+g.to);},
@@ -1586,7 +1589,7 @@ let BLOCKED_IPS=[
 ];
 function dupOf(a){const t=TENANTS.find(t=>t.ents.some(e=>e.tax===a.tax)||t.ct.mail===a.mail);if(t)return{txt:`${t.st==="試用中"?"試用中租戶":t.st==="已終止"?"已終止租戶":"既有租戶"} ${t.s}（${t.code}）`,act:"tenantOpen",k:"t",v:t.id};const h=TRIAL_HIST.find(h=>(h.tax===a.tax||h.mail===a.mail)&&diff(TODAY,h.d)<=365);if(h)return{txt:`12 個月內曾試用（${h.d}）`,act:"go",k:"go",v:"leads"};return null;}
 function appChecks(a){const d=dupOf(a);return `${tag("人機 "+a.bot.toFixed(2),a.bot>=.5?"t-ok":"t-bad")} ${a.ev?tag("Email 已驗證","t-ok"):tag("Email 未驗證","t-warn")} ${taxOk(a.tax)?tag("統編 ✓","t-ok"):tag("統編檢查碼錯誤","t-bad")}${d?` <button class="tag t-warn tagbtn" data-act="${d.act}" data-${d.k}="${d.v}">重複：${d.txt}</button>`:""}`;}
-renderApps=function(){$("#appChips").innerHTML=chips(["全部","待審核","已建立","已婉拒"],appF,"appF");const ls=APPS.filter(a=>appF==="全部"||a.st===appF);
+renderApps=function(){$("#appChips").innerHTML=chips(["全部","待審核","已核准","已建立","已婉拒"],appF,"appF");const ls=APPS.filter(a=>appF==="全部"||a.st===appF);
  $("#appRows").innerHTML=ls.length?ls.map(a=>{const p=PARTNERS.find(p=>p.code===a.ref);return `<tr class="click" data-act="appOpen" data-a="${a.id}"><td>${a.id}</td><td>${a.d}</td><td>${a.n}<br><small class="hint">統編 ${a.tax}</small></td><td>${a.ct}</td><td class="num">${a.sites}</td><td>${a.ref?a.ref+(p?` <span class="hint">${p.n}</span>`:` <span class="hint">查無此碼</span>`):"—"}</td><td style="white-space:normal;max-width:300px">${appChecks(a)}</td><td>${stTag(a.st)}</td><td>${a.st==="待審核"?(a.ev?`<button class="btn sm primary" data-act="appApprove" data-a="${a.id}">核准開通</button>`:`<button class="btn sm" data-act="appResend" data-a="${a.id}">重寄驗證信</button>`):""}</td></tr>`}).join(""):empty(9,"沒有符合的申請");
  $("#ipRows").innerHTML=BLOCKED_IPS.map((b,i)=>`<tr><td><code>${b.ip}</code></td><td style="white-space:normal">${b.why}</td><td>${b.at}</td><td>${b.until}</td><td>${tag(b.st,b.st==="封鎖中"?"t-bad":"t-mute")}</td><td>${b.st==="封鎖中"?`<button class="btn sm" data-act="ipUnblock" data-i="${i}">解除封鎖</button>`:""}</td></tr>`).join("");};
 
@@ -1851,7 +1854,7 @@ Object.assign(A,{
  exRemind(el){const e=EXITS[Number(el.dataset.i)];const n=[30,7,1].find(n=>!e.rem[n]&&diff(TODAY,addDays(roUntil(e),-n))>=0)||[30,7,1].find(n=>!e.rem[n]);if(n&&diff(TODAY,addDays(roUntil(e),-n))>=0)e.rem[n]=TODAY;audit("退租",tName(e.tid),"寄送刪除前提醒"+(e.fb.st!=="已下載"?"（特別提示：尚未下載最終備份）":""));renderExits();icons();toast("已以 Email 與後台通知寄送提醒"+(e.fb.st!=="已下載"?"，並特別提示尚未下載最終備份":""));},
  exResub(el){const e=EXITS[Number(el.dataset.i)];const t=tById(e.tid);reasonBox("重新訂閱還原",`${t.s} 在唯讀期間重新訂閱，資料立即恢復可用（P-EXIT-11）。`,"恢復",r=>{e.st="已回流";closeAll();setStatus(t,"正式",r,"唯讀期間重新訂閱，資料恢復可用");toast(t.s+" 已恢復為正式");});},
  exDelete(el){const e=EXITS[Number(el.dataset.i)];const t=tById(e.tid);const left=diff(roUntil(e),TODAY);
-  stepUp("執行租戶資料刪除",()=>{reasonBox("執行資料刪除",`刪除 <b>${t.s}</b> 的資料庫、物件儲存、搜尋索引、快取與應用日誌中的租戶資料；系統備份於 35 天輪替後消滅且不再用於還原（P-EXIT-10）。${left>0?`<br><b style="color:var(--bad)">唯讀期尚餘 ${left} 天，提前刪除需租戶書面同意。</b>`:""}${e.fb.st!=="已下載"?`<br><b style="color:var(--warn)">租戶尚未下載最終完整備份。</b>`:""}`,"刪除並產生證明",r=>{if(val("dlC")!==t.code){toast("請輸入正確的租戶代碼");$("#dlC").style.borderColor="var(--bad)";return;}const id="DEL-2026-"+String(DEL_CERTS.length+2).padStart(4,"0");DEL_CERTS.unshift({id,tid:t.id,d:TODAY,bkEnd:addDays(TODAY,35)});e.st="已刪除";e.cert=id;t.hist.push({d:TODAY,txt:"已刪除租戶資料（"+id+"）",by:ME.n});audit("退租",t.s,"執行資料刪除並產生刪除證明 "+id,r);closeAll();renderAll();A.exCert({dataset:{c:id}});},true,F(`請輸入租戶代碼「${t.code}」確認`,I("dlC"),1));});},
+  stepUp("執行租戶資料刪除",()=>{reasonBox("執行資料刪除",`刪除 <b>${t.s}</b> 的資料庫、物件儲存、搜尋索引、快取與應用日誌中的租戶資料；系統備份於 35 天輪替後消滅且不再用於還原（P-EXIT-10）。${left>0?`<br><b style="color:var(--bad)">唯讀期尚餘 ${left} 天，提前刪除需租戶書面同意。</b>`:""}${e.fb.st!=="已下載"?`<br><b style="color:var(--warn)">租戶尚未下載最終完整備份。</b>`:""}`,"刪除並產生證明",r=>{if(val("dlC")!==t.code){toast("請輸入正確的租戶代碼");$("#dlC").style.borderColor="var(--bad)";return;}const id="DEL-2026-"+String(DEL_CERTS.length+2).padStart(4,"0");DEL_CERTS.unshift({id,tid:t.id,d:TODAY,bkEnd:addDays(TODAY,35)});e.st="已刪除";e.cert=id;t.st="已刪除";t.hist.push({d:TODAY,txt:"已刪除租戶資料（"+id+"）",by:ME.n});audit("退租",t.s,"執行資料刪除並產生刪除證明 "+id,r);closeAll();renderAll();A.exCert({dataset:{c:id}});},true,F(`請輸入租戶代碼「${t.code}」確認`,I("dlC"),1));});},
  exCert(el){const c=DEL_CERTS.find(x=>x.id===el.dataset.c);const t=tById(c.tid);modal("資料刪除證明",`<div class="cert"><h4>資料刪除證明　${c.id}</h4><dl class="dl"><dt>租戶</dt><dd>${t.n}（${t.code}）</dd><dt>刪除日</dt><dd>${c.d}</dd><dt>刪除範圍</dt><dd style="white-space:normal">資料庫（所有模組資料）、物件儲存（照片、文件、憑證影像）、搜尋索引、快取、應用日誌中的租戶資料</dd><dt>系統備份</dt><dd>依輪替週期於 ${c.bkEnd} 前自然消滅，期間不會再用於還原此租戶</dd><dt>執行紀錄</dt><dd>${c.id}-LOG（平台稽核日誌，雜湊鏈驗證）</dd><dt>保留項目</dt><dd>訂閱帳單與發票（依法令保存）、本證明</dd></dl><p class="hint" style="margin-bottom:0">本證明依 P-EXIT-10、NF-SAAS-14 產生，已寄送租戶擁有者。</p></div>`,[{label:"關閉"},{label:"下載 PDF",cls:"primary",fn:()=>{audit("退租",c.id,"下載刪除證明");closeAll();toast("已下載 "+c.id+".pdf（模擬）");}}],true);},
  exOrder(){const ls=EXITS.filter(e=>e.st==="唯讀保留中");if(!ls.length){toast("目前沒有唯讀保留中的租戶");return;}const price=()=>{const t=tById(val("aoT"));const m=listPrice(t.ed,t.tier);const k=val("aoK");return k==="延長封存 1 年"?m*2:k==="延長封存 3 年"?m*5:5000;};
   modal("新增加值服務訂單",`<div class="form-grid">${F("租戶",S("aoT",ls.map(e=>[e.tid,tName(e.tid)]),ls[0].tid))}${F("項目",S("aoK",["延長封存 1 年","延長封存 3 年","離線交付"],"延長封存 1 年"))}</div><p class="hint" id="aoP"></p>`,[{label:"取消"},{label:"建立訂單",cls:"primary",fn:()=>{const o={id:"AO-"+String(4+ARCH_ORDERS.length-1).padStart(4,"0"),tid:val("aoT"),kind:val("aoK"),amt:price(),st:AO_FLOW[val("aoK")][0]};ARCH_ORDERS.unshift(o);audit("退租",tName(o.tid),"建立加值服務訂單："+o.kind+" "+money(o.amt));closeAll();renderExits();icons();toast("已建立 "+o.id);}}]);
@@ -1885,6 +1888,246 @@ function route(){
   A.closeMenu();closeAll();window.scrollTo(0,0);icons();
 }
 window.addEventListener("hashchange",route);
+/* =====================================================================
+   v0.3 跨雛型連動（shared-store.js）
+   平台層資料改由共用資料層讀寫：租戶、帳單、客服問題、授權、平台公告、
+   試用申請、退租、刪除證明、加值服務、背景工作、條款、功能開關、
+   潛在客戶、推薦夥伴、佣金、撥付。
+   作法：載入與其他分頁變更時 syncIn（以共用資料取代本頁陣列並重繪）；
+   每次操作後 syncOut（只寫回本頁實際改動的紀錄，不覆蓋其他分頁的變更）。
+   ===================================================================== */
+const PSYNC = (() => {
+  const has = typeof window.PCMP === 'object';
+  const V = {
+    tenants: [() => TENANTS, v => { TENANTS = v; }, r => r.id, '租戶'],
+    invoices: [() => INVS, v => { INVS = v; }, r => r.id, '帳單'],
+    tickets: [() => TICKETS, v => { TICKETS = v; }, r => r.id, '客服問題'],
+    grants: [() => GRANTS, v => { GRANTS = v; }, r => r.id, '授權存取'],
+    platformAnns: [() => ANNS, v => { ANNS = v; }, r => r.id, '平台公告'],
+    applications: [() => APPS, v => { APPS = v; }, r => r.id, '試用申請'],
+    exits: [() => EXITS, v => { EXITS = v; }, r => r.tid + '|' + r.term, '退租'],
+    delCerts: [() => DEL_CERTS, v => { DEL_CERTS = v; }, r => r.id, '刪除證明'],
+    archOrders: [() => ARCH_ORDERS, v => { ARCH_ORDERS = v; }, r => r.id, '加值服務'],
+    jobs: [() => JOBS, v => { JOBS = v; }, r => r.id, '背景工作'],
+    terms: [() => TERMS, v => { TERMS = v; }, r => r.kind + '|' + r.v, '條款'],
+    flags: [() => FLAGS, v => { FLAGS = v; }, r => r.key, '功能開關'],
+    leads: [() => LEADS, v => { LEADS = v; }, r => r.id, '潛在客戶'],
+    partners: [() => PARTNERS, v => { PARTNERS = v; }, r => r.id, '推薦夥伴'],
+    commissions: [() => COMMS, v => { COMMS = v; }, r => r.id, '佣金'],
+    payouts: [() => PAYOUTS, v => { PAYOUTS = v; }, r => r.id, '佣金撥付'],
+  };
+  const KEYS = Object.keys(V);
+  const SNAP = {};
+  const TID = has ? PCMP.TID : 'T001';
+  let audSeen = new Set(AUDIT);
+  let pending = new Set();
+
+  // 序列化：T001 的 LINE 推播數是本頁的衍生值（基數＋推播收件匣），寫回時還原成基數
+  const ser = (k, r) => (k === 'tenants' && r._pb != null) ? JSON.stringify(Object.assign({}, r, { push: r._pb, _pb: undefined })) : JSON.stringify(r);
+  const plain = (k, r) => JSON.parse(ser(k, r));
+  const snapOf = k => new Map(V[k][0]().map(r => [V[k][2](r), ser(k, r)]));
+
+  function normalize(k, list) {
+    if (k === 'applications') list.forEach(a => {
+      if (!a.st) a.st = '待審核'; if (a.bot == null) a.bot = 0.9; if (a.ev == null) a.ev = false;
+      if (!a.ip) a.ip = '—'; if (!a.d) a.d = (a.at || PCMP.now()).slice(0, 10); if (!a.sites) a.sites = '—'; if (!a.tool) a.tool = '—';
+      if (!a.tel) a.tel = '—'; if (!a.mail) a.mail = '—'; if (!a.ct) a.ct = '—'; if (!a.tax) a.tax = '—'; if (a.ref == null) a.ref = '';
+    });
+    if (k === 'tickets') list.forEach(t => { if (!t.msgs) t.msgs = []; if (!t.st) t.st = '新進'; if (!t.who) t.who = '—'; if (!t.pri) t.pri = '中'; if (!t.cat) t.cat = '操作問題'; if (!t.created) t.created = PCMP.now(); });
+    if (k === 'grants') list.forEach(g => { if (!g.ops) g.ops = []; if (g.from == null) g.from = '—'; if (g.to == null) g.to = '—'; if (!g.h) g.h = 24; });
+    if (k === 'jobs') list.forEach(j => { if (!j.st) j.st = '排隊'; if (!j.at) j.at = PCMP.short(); });
+    if (k === 'exits') list.forEach(e => { if (!e.fb) e.fb = { st: '未下載', d: null }; if (!e.rem) e.rem = { 30: null, 7: null, 1: null }; if (!e.st) e.st = '唯讀保留中'; });
+    if (k === 'tenants') list.forEach(t => { if (!t.hist) t.hist = []; if (!t.logs) t.logs = []; });
+    if (k === 'invoices') list.forEach(i => { if (i.credit == null) i.credit = 0; if (!i.dun) i.dun = []; });
+    return list;
+  }
+
+  // T001 的即時用量：推播數＝基數＋收件匣則數
+  function deriveUsage() {
+    const t = TENANTS.find(x => x.id === TID); if (!t || !has) return;
+    if (t._pb == null) t._pb = t.push;
+    t.push = t._pb + PCMP.get('inbox').length;
+  }
+
+  // 其他分頁登記付款時，比照本頁 markPaid 產生佣金並恢復租戶狀態（可重複執行）
+  function ensurePaidEffects(prevInvs) {
+    const prev = new Map((prevInvs || []).map(i => [i.id, i.st]));
+    INVS.forEach(i => {
+      if (i.st !== '已付') return;
+      const t = TENANTS.find(x => x.id === i.tid); if (!t) return;
+      const wasPaid = prev.get(i.id) === '已付';
+      if (t.ptn && !COMMS.some(c => c.inv === i.id)) {
+        const p = PARTNERS.find(x => x.id === t.ptn);
+        if (p && p.model === '推薦佣金') {
+          const date = i.paidOn || TODAY;
+          const inPeriod = diff(date, t.since) <= p.months * 30.5;
+          const okKind = i.kind === '月費' || i.kind === '年費' || (p.inclOT && i.kind === '導入費');
+          if (inPeriod && okKind) {
+            const amt = p.kind === '固定金額' ? (COMMS.some(c => c.pid === p.id && c.tid === t.id) ? 0 : p.fixed) : (i.amt - (i.credit || 0)) * p.rate / 100;
+            if (amt) cm(p.id, t.id, i.id, date, i.amt - (i.credit || 0), p.kind === '固定金額' ? 0 : p.rate, amt, '待撥付');
+          }
+        }
+      }
+      if (!wasPaid && prevInvs && ['付款逾期', '唯讀', '停權'].includes(t.st) && !overdueInvs(t).length) {
+        const old = t.st; t.st = '正式'; t.hist.push({ d: TODAY, txt: `付款完成，${old} → 正式`, by: '系統' });
+        audit('租戶狀態', t.s, `${old} → 正式`, '付款完成自動恢復');
+      }
+    });
+    const mx = COMMS.reduce((a, c) => Math.max(a, Number(String(c.id).replace(/\D/g, '')) || 0), 0);
+    if (mx >= cmSeq) cmSeq = mx + 1;
+  }
+
+  function syncIn(keys) {
+    if (!has) return;
+    (keys || KEYS).forEach(k => {
+      if (!V[k]) return;
+      const prev = k === 'invoices' ? JSON.parse(JSON.stringify(INVS)) : null;
+      const list = normalize(k, PCMP.get(k) || []);
+      V[k][1](list);
+      SNAP[k] = snapOf(k);
+      if (k === 'invoices') ensurePaidEffects(prev);
+    });
+    deriveUsage();
+    KEYS.forEach(k => { SNAP[k] = SNAP[k] || snapOf(k); });
+  }
+
+  const isT1 = (k, r) => (k === 'tenants' ? r.id : r.tid) === TID;
+  const anyLayer = () => !!document.querySelector('#modal.on,#drawer.on');
+  const route = () => (location.hash || '#dashboard').slice(1);
+
+  // 依變更內容產生動態文字；租戶看得到的只有與 T001 相關且非平台內部的事項
+  function describe(k, added, changed, removed, before, aud) {
+    const lines = []; let visible = false;
+    const T1 = r => isT1(k, r);
+    if (k === 'tenants') {
+      changed.filter(T1).forEach(r => {
+        const o = before.get(r.id) || {};
+        if (o.ed !== r.ed || o.tier !== r.tier) { lines.push(`平台調整方案：${o.ed}・${o.tier} → ${r.ed}・${r.tier}`); visible = true; }
+        if (o.st !== r.st) { lines.push(`租戶狀態：${o.st} → ${r.st}`); visible = true; }
+        if (!!o.addon !== !!r.addon) { lines.push(r.addon ? '平台開通社區帳務模組（加購）' : '平台取消加購社區帳務模組'); visible = true; }
+        if (o.cycle !== r.cycle) { lines.push(`計費週期改為${r.cycle}`); visible = true; }
+        if (o.lineMode !== r.lineMode) { lines.push(`LINE 官方帳號模式：${r.lineMode}`); visible = true; }
+        if (o.trialEnd !== r.trialEnd && r.trialEnd) { lines.push(`試用延長至 ${r.trialEnd}`); visible = true; }
+      });
+    }
+    if (k === 'invoices') {
+      changed.filter(T1).forEach(r => { const o = before.get(r.id) || {}; if (o.st !== r.st) { lines.push(`帳單 ${r.id}：${r.st}`); visible = true; } if ((o.credit || 0) !== (r.credit || 0)) { lines.push(`帳單 ${r.id} 開立折讓`); visible = true; } });
+      added.filter(T1).forEach(r => { lines.push(`平台開立帳單 ${r.id}（${money(r.amt)}）`); visible = true; });
+    }
+    if (k === 'tickets') {
+      changed.filter(T1).forEach(r => {
+        const o = before.get(r.id) || { msgs: [] };
+        const ns = r.msgs.slice((o.msgs || []).length).filter(m => m.f === 's');
+        if (ns.length) { lines.push(`平台客服回覆 ${r.id}`); visible = true; }
+        if (o.st !== r.st) { lines.push(`客服問題 ${r.id}：${r.st}`); visible = true; }
+      });
+    }
+    if (k === 'grants') {
+      added.filter(T1).forEach(r => { lines.push(`平台申請客服授權 ${r.id}（${r.h} 小時）：${r.reason}`); visible = true; });
+      changed.filter(T1).forEach(r => {
+        const o = before.get(r.id) || { ops: [] };
+        if (o.st !== r.st) { lines.push(`客服授權 ${r.id}：${r.st}`); visible = true; }
+        r.ops.slice((o.ops || []).length).forEach(op => { lines.push(`平台客服操作（${r.id}）：${op.x}`); visible = true; });
+      });
+    }
+    if (k === 'platformAnns') {
+      const t1 = TENANTS.find(t => t.id === TID);
+      const hits = a => a.st === '已發布' && (a.target === '全部租戶' || String(a.target).includes(t1 ? t1.s : '永信') || (t1 && String(a.target).includes(t1.ed)));
+      [...added, ...changed].filter(hits).forEach(a => { const o = before.get(a.id); if (!o || o.st !== '已發布') { lines.push(`平台公告：${a.title}`); visible = true; } });
+    }
+    if (k === 'exits') [...added, ...changed].filter(T1).forEach(r => { lines.push(`退租紀錄：${r.st}`); visible = true; });
+    if (k === 'delCerts') added.filter(T1).forEach(r => { lines.push(`平台已刪除租戶資料（刪除證明 ${r.id}）`); visible = true; });
+    if (k === 'archOrders') [...added, ...changed].filter(T1).forEach(r => { lines.push(`${r.kind} ${r.id}：${r.st}`); visible = true; });
+    if (k === 'jobs') changed.filter(T1).forEach(r => { const o = before.get(r.id) || {}; if (o.st !== r.st) { lines.push(`背景工作 ${r.id}（${r.type}）：${r.st}`); visible = true; } });
+    if (k === 'terms') changed.forEach(r => { const o = before.get(r.kind + '|' + r.v) || {}; if (o.st !== r.st && r.st === '生效中') { lines.push(`${r.kind} ${r.v} 生效，請租戶擁有者重新同意`); visible = true; } });
+    if (k === 'flags') changed.forEach(r => { const on = r.mode === '全部開啟' || (r.mode === '指定租戶' && (r.tids || []).includes(TID)); const o = before.get(r.key) || {}; const was = o.mode === '全部開啟' || (o.mode === '指定租戶' && (o.tids || []).includes(TID)); if (on !== was) { lines.push(`功能「${r.name}」${on ? '已開放' : '已關閉'}`); visible = true; } });
+    let text = lines.join('；');
+    if (!text) { const a = aud[0]; text = a ? `${a.act}（${a.obj}）` : `更新${V[k][3]}（${[...added, ...changed].map(V[k][2]).slice(0, 3).join('、') || removed.slice(0, 3).join('、')}）`; }
+    const tid = [...added, ...changed].some(r => isT1(k, r)) ? TID : ([...added, ...changed].map(r => k === 'tenants' ? r.id : r.tid).find(Boolean) || '');
+    return { src: '平台', who: ME.n, text, link: 'ops.html#' + route(), tid: tid || undefined, internal: !visible };
+  }
+
+  function syncOut() {
+    if (!has) return;
+    const aud = AUDIT.filter(a => !audSeen.has(a)); aud.forEach(a => audSeen.add(a));
+    KEYS.forEach(k => {
+      const cur = V[k][0](); const key = V[k][2];
+      const snap = SNAP[k] || new Map();
+      const added = [], changed = [], removed = [];
+      const curIds = new Set();
+      cur.forEach((r, idx) => { const id = key(r); curIds.add(id); const s = ser(k, r); if (!snap.has(id)) added.push([r, idx]); else if (snap.get(id) !== s) changed.push(r); });
+      snap.forEach((s, id) => { if (!curIds.has(id)) removed.push(id); });
+      if (!added.length && !changed.length && !removed.length) return;
+      const before = new Map([...snap].map(([id, s]) => [id, JSON.parse(s)]));
+      const meta = describe(k, added.map(a => a[0]), changed, removed, before, aud.splice(0, 1));
+      // LIFF 來源的客服問題：平台回覆時推播到提問人的 LINE
+      if (k === 'tickets') changed.forEach(r => {
+        const o = before.get(r.id) || { msgs: [] };
+        const ns = r.msgs.slice((o.msgs || []).length).filter(m => m.f === 's');
+        if (ns.length && (r.src === 'LIFF' || r.src === 'LINE')) PCMP.push({ to: r.whoId || 'role:mgr@春暉苑', kind: 'support', title: '客服回覆 ' + r.id, body: ns[ns.length - 1].x, link: '#feedback', from: '平台客服' });
+      });
+      PCMP.update(k, list => {
+        list = (list || []).filter(r => !removed.includes(key(r)));
+        changed.forEach(r => { const i = list.findIndex(x => key(x) === key(r)); if (i >= 0) list[i] = plain(k, r); else list.push(plain(k, r)); });
+        added.forEach(([r, idx]) => { if (!list.some(x => key(x) === key(r))) list.splice(Math.min(idx, list.length), 0, plain(k, r)); });
+        return list;
+      }, meta);
+      SNAP[k] = snapOf(k);
+    });
+  }
+
+  // 租戶即時動態（儀表板：全部；T001 詳情：只看該租戶）
+  const SRC_C = { '後台': 't-info', 'LINE': 't-ok', '網頁前台': 't-warn', '平台': 't-mute' };
+  function feedHtml(list, empty) {
+    if (!list.length) return `<div class="hint" style="padding:8px 0">${empty}</div>`;
+    return `<div class="tbl-wrap"><table><thead><tr><th>時間</th><th>來源</th><th>操作人</th><th>內容</th><th>租戶</th></tr></thead><tbody>${list.map(a => `<tr><td style="white-space:nowrap">${String(a.at).slice(5)}</td><td>${tag(a.src || '—', SRC_C[a.src] || 't-mute')}${a.internal ? ' ' + tag('平台內部', 't-mute') : ''}</td><td>${a.who || '—'}</td><td>${a.text}</td><td>${tName(a.tid || TID) || '—'}</td></tr>`).join('')}</tbody></table></div>`;
+  }
+  function renderLive() {
+    if (!has) return;
+    const act = PCMP.get('activity');
+    const d = $('#dLive'); if (d) d.innerHTML = feedHtml(act.slice(0, 8), '尚無跨系統動態。在租戶後台、LINE 前台或網頁前台操作後會即時出現在這裡。');
+    const tl = $('#tLive');
+    if (tl) {
+      if (curT !== TID) { tl.innerHTML = ''; return; }
+      const mine = act.filter(a => !a.tid || a.tid === TID);
+      const inbox = PCMP.get('inbox');
+      tl.innerHTML = `<div class="card"><h3><span class="l"><i data-lucide="radio"></i>租戶即時動態</span><span class="hint">LINE 推播 ${fmt(inbox.length)} 則（本次示範）· 動態 ${fmt(mine.length)} 筆</span></h3>${feedHtml(mine.slice(0, 10), '尚無動態。')}</div>`;
+    }
+    icons();
+  }
+
+  function refresh() { renderAll(); renderLive(); if (route() === 'tenant') renderTenant(); icons(); }
+
+  function onRemote(k) {
+    if (V[k]) pending.add(k);
+    if (k === 'inbox' && TENANTS) { deriveUsage(); }
+    if (anyLayer()) { if (k === 'activity' || k === 'inbox') renderLive(); return; }
+    flush();
+  }
+  function flush() {
+    syncOut();
+    if (pending.size) { const ks = [...pending]; pending.clear(); syncIn(ks); syncOut(); refresh(); }
+    else renderLive();
+  }
+
+  function init() {
+    if (!has) return;
+    syncIn();
+    ensurePaidEffects(null);
+    syncOut(); // 寫回補產生的佣金（若有）
+    PCMP.on('*', (k, meta, remote) => { if (remote) onRemote(k); });
+    window.addEventListener('storage', e => { if (e.key && e.key.indexOf('pcmp.saas.v1:') === 0) onRemote(e.key.slice('pcmp.saas.v1:'.length)); });
+    const later = () => setTimeout(() => { syncOut(); if (!anyLayer() && pending.size) flush(); }, 0);
+    document.addEventListener('click', later);
+    document.addEventListener('keydown', e => { if (e.key === 'Enter') later(); });
+    setInterval(() => { syncOut(); if (!anyLayer() && pending.size) flush(); }, 1500);
+    PCMP.mountBadge();
+    { const _rd = renderDash; renderDash = function () { _rd(); renderLive(); }; }
+    { const _rt = renderTenant; renderTenant = function () { _rt(); renderLive(); }; }
+  }
+  return { init, syncIn, syncOut, renderLive, flush };
+})();
+PSYNC.init();
 try{if(sessionStorage.getItem("pcmp-ops"))$("#login").style.display="none"}catch(e){}
 applySide();renderAll();renderParams();route();
 </script>
