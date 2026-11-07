@@ -253,6 +253,246 @@ aside{background:#0d1324}
 .stat3{display:flex;gap:24px;flex-wrap:wrap}
 .stat3 div b{display:block;font-size:20px}
 .stat3 div small{color:var(--muted)}
+
+/* =====================================================================
+   捲軸設計（所有 SaaS 雛型共用）
+   - 全站：細捲軸（8px）、軌道透明、拇指圓角並隨深淺色主題變化
+   - 側邊功能列：品牌區與底部固定，只有選單區捲動；捲軸平常隱藏，
+     滑鼠移入或鍵盤聚焦時才淡入；上下緣淡出遮罩提示「還有更多」
+   - 手機外框（LIFF）：比照手機，不顯示捲軸
+   ===================================================================== */
+:root{
+  --sb-size:8px;
+  --sb-thumb:rgba(100,116,139,.28);
+  --sb-thumb-hover:rgba(100,116,139,.5);
+  --sb-side-thumb:rgba(148,163,184,.28);
+  --sb-side-thumb-hover:rgba(148,163,184,.55);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){--sb-thumb:rgba(148,163,184,.22);--sb-thumb-hover:rgba(148,163,184,.45)}
+}
+:root[data-theme="dark"]{--sb-thumb:rgba(148,163,184,.22);--sb-thumb-hover:rgba(148,163,184,.45)}
+
+/* Firefox */
+/* Firefox 專用：Chromium 設了標準屬性會停用 ::-webkit-scrollbar 並出現箭頭按鈕 */
+@supports not selector(::-webkit-scrollbar){
+  *{scrollbar-width:thin;scrollbar-color:var(--sb-thumb) transparent}
+  .side-nav{scrollbar-color:rgba(148,163,184,.16) transparent}
+  .side-nav:hover,.side-nav:focus-within{scrollbar-color:var(--sb-side-thumb) transparent}
+}
+::-webkit-scrollbar-button{display:none;width:0;height:0}
+/* Chromium / Safari */
+::-webkit-scrollbar{width:var(--sb-size);height:var(--sb-size)}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--sb-thumb);border-radius:999px;border:2px solid transparent;background-clip:padding-box;min-height:40px}
+::-webkit-scrollbar-thumb:hover{background:var(--sb-thumb-hover);background-clip:padding-box}
+::-webkit-scrollbar-corner{background:transparent}
+
+/* ---------- 側邊功能列 ----------
+   建議結構：
+   <aside id="side">
+     <div class="side-head">…Logo / 租戶名稱…</div>
+     <nav class="side-nav">…選單連結與分組標題…</nav>
+     <div class="side-foot">…目前使用者 / 方案 / 版本…</div>
+   </aside>
+   aside 本身不捲動（overflow:hidden），由 .side-nav 捲動 */
+.side-nav{
+  flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;
+  scrollbar-gutter:stable;padding:6px 2px 10px;margin:0 -4px 0 0;
+  display:flex;flex-direction:column;gap:2px;
+  -webkit-mask-image:linear-gradient(to bottom,transparent 0,#000 14px,#000 calc(100% - 22px),transparent 100%);
+          mask-image:linear-gradient(to bottom,transparent 0,#000 14px,#000 calc(100% - 22px),transparent 100%);
+}
+
+.side-nav::-webkit-scrollbar{width:6px}
+.side-nav::-webkit-scrollbar-thumb{background:rgba(148,163,184,.16);border:1px solid transparent;background-clip:padding-box}
+.side-nav:hover::-webkit-scrollbar-thumb,.side-nav:focus-within::-webkit-scrollbar-thumb{background:var(--sb-side-thumb);background-clip:padding-box}
+.side-nav::-webkit-scrollbar-thumb:hover{background:var(--sb-side-thumb-hover)!important;background-clip:padding-box!important}
+.side-head{flex-shrink:0;padding-bottom:10px;border-bottom:1px solid rgba(148,163,184,.12);margin-bottom:4px}
+.side-foot{flex-shrink:0;border-top:1px solid rgba(148,163,184,.12);padding-top:10px;margin-top:4px;font-size:12px}
+@media (prefers-reduced-motion: reduce){.side-nav{transition:none}}
+
+/* ---------- 手機外框（LIFF）內不顯示捲軸 ---------- */
+.phone *, .phone{scrollbar-width:none}
+.phone ::-webkit-scrollbar, .phone::-webkit-scrollbar{width:0;height:0;display:none}
+
+/* ---------- 橫向捲動的表格容器：細且只在需要時出現 ---------- */
+.table-wrap,.tbl-wrap,.tw{overflow-x:auto;scrollbar-gutter:auto}
+
+/* ================= 側邊功能列（v0.2 設計） ================= */
+aside{overflow:hidden;padding:14px 10px 12px;gap:0}
+aside .side-head .logo{padding:2px 8px 0;font-size:15px}
+.side-head .env{display:flex;gap:6px;margin:10px 8px 2px;flex-wrap:wrap}
+.env-chip{font-size:11px;line-height:18px;padding:0 8px;border-radius:999px;background:rgba(16,185,129,.14);color:#6ee7b7;border:1px solid rgba(16,185,129,.25);display:inline-flex;align-items:center;gap:4px}
+.env-chip.region{background:rgba(148,163,184,.08);color:#94a3b8;border-color:rgba(148,163,184,.18)}
+.env-chip::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+.env-chip.region::before{display:none}
+aside a{position:relative;padding:7px 10px 7px 14px;font-size:13.5px;transition:background .15s,color .15s;border-radius:8px}
+aside a svg.lucide{width:17px;height:17px;opacity:.75;transition:opacity .15s}
+aside a:hover svg.lucide{opacity:1}
+aside a.active{background:rgba(56,189,248,.12);color:#fff;box-shadow:none}
+aside a.active::before{content:"";position:absolute;left:3px;top:8px;bottom:8px;width:3px;border-radius:3px;background:linear-gradient(var(--accent),var(--accent-2))}
+aside a.active svg.lucide{color:#7dd3fc;opacity:1}
+aside a:focus-visible,.sgrp-h:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.sgrp{margin-top:4px}
+.sgrp-h{width:100%;display:flex;align-items:center;gap:6px;border:0;background:none;color:#64748b;font-size:11.5px;font-weight:600;letter-spacing:.06em;padding:8px 10px 6px;cursor:pointer;border-radius:6px;text-align:left;font-family:inherit}
+.sgrp-h:hover{color:#cbd5e1;background:rgba(148,163,184,.06)}
+.sgrp-h .cnt{margin-left:auto;font-weight:500;letter-spacing:0;color:#475569;font-size:11px}
+.sgrp-h .dotb{width:6px;height:6px;border-radius:50%;background:var(--bad);display:none}
+.sgrp-h .dotb.on{display:inline-block}
+.sgrp-h svg.lucide{width:14px;height:14px;transition:transform .2s;opacity:.7}
+.sgrp.closed .sgrp-h svg.lucide{transform:rotate(-90deg)}
+.sgrp.has-active .sgrp-h{color:#a5b4c8}
+.sgrp-b{display:grid;grid-template-rows:1fr;transition:grid-template-rows .22s ease}
+.sgrp-b>div{overflow:hidden;display:flex;flex-direction:column;gap:2px;min-height:0}
+.sgrp.closed .sgrp-b{grid-template-rows:0fr}
+.sgrp.closed .sgrp-b a{visibility:hidden}
+.side-foot .who{display:flex;align-items:center;gap:10px;padding:4px 6px}
+.side-foot .av{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#f59e0b,#ef4444);color:#fff;display:grid;place-items:center;font-weight:700;font-size:13px;flex-shrink:0}
+.side-foot b{color:#e2e8f0;font-size:13px;display:block;line-height:1.3}
+.side-foot small{color:#64748b;font-size:11.5px}
+.side-foot .ver{color:#475569;padding:6px 6px 0;font-size:11px}
+@media (prefers-reduced-motion: reduce){.sgrp-b,.sgrp-h svg.lucide{transition:none}}
+
+/* ================= 登入強化 ================= */
+.conn{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border-radius:10px;font-size:12.5px;margin:12px 0 4px;background:var(--ok-bg);color:var(--ok);line-height:1.5}
+.conn.bad{background:var(--bad-bg);color:var(--bad)}
+.mth{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0}
+.mth button{border:1px solid var(--border);background:var(--panel);border-radius:10px;padding:10px 12px;cursor:pointer;text-align:left;font-family:inherit;color:var(--text)}
+.mth button b{display:block;font-size:13.5px}
+.mth button small{color:var(--muted);font-size:12px}
+.mth button.on{border-color:var(--accent);background:var(--accent-soft)}
+.cd{font-size:40px;font-weight:700;text-align:center;font-variant-numeric:tabular-nums;margin:10px 0 4px;color:var(--warn)}
+.linkrow{margin-top:14px;display:flex;gap:6px 16px;flex-wrap:wrap}
+
+/* ================= 新頁面元件 ================= */
+.gate{display:inline-flex;align-items:center;gap:4px;border:1px solid var(--border);background:var(--panel-2);border-radius:8px;padding:2px 8px;font-size:12px;cursor:pointer;margin:2px;font-family:inherit;color:var(--muted)}
+.gate.pass{background:var(--ok-bg);color:var(--ok);border-color:transparent}
+.gate.fail{background:var(--bad-bg);color:var(--bad);border-color:transparent;font-weight:600}
+.gate.run{background:var(--info-bg);color:var(--info);border-color:transparent}
+.gate.na{opacity:.6;cursor:default}
+tr.overdue td{background:color-mix(in srgb,var(--bad-bg) 70%,transparent)}
+.hash{font-family:ui-monospace,Consolas,monospace;font-size:11.5px;color:var(--muted)}
+.chk{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px dashed var(--border)}
+.chk:last-child{border-bottom:0}
+.chk .t{flex:1}
+.chk small{display:block;color:var(--muted)}
+.cert{border:1px solid var(--border);border-radius:12px;padding:18px;background:var(--panel-2)}
+.cert h4{margin:0 0 10px;font-size:16px}
+.tagbtn{border:0;cursor:pointer;font-family:inherit}
+.mini{font-size:12px;color:var(--muted)}
+.kpi .val{font-size:clamp(18px,1.4vw,26px);white-space:nowrap;line-height:1.25}
+.gate-cell{min-width:270px}
+
+/* =====================================================================
+   側邊功能列：跟隨深淺色主題（淺色＝白底深字；深色＝維持原本深藍底）
+   以 html 前綴提高權重，覆蓋前面寫死的深色值
+   ===================================================================== */
+:root{
+  --sd-bg:#ffffff; --sd-border:#e2e8f0; --sd-text:#475569; --sd-strong:#0f172a; --sd-muted:#64748b; --sd-grp:#94a3b8;
+  --sd-icon:#64748b; --sd-hover-bg:#f1f5f9; --sd-hover-text:#0f172a; --sd-hover-icon:#334155;
+  --sd-active-bg:linear-gradient(90deg,rgba(14,165,233,.14),rgba(99,102,241,.04)); --sd-active-text:#0369a1; --sd-active-icon:#0284c7;
+  --sd-line:rgba(15,23,42,.08); --sd-nb-bg:#e0f2fe; --sd-nb-text:#0369a1; --sd-lock:#94a3b8; --sd-locked-text:#94a3b8;
+  --sd-chip-bg:#d1fae5; --sd-chip-text:#047857; --sd-chip-border:#a7f3d0; --sd-chip2-bg:#f1f5f9; --sd-chip2-text:#64748b; --sd-chip2-border:#e2e8f0;
+  --sb-side-thumb:rgba(100,116,139,.32); --sb-side-thumb-hover:rgba(100,116,139,.55); --sd-thumb-idle:rgba(100,116,139,.16);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --sd-bg:#0d1324; --sd-border:#1f2a3c; --sd-text:#9aa8bb; --sd-strong:#f1f5f9; --sd-muted:#64748b; --sd-grp:#55657d;
+    --sd-icon:#6b7a90; --sd-hover-bg:rgba(148,163,184,.08); --sd-hover-text:#e2e8f0; --sd-hover-icon:#cbd5e1;
+    --sd-active-bg:linear-gradient(90deg,rgba(14,165,233,.2),rgba(99,102,241,.05)); --sd-active-text:#ffffff; --sd-active-icon:#38bdf8;
+    --sd-line:rgba(148,163,184,.12); --sd-nb-bg:rgba(56,189,248,.14); --sd-nb-text:#7dd3fc; --sd-lock:#64748b; --sd-locked-text:#66768c;
+    --sd-chip-bg:rgba(16,185,129,.14); --sd-chip-text:#6ee7b7; --sd-chip-border:rgba(16,185,129,.25); --sd-chip2-bg:rgba(148,163,184,.08); --sd-chip2-text:#94a3b8; --sd-chip2-border:rgba(148,163,184,.18);
+    --sb-side-thumb:rgba(148,163,184,.28); --sb-side-thumb-hover:rgba(148,163,184,.55); --sd-thumb-idle:rgba(148,163,184,.16);
+  }
+}
+:root[data-theme="dark"]{
+  --sd-bg:#0d1324; --sd-border:#1f2a3c; --sd-text:#9aa8bb; --sd-strong:#f1f5f9; --sd-muted:#64748b; --sd-grp:#55657d;
+  --sd-icon:#6b7a90; --sd-hover-bg:rgba(148,163,184,.08); --sd-hover-text:#e2e8f0; --sd-hover-icon:#cbd5e1;
+  --sd-active-bg:linear-gradient(90deg,rgba(14,165,233,.2),rgba(99,102,241,.05)); --sd-active-text:#ffffff; --sd-active-icon:#38bdf8;
+  --sd-line:rgba(148,163,184,.12); --sd-nb-bg:rgba(56,189,248,.14); --sd-nb-text:#7dd3fc; --sd-lock:#64748b; --sd-locked-text:#66768c;
+  --sd-chip-bg:rgba(16,185,129,.14); --sd-chip-text:#6ee7b7; --sd-chip-border:rgba(16,185,129,.25); --sd-chip2-bg:rgba(148,163,184,.08); --sd-chip2-text:#94a3b8; --sd-chip2-border:rgba(148,163,184,.18);
+  --sb-side-thumb:rgba(148,163,184,.28); --sb-side-thumb-hover:rgba(148,163,184,.55); --sd-thumb-idle:rgba(148,163,184,.16);
+}
+html aside{background:var(--sd-bg);color:var(--sd-text);border-right:1px solid var(--sd-border);transition:background-color .2s,border-color .2s}
+html aside .logo{color:var(--sd-strong)}
+html aside .logo small{color:var(--sd-muted)}
+html .side-head,html .side-foot{border-color:var(--sd-line)}
+html aside .grp,html .side-nav .grp{color:var(--sd-grp)}
+html aside a,html .side-nav a{color:var(--sd-text)}
+html aside a svg,html .side-nav a svg{color:var(--sd-icon)}
+html aside a:hover,html .side-nav a:hover{background:var(--sd-hover-bg);color:var(--sd-hover-text)}
+html aside a:hover svg,html .side-nav a:hover svg{color:var(--sd-hover-icon)}
+html aside a.active,html .side-nav a.active{background:var(--sd-active-bg);color:var(--sd-active-text)}
+html aside a.active svg,html .side-nav a.active svg,html aside a.active svg.lucide{color:var(--sd-active-icon)}
+html aside a .nb,html .side-nav a .nb{background:var(--sd-nb-bg);color:var(--sd-nb-text)}
+html .side-nav a .lk svg,html aside a .lk svg{color:var(--sd-lock)}
+html .side-nav a.locked,html aside a.locked{color:var(--sd-locked-text)}
+html .side-nav a.locked>svg{color:var(--sd-lock)}
+/* 群組標題（可收合） */
+html .sgrp-h{color:var(--sd-grp)}
+html .sgrp-h:hover{color:var(--sd-hover-text);background:var(--sd-hover-bg)}
+html .sgrp.has-active .sgrp-h{color:var(--sd-text)}
+html .sgrp-h .cnt{color:var(--sd-grp)}
+/* 環境標籤 */
+html .env-chip{background:var(--sd-chip-bg);color:var(--sd-chip-text);border-color:var(--sd-chip-border)}
+html .env-chip.region{background:var(--sd-chip2-bg);color:var(--sd-chip2-text);border-color:var(--sd-chip2-border)}
+/* 底部使用者區 */
+html .side-foot,html aside .foot{color:var(--sd-muted)}
+html .side-foot b,html .side-foot .me b{color:var(--sd-strong)}
+html .side-foot small,html .side-foot .me small{color:var(--sd-muted)}
+html .side-foot .ver{color:var(--sd-grp)}
+html .side-foot .me{color:var(--sd-text)}
+html .side-foot .me:hover{background:var(--sd-hover-bg)}
+html .side-foot .me.active{background:var(--sd-nb-bg)}
+/* 側邊捲軸：平常淡、移入加深，跟隨主題 */
+html .side-nav::-webkit-scrollbar-thumb{background:var(--sd-thumb-idle);background-clip:padding-box}
+html .side-nav:hover::-webkit-scrollbar-thumb,html .side-nav:focus-within::-webkit-scrollbar-thumb{background:var(--sb-side-thumb);background-clip:padding-box}
+html .side-nav::-webkit-scrollbar-thumb:hover{background:var(--sb-side-thumb-hover);background-clip:padding-box}
+@supports not selector(::-webkit-scrollbar){
+  html .side-nav{scrollbar-color:var(--sd-thumb-idle) transparent}
+  html .side-nav:hover,html .side-nav:focus-within{scrollbar-color:var(--sb-side-thumb) transparent}
+}
+
+/* =====================================================================
+   下拉式選單與表單元件：跟隨網站深淺色主題
+   - color-scheme 讓瀏覽器原生的下拉清單、日期選擇器、捲軸改用對應主題
+   - option 明確指定底色與字色，避免深色模式出現「淺底淺字」
+   - 自訂箭頭、hover 與 focus 樣式，與網站輸入框一致
+   ===================================================================== */
+:root{
+  color-scheme:light;
+  --sel-chev:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  --sel-opt-bg:#ffffff; --sel-opt-text:#0f172a; --sel-opt-muted:#64748b;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --sel-chev:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    --sel-opt-bg:#111827; --sel-opt-text:#e5e7eb; --sel-opt-muted:#94a3b8;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --sel-chev:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  --sel-opt-bg:#111827; --sel-opt-text:#e5e7eb; --sel-opt-muted:#94a3b8;
+}
+html select{
+  -webkit-appearance:none!important;appearance:none!important;
+  font:inherit;color:var(--text,var(--sel-opt-text));cursor:pointer;
+  /* 以 !important 確保自訂箭頭不被 .input{background:…} 等簡寫屬性覆蓋 */
+  background-image:var(--sel-chev)!important;background-repeat:no-repeat!important;background-position:right 10px center!important;background-size:16px 16px!important;
+  padding-right:34px!important;text-overflow:ellipsis;
+  transition:border-color .15s,box-shadow .15s;
+}
+html select:not([multiple]){line-height:1.3}
+html select option,html select optgroup{background-color:var(--sel-opt-bg);color:var(--sel-opt-text);font-weight:400}
+html select optgroup{color:var(--sel-opt-muted);font-weight:600}
+html select option:disabled{color:var(--sel-opt-muted)}
+html select:hover{border-color:var(--accent,#0ea5e9)}
+html select:focus-visible{outline:none;border-color:var(--accent,#0ea5e9);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent,#0ea5e9) 22%,transparent)}
+html select:disabled{opacity:.55;cursor:not-allowed}
+html select::-ms-expand{display:none}
 </style>
 </head>
 <body>
@@ -265,26 +505,37 @@ aside{background:#0d1324}
       <h1>物業社區管理平台<br>營運後台</h1>
       <p>管理租戶、方案、帳務、推薦夥伴、客服與系統。平台人員專用，與租戶後台帳號分開。</p>
     </div>
-    <div style="position:relative;z-index:1;color:#64748b;font-size:12px">SaaS 原型 v0.1 · 僅供討論，資料為虛構</div>
+    <div style="position:relative;z-index:1;color:#64748b;font-size:12px">SaaS 原型 v0.2 · 對應需求書 v0.4 · 資料為虛構</div>
   </div>
   <div class="form">
+    <div class="card-login" id="step0" style="display:none">
+      <h2>連線來源不允許</h2>
+      <div class="conn bad"><i data-lucide="shield-x"></i><span><b>連線來源檢查：拒絕</b><br>來源 203.0.113.40 不在公司網路或零信任存取管道內。平台營運後台只允許公司網路或零信任代理連線（NF-AUTH-12），本次嘗試已記錄。</span></div>
+      <button class="btn primary block" data-act="useZT"><i data-lucide="shield-check"></i>改用零信任代理連線</button>
+    </div>
     <div class="card-login" id="step1">
       <h2>平台人員登入</h2>
-      <div class="hint">所有平台人員一律強制雙因子驗證（P-ADM-01）</div>
-      <label class="field"><span>Email</span><input class="input" id="lgUser" value="zihao@pcmp.example"></label>
-      <label class="field"><span>密碼</span><input class="input" id="lgPwd" type="password" value="password"></label>
+      <div class="hint">平台人員一律強制雙因子驗證，閒置 15 分鐘自動鎖定</div>
+      <div class="conn" id="connBox"><i data-lucide="shield-check"></i><span><b>連線來源檢查：允許</b><br>公司網路 10.20.8.41（零信任代理已驗證裝置）。</span></div>
+      <label class="field"><span>Email</span><input class="input" id="lgUser" value="zihao@pcmp.example" autocomplete="username"></label>
+      <label class="field"><span>密碼（至少 12 字元）</span><input class="input" id="lgPwd" type="password" value="Ops#Platform2026" autocomplete="current-password"></label>
       <div class="err" id="lgErr">請輸入 Email 與密碼</div>
       <button class="btn primary block" data-act="loginNext">下一步</button>
-      <p style="margin-top:14px"><button class="linkbtn" data-act="forgotPwd">忘記密碼？</button></p>
+      <div class="hint" id="lgTries" style="margin-top:8px;min-height:18px"></div>
+      <div class="linkrow"><button class="linkbtn" data-act="forgotPwd">忘記密碼？</button><button class="linkbtn" data-act="simWrongPwd">模擬輸入錯誤密碼</button><button class="linkbtn" data-act="simExtNet">模擬從外部網路連線</button></div>
     </div>
     <div class="card-login" id="step2" style="display:none">
       <h2>雙因子驗證</h2>
-      <div class="hint">請輸入驗證 App 上的 6 位數驗證碼（原型：任意 6 碼）</div>
-      <div class="otp field" style="margin:16px 0" id="otp">
-        <input class="input" maxlength="1" inputmode="numeric"><input class="input" maxlength="1" inputmode="numeric"><input class="input" maxlength="1" inputmode="numeric"><input class="input" maxlength="1" inputmode="numeric"><input class="input" maxlength="1" inputmode="numeric"><input class="input" maxlength="1" inputmode="numeric">
+      <div class="hint">平台人員強制使用，無法關閉（NF-AUTH-03）</div>
+      <div class="mth"><button class="on" data-act="mfaM" data-m="pk" id="mPk"><b>Passkey</b><small>建議 · 裝置指紋或安全金鑰</small></button><button data-act="mfaM" data-m="totp" id="mTotp"><b>驗證器 App</b><small>6 位數驗證碼</small></button></div>
+      <div id="mfaPk"><button class="btn primary block" data-act="loginPasskey"><i data-lucide="fingerprint"></i>使用 Passkey 驗證</button></div>
+      <div id="mfaTotp" style="display:none">
+        <div class="otp field" style="margin:4px 0 16px" id="otp">
+          <input class="input" maxlength="1" inputmode="numeric"><input class="input" maxlength="1" inputmode="numeric"><input class="input" maxlength="1" inputmode="numeric"><input class="input" maxlength="1" inputmode="numeric"><input class="input" maxlength="1" inputmode="numeric"><input class="input" maxlength="1" inputmode="numeric">
+        </div>
+        <div class="err" id="otpErr">請輸入完整 6 位數驗證碼</div>
+        <button class="btn primary block" data-act="loginOtp">驗證並登入</button>
       </div>
-      <div class="err" id="otpErr">請輸入完整 6 位數驗證碼</div>
-      <button class="btn primary block" data-act="loginOtp">驗證並登入</button>
       <button class="btn block" style="margin-top:8px" data-act="loginBack">返回</button>
     </div>
   </div>
@@ -293,40 +544,67 @@ aside{background:#0d1324}
 <!-- ================= 主框架 ================= -->
 <div class="app">
   <aside id="side">
-    <div class="logo"><div class="mark ops"><i data-lucide="shield-check"></i></div>平台營運後台</div>
-    <a href="#dashboard"><i data-lucide="layout-dashboard"></i>營運儀表板</a>
-    <a href="#reports"><i data-lucide="pie-chart"></i>營運報表</a>
-    <div class="grp">客戶開發</div>
-    <a href="#leads"><i data-lucide="kanban"></i>潛在客戶</a>
-    <a href="#apps"><i data-lucide="inbox"></i>試用申請</a>
-    <a href="#funnel"><i data-lucide="filter"></i>銷售漏斗</a>
-    <div class="grp">租戶管理</div>
-    <a href="#tenants"><i data-lucide="building-2"></i>租戶列表</a>
-    <a href="#health"><i data-lucide="heart-pulse"></i>健康度與流失預警</a>
-    <a href="#grants"><i data-lucide="key-round"></i>授權存取紀錄</a>
-    <div class="grp">方案與帳務</div>
-    <a href="#plans"><i data-lucide="layers"></i>方案與價格</a>
-    <a href="#coupons"><i data-lucide="ticket-percent"></i>優惠碼</a>
-    <a href="#billing"><i data-lucide="receipt"></i>帳單與收款對帳</a>
-    <a href="#dunning"><i data-lucide="alarm-clock"></i>逾期催收</a>
-    <div class="grp">推薦夥伴</div>
-    <a href="#partners"><i data-lucide="handshake"></i>夥伴列表</a>
-    <a href="#comms"><i data-lucide="coins"></i>佣金與撥付</a>
-    <a href="#portal"><i data-lucide="door-open"></i>夥伴入口（預覽）</a>
-    <div class="grp">服務</div>
-    <a href="#support"><i data-lucide="life-buoy"></i>客服中心</a>
-    <a href="#announce"><i data-lucide="megaphone"></i>平台公告</a>
-    <a href="#templates"><i data-lucide="library"></i>平台範本庫</a>
-    <a href="#content"><i data-lucide="clapperboard"></i>教學與說明</a>
-    <a href="#releases"><i data-lucide="rocket"></i>版本更新說明</a>
-    <a href="#terms"><i data-lucide="scroll-text"></i>服務條款版本</a>
-    <div class="grp">系統</div>
-    <a href="#monitor"><i data-lucide="activity"></i>系統監控</a>
-    <a href="#staff"><i data-lucide="user-cog"></i>平台人員與權限</a>
-    <a href="#flags"><i data-lucide="toggle-right"></i>功能開關</a>
-    <a href="#params"><i data-lucide="sliders-horizontal"></i>平台參數</a>
-    <a href="#audit"><i data-lucide="history"></i>平台稽核日誌</a>
-    <div class="foot">SaaS 原型 v0.1 · 資料為虛構</div>
+    <div class="side-head">
+      <div class="logo"><div class="mark ops"><i data-lucide="shield-check"></i></div>平台營運後台</div>
+      <div class="env"><span class="env-chip">正式環境</span><span class="env-chip region">台灣區機房</span></div>
+    </div>
+    <nav class="side-nav" aria-label="平台營運選單">
+      <a href="#dashboard"><i data-lucide="layout-dashboard"></i>營運儀表板</a>
+      <a href="#reports"><i data-lucide="pie-chart"></i>營運報表</a>
+      <div class="sgrp" data-g="crm"><button class="sgrp-h" data-act="sideGrp" data-g="crm" aria-expanded="true"><i data-lucide="chevron-down"></i>客戶開發<span class="cnt">3</span></button><div class="sgrp-b"><div>
+        <a href="#leads"><i data-lucide="kanban"></i>潛在客戶</a>
+        <a href="#apps"><i data-lucide="inbox"></i>試用申請</a>
+        <a href="#funnel"><i data-lucide="filter"></i>銷售漏斗</a>
+      </div></div></div>
+      <div class="sgrp" data-g="ten"><button class="sgrp-h" data-act="sideGrp" data-g="ten" aria-expanded="true"><i data-lucide="chevron-down"></i>租戶管理<span class="cnt">4</span></button><div class="sgrp-b"><div>
+        <a href="#tenants"><i data-lucide="building-2"></i>租戶列表</a>
+        <a href="#health"><i data-lucide="heart-pulse"></i>健康度與流失預警</a>
+        <a href="#grants"><i data-lucide="key-round"></i>授權存取紀錄</a>
+        <a href="#exits"><i data-lucide="archive"></i>退租與資料刪除</a>
+      </div></div></div>
+      <div class="sgrp" data-g="bill"><button class="sgrp-h" data-act="sideGrp" data-g="bill" aria-expanded="true"><i data-lucide="chevron-down"></i>方案與帳務<span class="cnt">4</span></button><div class="sgrp-b"><div>
+        <a href="#plans"><i data-lucide="layers"></i>方案與價格</a>
+        <a href="#coupons"><i data-lucide="ticket-percent"></i>優惠碼</a>
+        <a href="#billing"><i data-lucide="receipt"></i>帳單與收款對帳</a>
+        <a href="#dunning"><i data-lucide="alarm-clock"></i>逾期催收</a>
+      </div></div></div>
+      <div class="sgrp" data-g="ptn"><button class="sgrp-h" data-act="sideGrp" data-g="ptn" aria-expanded="true"><i data-lucide="chevron-down"></i>推薦夥伴<span class="cnt">3</span></button><div class="sgrp-b"><div>
+        <a href="#partners"><i data-lucide="handshake"></i>夥伴列表</a>
+        <a href="#comms"><i data-lucide="coins"></i>佣金與撥付</a>
+        <a href="#portal"><i data-lucide="door-open"></i>夥伴入口（預覽）</a>
+      </div></div></div>
+      <div class="sgrp" data-g="svc"><button class="sgrp-h" data-act="sideGrp" data-g="svc" aria-expanded="true"><i data-lucide="chevron-down"></i>客服與內容<span class="cnt">6</span></button><div class="sgrp-b"><div>
+        <a href="#support"><i data-lucide="life-buoy"></i>客服中心</a>
+        <a href="#announce"><i data-lucide="megaphone"></i>平台公告</a>
+        <a href="#templates"><i data-lucide="library"></i>平台範本庫</a>
+        <a href="#content"><i data-lucide="clapperboard"></i>教學與說明</a>
+        <a href="#releases"><i data-lucide="rocket"></i>版本更新說明</a>
+        <a href="#terms"><i data-lucide="scroll-text"></i>服務條款版本</a>
+      </div></div></div>
+      <div class="sgrp" data-g="sec"><button class="sgrp-h" data-act="sideGrp" data-g="sec" aria-expanded="true"><i data-lucide="chevron-down"></i>資安中心<span class="dotb" id="secDot"></span><span class="cnt">5</span></button><div class="sgrp-b"><div>
+        <a href="#secEvents"><i data-lucide="siren"></i>資安事件監控</a>
+        <a href="#secVulns"><i data-lucide="bug"></i>弱點與修補</a>
+        <a href="#secJit"><i data-lucide="timer"></i>生產環境存取（JIT）</a>
+        <a href="#secIr"><i data-lucide="shield-alert"></i>資安事件應變</a>
+        <a href="#secPentest"><i data-lucide="file-search"></i>滲透測試紀錄</a>
+      </div></div></div>
+      <div class="sgrp" data-g="ops"><button class="sgrp-h" data-act="sideGrp" data-g="ops" aria-expanded="true"><i data-lucide="chevron-down"></i>維運<span class="cnt">4</span></button><div class="sgrp-b"><div>
+        <a href="#monitor"><i data-lucide="activity"></i>系統監控</a>
+        <a href="#slo"><i data-lucide="gauge"></i>效能與 SLO</a>
+        <a href="#gates"><i data-lucide="list-checks"></i>上線門檻</a>
+        <a href="#backup"><i data-lucide="database-backup"></i>備份與還原</a>
+      </div></div></div>
+      <div class="sgrp" data-g="adm"><button class="sgrp-h" data-act="sideGrp" data-g="adm" aria-expanded="true"><i data-lucide="chevron-down"></i>平台設定<span class="cnt">4</span></button><div class="sgrp-b"><div>
+        <a href="#staff"><i data-lucide="user-cog"></i>平台人員與權限</a>
+        <a href="#flags"><i data-lucide="toggle-right"></i>功能開關</a>
+        <a href="#params"><i data-lucide="sliders-horizontal"></i>平台參數</a>
+        <a href="#audit"><i data-lucide="history"></i>平台稽核日誌</a>
+      </div></div></div>
+    </nav>
+    <div class="side-foot">
+      <div class="who"><span class="av">張</span><div><b>張子豪</b><small>平台管理員 · 2FA Passkey</small></div></div>
+      <div class="ver">SaaS 原型 v0.2 · 需求書 v0.4</div>
+    </div>
   </aside>
   <div class="drawer-bg" id="drawerBg" data-act="closeMenu"></div>
 
@@ -377,7 +655,11 @@ aside{background:#0d1324}
         <div class="page-head"><div><div class="crumb">客戶開發</div><h1>試用申請</h1></div>
           <div class="actions"><button class="btn" data-act="openSignup"><i data-lucide="external-link"></i>官網申請頁</button></div></div>
         <div class="toolbar" id="appChips"></div>
-        <div class="tbl-wrap"><table><thead><tr><th>申請編號</th><th>申請日</th><th>公司</th><th>聯絡人</th><th class="num">社區數</th><th>推薦碼</th><th>狀態</th><th></th></tr></thead><tbody id="appRows"></tbody></table></div>
+        <div class="tbl-wrap"><table><thead><tr><th>申請編號</th><th>申請日</th><th>公司</th><th>聯絡人</th><th class="num">社區數</th><th>推薦碼</th><th>檢核（NF-REG-01～03）</th><th>狀態</th><th></th></tr></thead><tbody id="appRows"></tbody></table></div>
+        <div class="grid g-2" style="margin-top:16px">
+          <div class="card"><h3><span class="l"><i data-lucide="octagon-x"></i>限流封鎖的來源 IP（NF-REG-01）</span></h3><div class="tbl-wrap"><table><thead><tr><th>IP</th><th>原因</th><th>封鎖時間</th><th>至</th><th>狀態</th><th></th></tr></thead><tbody id="ipRows"></tbody></table></div></div>
+          <div class="card"><h3><span class="l"><i data-lucide="shield-check"></i>審核規則</span></h3><ul style="margin:0;padding-left:20px;line-height:1.9"><li>人機驗證分數低於 0.5 不得核准（NF-REG-01）</li><li>Email 未驗證不得核准，可重寄單次驗證連結（24 小時有效）（NF-REG-02）</li><li>統編檢查碼錯誤不得核准；同統編／Email 已有租戶或 12 個月內試用過，需填原因才能開通（NF-REG-03）</li><li>一律人工審核後開通，不自動建立租戶（NF-REG-04）</li><li>回覆申請人的訊息一律相同，不透露是否已是客戶（NF-REG-06）</li><li>推薦碼只用於歸屬推薦夥伴，不作為身分驗證（NF-REG-09）</li><li>試用租戶與正式租戶同等資安防護（NF-REG-10）</li></ul></div>
+        </div>
       </section>
 
       <section class="screen" id="s-funnel">
@@ -393,7 +675,7 @@ aside{background:#0d1324}
         <div class="page-head"><div><div class="crumb">租戶管理</div><h1>租戶列表</h1></div>
           <div class="actions"><button class="btn" data-act="exportJob" data-name="租戶列表"><i data-lucide="download"></i>匯出</button><button class="btn primary" data-act="newTenant"><i data-lucide="plus"></i>建立租戶</button></div></div>
         <div class="toolbar" id="tChips"></div>
-        <div class="tbl-wrap"><table><thead><tr><th>租戶</th><th>代碼</th><th>方案</th><th>狀態</th><th class="num">社區</th><th class="num">使用者</th><th class="num">MRR</th><th>到期／下次帳單</th><th>最近活躍</th><th>健康度</th></tr></thead><tbody id="tRows"></tbody></table></div>
+        <div class="tbl-wrap"><table><thead><tr><th>租戶</th><th>代碼</th><th>方案</th><th>LINE 帳號</th><th>狀態</th><th class="num">社區</th><th class="num">使用者</th><th class="num">MRR</th><th>到期／下次帳單</th><th>最近活躍</th><th>健康度</th></tr></thead><tbody id="tRows"></tbody></table></div>
       </section>
 
       <section class="screen" id="s-tenant">
@@ -420,6 +702,7 @@ aside{background:#0d1324}
         <div class="page-head"><div><div class="crumb">方案與帳務</div><h1>方案與價格</h1></div>
           <div class="actions"><button class="btn" data-act="newQuote"><i data-lucide="file-pen-line"></i>個別報價</button><button class="btn primary" data-act="newPriceVer"><i data-lucide="plus"></i>新增價格版本</button></div></div>
         <div class="tbl-wrap"><table><thead><tr><th>方案</th><th>社區數</th><th class="num">月費</th><th class="num">年費（九折）</th><th>可用模組</th><th>配額</th><th class="num">租戶數</th><th>銷售狀態</th><th></th></tr></thead><tbody id="pRows"></tbody></table></div>
+        <div class="card" style="margin-top:16px" id="addonCard"></div>
         <div class="grid g-2" style="margin-top:16px">
           <div class="card"><h3><span class="l"><i data-lucide="history"></i>價格版本（P-SUB-10）</span></h3><div class="tbl-wrap"><table><thead><tr><th>方案</th><th>版本</th><th class="num">月費</th><th>生效日</th><th>既有租戶</th><th>狀態</th><th></th></tr></thead><tbody id="pvRows"></tbody></table></div></div>
           <div class="card"><h3><span class="l"><i data-lucide="file-pen-line"></i>個別報價（P-SUB-12）</span></h3><div class="tbl-wrap"><table><thead><tr><th>租戶</th><th>方案</th><th class="num">月費</th><th>原因</th><th>狀態</th><th></th></tr></thead><tbody id="qRows"></tbody></table></div></div>
@@ -544,10 +827,94 @@ aside{background:#0d1324}
 
       <section class="screen" id="s-audit">
         <div class="page-head"><div><div class="crumb">平台設定</div><h1>平台稽核日誌</h1></div>
-          <div class="actions"><input class="input" id="auQ" placeholder="搜尋對象或動作…" style="width:220px"><button class="btn" data-act="exportJob" data-name="平台稽核日誌"><i data-lucide="download"></i>匯出</button></div></div>
+          <div class="actions"><input class="input" id="auQ" placeholder="搜尋對象或動作…" style="width:220px"><button class="btn" data-act="auVerify"><i data-lucide="shield-check"></i>驗證完整性</button><button class="btn" data-act="exportJob" data-name="平台稽核日誌"><i data-lucide="download"></i>匯出</button></div></div>
         <div class="toolbar" id="auChips"></div>
-        <div class="tbl-wrap"><table><thead><tr><th>時間</th><th>人員</th><th>類別</th><th>對象</th><th>動作</th><th>原因</th><th>授權編號</th></tr></thead><tbody id="auRows"></tbody></table></div>
-        <p class="hint" style="margin-top:8px">保存至少 2 年（P-ADM-03）。</p>
+        <div class="tbl-wrap"><table><thead><tr><th>時間</th><th>人員</th><th>類別</th><th>對象</th><th>動作</th><th>原因</th><th>授權編號</th><th>雜湊（串接前一筆）</th></tr></thead><tbody id="auRows"></tbody></table></div>
+        <p class="hint" style="margin-top:8px">保存至少 2 年（P-ADM-03）；只能新增、不能修改或刪除，以雜湊串接防竄改（NF-SVC-08）。</p>
+      </section>
+      <!-- ============ v0.2 新增：退租與資料刪除 ============ -->
+      <section class="screen" id="s-exits">
+        <div class="page-head"><div><div class="crumb">租戶管理</div><h1>退租與資料刪除</h1></div>
+          <div class="actions"><button class="btn primary" data-act="exOrder"><i data-lucide="plus"></i>新增加值服務訂單</button></div></div>
+        <div class="grid g-4" id="exKpi"></div>
+        <div class="card" style="margin-top:16px"><h3><span class="l"><i data-lucide="archive"></i>唯讀保留中的租戶（P-EXIT-02、07）</span><span class="hint">終止後唯讀 90 天；刪除前 30／7／1 天提醒</span></h3>
+          <div class="tbl-wrap"><table><thead><tr><th>租戶</th><th>終止日</th><th>唯讀至</th><th>剩餘</th><th>最終完整備份</th><th>刪除前提醒</th><th>加值服務</th><th></th></tr></thead><tbody id="exRows"></tbody></table></div></div>
+        <div class="grid g-2" style="margin-top:16px">
+          <div class="card"><h3><span class="l"><i data-lucide="package"></i>延長封存與離線交付（P-EXIT-08、09）</span></h3>
+            <div class="tbl-wrap"><table><thead><tr><th>訂單</th><th>租戶</th><th>項目</th><th class="num">金額</th><th>狀態</th><th></th></tr></thead><tbody id="aoRows"></tbody></table></div>
+            <p class="hint">延長封存 1 年＝退租時方案月費 × 2，3 年＝月費 × 5；離線交付（加密外接硬碟）每次 NT$5,000 起（假設價格）。</p></div>
+          <div class="card"><h3><span class="l"><i data-lucide="file-check-2"></i>刪除證明（P-EXIT-10、NF-SAAS-14）</span></h3>
+            <div class="tbl-wrap"><table><thead><tr><th>證明編號</th><th>租戶</th><th>刪除日</th><th>系統備份消滅</th><th></th></tr></thead><tbody id="dcRows"></tbody></table></div></div>
+        </div>
+        <div class="banner" style="margin-top:16px"><i data-lucide="info"></i><span>付款逾期的租戶（唯讀或停權）不會進入刪除流程，資料完整保留且租戶擁有者仍可匯出（P-EXIT-12）。</span></div>
+      </section>
+
+      <!-- ============ 資安中心 ============ -->
+      <section class="screen" id="s-secEvents">
+        <div class="page-head"><div><div class="crumb">資安中心</div><h1>資安事件監控</h1></div>
+          <div class="actions"><button class="btn" data-act="exportJob" data-name="資安事件"><i data-lucide="download"></i>匯出</button></div></div>
+        <div class="grid g-4" id="seKpi"></div>
+        <div class="toolbar" id="seChips" style="margin-top:16px"></div>
+        <div class="tbl-wrap"><table><thead><tr><th>時間</th><th>類型</th><th>等級</th><th>來源</th><th>說明</th><th>自動處置</th><th>狀態</th><th></th></tr></thead><tbody id="seRows"></tbody></table></div>
+        <p class="hint" style="margin-top:8px">登入異常、撞庫偵測、WAF 攔截、大量匯出、權限異常集中收集並告警（NF-SVC-13、NF-AUTH-04）。</p>
+      </section>
+      <section class="screen" id="s-secVulns">
+        <div class="page-head"><div><div class="crumb">資安中心</div><h1>弱點與修補</h1></div>
+          <div class="actions"><button class="btn primary" data-act="newVuln"><i data-lucide="plus"></i>登錄弱點</button></div></div>
+        <div class="banner"><i data-lucide="timer"></i><span>修補時限（NF-SVC-10）：重大（Critical）7 天、高風險（High）30 天、中風險（Medium）90 天、低風險 180 天。來源：SAST、SCA、容器映像掃描、每月 DAST。</span></div>
+        <div class="grid g-4" id="vuKpi"></div>
+        <div class="tbl-wrap" style="margin-top:16px"><table><thead><tr><th>編號</th><th>來源</th><th>嚴重度</th><th>弱點</th><th>元件</th><th>發現日</th><th>修補期限</th><th>負責人</th><th>狀態</th><th></th></tr></thead><tbody id="vuRows"></tbody></table></div>
+      </section>
+      <section class="screen" id="s-secJit">
+        <div class="page-head"><div><div class="crumb">資安中心</div><h1>生產環境存取（JIT）</h1></div>
+          <div class="actions"><button class="btn primary" data-act="newJit"><i data-lucide="plus"></i>申請限時存取</button></div></div>
+        <div class="banner"><i data-lucide="lock"></i><span>工程師預設沒有生產環境權限，需申請限時權限並經核准，到期自動收回，期間操作全程記錄（NF-SVC-11）。生產資料不得複製到開發或測試環境。</span></div>
+        <div class="tbl-wrap"><table><thead><tr><th>編號</th><th>工程師</th><th>存取對象</th><th>原因</th><th>時數</th><th>期間</th><th>核准人</th><th>狀態</th><th></th></tr></thead><tbody id="jitRows"></tbody></table></div>
+      </section>
+      <section class="screen" id="s-secIr">
+        <div class="page-head"><div><div class="crumb">資安中心</div><h1>資安事件應變</h1></div>
+          <div class="actions"><button class="btn" data-act="newDrill"><i data-lucide="flask-conical"></i>記錄演練</button><button class="btn primary" data-act="newIncident"><i data-lucide="plus"></i>登錄資安事件</button></div></div>
+        <div class="banner"><i data-lucide="alarm-clock"></i><span>平台內部目標（NF-SVC-12）：確認個資事故後 <b>24 小時內通知受影響租戶</b>、<b>72 小時內提供初步調查報告</b>；對主管機關與當事人的法定通報時限依律師確認（S10、S13）。每年至少演練一次。</span></div>
+        <div class="card"><h3><span class="l"><i data-lucide="shield-alert"></i>事件登記簿</span></h3>
+          <div class="tbl-wrap"><table><thead><tr><th>編號</th><th>事件</th><th>確認時間</th><th>等級</th><th>涉及個資</th><th>受影響租戶</th><th>通報進度</th><th>狀態</th><th></th></tr></thead><tbody id="irRows"></tbody></table></div></div>
+        <div class="card" style="margin-top:16px"><h3><span class="l"><i data-lucide="flask-conical"></i>應變演練紀錄</span></h3>
+          <div class="tbl-wrap"><table><thead><tr><th>日期</th><th>情境</th><th>結果</th><th>改善事項</th></tr></thead><tbody id="irDrRows"></tbody></table></div></div>
+      </section>
+      <section class="screen" id="s-secPentest">
+        <div class="page-head"><div><div class="crumb">資安中心</div><h1>滲透測試紀錄</h1></div>
+          <div class="actions"><button class="btn primary" data-act="newPentest"><i data-lucide="plus"></i>新增紀錄</button></div></div>
+        <div class="banner"><i data-lucide="calendar-check"></i><span>第三方滲透測試：上市前一次、每年至少一次、重大改版後加做一次（NF-SAAS-05）；高風險項目修補完成才能通過上線門檻 G6。</span></div>
+        <div class="tbl-wrap"><table><thead><tr><th>日期</th><th>類型</th><th>廠商</th><th>範圍</th><th class="num">重大</th><th class="num">高</th><th class="num">中</th><th class="num">低</th><th>狀態</th><th></th></tr></thead><tbody id="penRows"></tbody></table></div>
+      </section>
+
+      <!-- ============ 維運 ============ -->
+      <section class="screen" id="s-slo">
+        <div class="page-head"><div><div class="crumb">維運</div><h1>效能與 SLO</h1></div>
+          <div class="actions"><button class="btn" data-act="exportJob" data-name="SLO 月報"><i data-lucide="download"></i>匯出 SLO 月報</button></div></div>
+        <div class="tabs" id="sloTabs"></div>
+        <div id="sloBody"></div>
+      </section>
+      <section class="screen" id="s-gates">
+        <div class="page-head"><div><div class="crumb">維運</div><h1>上線門檻（資安與效能檢核）</h1></div>
+          <div class="actions"><button class="btn primary" data-act="newRelease"><i data-lucide="plus"></i>建立發布</button></div></div>
+        <div class="banner"><i data-lucide="octagon-alert"></i><span>每次發布前 G1～G7 必須全部通過（重大發布才適用 G5、G6），任何一項未通過即<b>不得上線</b>（需求書 8.8）。</span></div>
+        <div class="card"><h3><span class="l"><i data-lucide="list-checks"></i>檢核項目</span></h3><div id="gtDef" class="grid g-2"></div></div>
+        <div class="tbl-wrap" style="margin-top:16px"><table><thead><tr><th>版本</th><th>預定日</th><th>類型</th><th>內容</th><th>檢核結果（點選失敗項目可重新執行）</th><th>狀態</th><th></th></tr></thead><tbody id="gtRows"></tbody></table></div>
+      </section>
+      <section class="screen" id="s-backup">
+        <div class="page-head"><div><div class="crumb">維運</div><h1>備份與還原</h1></div>
+          <div class="actions"><button class="btn" data-act="newBkDrill"><i data-lucide="flask-conical"></i>記錄演練</button><button class="btn primary" data-act="tenantRestore"><i data-lucide="rotate-ccw"></i>單一租戶還原</button></div></div>
+        <div class="grid g-4" id="bkKpi"></div>
+        <div class="grid g-2" style="margin-top:16px">
+          <div class="card"><h3><span class="l"><i data-lucide="hard-drive"></i>每日完整備份（NF-BAK-01）</span><span class="hint">加密 · 異地 · 保留 35 天 · 不可刪除</span></h3>
+            <div class="tbl-wrap"><table><thead><tr><th>日期</th><th class="num">大小</th><th>加密</th><th>異地</th><th>不可刪除</th><th>到期</th><th></th></tr></thead><tbody id="bkRows"></tbody></table></div>
+            <p class="hint">備份與正式環境使用不同帳號權限，正式環境的管理帳號無法刪除備份（NF-BAK-04，防勒索軟體）。僅顯示最近 7 份。</p></div>
+          <div class="card"><h3><span class="l"><i data-lucide="rotate-ccw"></i>單一租戶時間點還原（NF-BAK-03）</span></h3>
+            <div class="tbl-wrap"><table><thead><tr><th>編號</th><th>租戶</th><th>還原時間點</th><th>方式</th><th>狀態</th><th></th></tr></thead><tbody id="rsRows"></tbody></table></div>
+            <p class="hint">還原以背景工作執行，不影響其他租戶；需再次驗證（NF-AUTH-12）。</p></div>
+        </div>
+        <div class="card" style="margin-top:16px"><h3><span class="l"><i data-lucide="flask-conical"></i>每季還原演練（NF-BAK-04）</span></h3>
+          <div class="tbl-wrap"><table><thead><tr><th>季度</th><th>日期</th><th>範圍</th><th>實際 RTO</th><th>實際 RPO</th><th>結果</th><th>備註</th></tr></thead><tbody id="bdRows"></tbody></table></div></div>
       </section>
     </main>
   </div>
@@ -570,10 +937,10 @@ const PRICE={基本:{入門:3500,標準:8000,進階:16000},專業:{入門:5000,�
 const TIER_RANGE={入門:"1～10",標準:"11～30",進階:"31～60",企業:"60 以上"};
 const TIER_MAX={入門:10,標準:30,進階:60,企業:999};
 const QUOTA={入門:{gb:20,line:3000,sup:"線上回報",sla:24},標準:{gb:60,line:8000,sup:"線上回報＋電話",sla:8},進階:{gb:150,line:15000,sup:"專人窗口",sla:4}};
-const MOD_BASE=["社區／合約／到期提醒","員工／證照／派駐","排班請假","交接日誌","報修工單","事件通報","包裹／訪客","公告","LINE 前台","使用率監控","基本報表"];
+const MOD_BASE=["社區／合約／到期提醒","員工／證照／派駐","排班請假","打卡與出勤","薪資標準匯出","交接日誌","報修工單","事件通報","包裹／訪客","公告","LINE 前台（共用／自有帳號）","使用率監控","基本報表"];
 const MOD_PRO=["督導稽核與改善單","巡邏打點","設備保養／清潔檢核","公設預約","廠商管理","進階報表"];
-const MOD_FLAG=["住戶完整資料","管理費收繳","社區財務與管委會月報","公司經營分析"];
-const ALLMODS=[...MOD_BASE,...MOD_PRO,...MOD_FLAG,"打卡（加購）"];
+const MOD_FLAG=["社區帳務模組（住戶完整資料、管理費收繳、社區財務與管委會月報）","公司經營分析"];
+const ALLMODS=[...MOD_BASE,...MOD_PRO,...MOD_FLAG];
 let PLANS=[];EDS.forEach(e=>TIERN.forEach(t=>PLANS.push({id:e+"-"+t,ed:e,tier:t,mods:e==="基本"?[...MOD_BASE]:e==="專業"?[...MOD_BASE,...MOD_PRO]:[...MOD_BASE,...MOD_PRO,...MOD_FLAG],gb:QUOTA[t].gb,line:QUOTA[t].line,sale:true})));
 let PVERS=PLANS.map(p=>({pid:p.id,v:1,m:PRICE[p.ed][p.tier],eff:"2026/01/01",policy:"—",st:"適用中"}));
 const ONB_ITEMS=["公司與法人資料","組織架構","建立社區","匯入員工","角色與帳號","LINE 綁定","第一筆交接日誌","教育訓練"];
@@ -661,7 +1028,7 @@ cm("P01","T007","INV-2610-07","2026/10/05",12000,15,1800,"待撥付");
 cm("P01","T001","INV-2611-01","2026/11/03",8000,15,1200,"待撥付");
 let PAYOUTS=[{id:"PO-2604",pid:"P02",d:"2026/04/15",voucher:"匯款單 0415-01.pdf",pinv:"收據 TPA-115-031"},{id:"PO-2609",pid:"P01",d:"2026/09/15",voucher:"匯款單 0915-03.pdf",pinv:"發票 QZ-21883410"},{id:"PO-2610",pid:"P01",d:"2026/10/15",voucher:"匯款單 1015-02.pdf",pinv:"發票 QZ-21884552"}];
 
-let QUOTES=[{tid:"T011",plan:"旗艦-進階",m:33000,reason:"52 社區、年繳三年，另加打卡模組試行",st:"已核准",by:"張子豪"},{tid:"L06",plan:"專業-進階",m:22500,reason:"聯安保全 35 社區，年繳再 9 折",st:"待核准",by:"林育成"}];
+let QUOTES=[{tid:"T011",plan:"旗艦-進階",m:33000,reason:"52 社區、年繳三年，含打卡與出勤、社區帳務模組",st:"已核准",by:"張子豪"},{tid:"L06",plan:"專業-進階",m:22500,reason:"聯安保全 35 社區，年繳再 9 折",st:"待核准",by:"林育成"}];
 TENANTS.find(t=>t.id==="T011").custom=33000;
 let COUPONS=[
  {code:"LAUNCH2026",kind:"百分比",val:20,plans:"全部",from:"2026/07/01",to:"2026/12/31",used:3,max:20,on:true},
@@ -796,7 +1163,7 @@ const tName=id=>{const t=tById(id);if(t)return t.s;const l=LEADS.find(x=>x.id===
 const planOf=t=>PLANS.find(p=>p.id===t.ed+"-"+t.tier);
 const listPrice=(ed,tier)=>{const v=PVERS.filter(x=>x.pid===ed+"-"+tier&&x.st==="適用中");return v.length?v[v.length-1].m:PRICE[ed][tier];};
 const tPrice=t=>t.custom||t.locked||listPrice(t.ed,t.tier);
-const tMRR=t=>["正式","付款逾期"].includes(t.st)?(t.cycle==="年繳"?tPrice(t)*.9:tPrice(t)):0;
+const tMRR=t=>{if(!["正式","付款逾期"].includes(t.st))return 0;const base=t.cycle==="年繳"?tPrice(t)*.9:tPrice(t);return base+(t.addon&&t.ed!=="旗艦"?addonPrice(t.tier):0);};
 const overdueInvs=t=>INVS.filter(i=>i.tid===t.id&&i.st==="未付"&&diff(TODAY,i.due)>0);
 const overdueDays=t=>Math.max(0,...overdueInvs(t).map(i=>diff(TODAY,i.due)));
 const openTickets=t=>TICKETS.filter(x=>x.tid===t.id&&!["已解決","結案"].includes(x.st)).length;
@@ -873,7 +1240,7 @@ function renderFunnel(){const fs=val("fSrc")||"全部來源",fp=val("fPtn")||"�
 let tF="全部",tQ="";
 function renderTenants(){const sts=["全部","試用中","正式","付款逾期","唯讀","停權","已終止"];$("#tChips").innerHTML=chips(sts,tF,"tF")+(tQ?`<button class="chip on" data-act="clearQ">搜尋：${tQ} ✕</button>`:"");
  const ls=TENANTS.filter(t=>(tF==="全部"||t.st===tF)&&(!tQ||t.n.includes(tQ)||t.code.includes(tQ)||t.s.includes(tQ)));
- $("#tRows").innerHTML=ls.length?ls.map(t=>`<tr class="click" data-act="tenantOpen" data-t="${t.id}"><td><b>${t.s}</b><br><small class="hint">${t.n}</small></td><td>${t.code}</td><td>${t.ed}・${t.tier}${t.custom?" "+tag("個別報價","t-info"):""}</td><td>${stTag(t.st)}</td><td class="num">${t.sites}</td><td class="num">${t.users}</td><td class="num">${tMRR(t)?money(tMRR(t)):"—"}</td><td>${nextBillDate(t)}</td><td>${t.act}</td><td>${hTag(t)}</td></tr>`).join(""):empty(10,"沒有符合的租戶");}
+ $("#tRows").innerHTML=ls.length?ls.map(t=>`<tr class="click" data-act="tenantOpen" data-t="${t.id}"><td><b>${t.s}</b><br><small class="hint">${t.n}</small></td><td>${t.code}</td><td>${t.ed}・${t.tier}${t.custom?" "+tag("個別報價","t-info"):""} ${addonTag(t)}</td><td>${lineTag(t)}</td><td>${stTag(t.st)}</td><td class="num">${t.sites}</td><td class="num">${t.users}</td><td class="num">${tMRR(t)?money(tMRR(t)):"—"}</td><td>${nextBillDate(t)}</td><td>${t.act}</td><td>${hTag(t)}</td></tr>`).join(""):empty(11,"沒有符合的租戶");}
 let curT="T001",tTab="info";
 const TTABS=[["info","基本資料與法人"],["plan","方案"],["bill","帳單"],["usage","用量"],["adopt","使用率"],["onb","導入進度"],["sup","客服"],["log","聯繫紀錄"],["ptn","推薦夥伴"],["hist","異動紀錄"]];
 const SITE_NAMES={T001:["春暉苑","青山大境","河畔晴空","森林綠園","星河廣場","雲頂閱","翠堤灣","和平新城"]};
@@ -885,8 +1252,8 @@ function renderTenant(){const t=tById(curT)||TENANTS[0];const p=planOf(t);
  $("#tKpi").innerHTML=kpi("layers","方案",`${t.ed}・${t.tier}`,`月費 ${money(tPrice(t))}${t.cycle==="年繳"?"（年繳九折）":""}`)+kpi("map-pin","服務社區",`${t.sites} / ${TIER_MAX[t.tier]}`,`使用者 ${t.users}（不限）`)+kpi("activity","使用率",t.use+"%",`LINE 綁定率 ${t.line}%`)+kpi("heart-pulse","健康度",health(t),`逾期 ${overdueDays(t)} 天 · 未結客服 ${openTickets(t)}`);
  $("#tTabs").innerHTML=TTABS.map(([k,l])=>`<button data-act="tTab" data-tab="${k}" class="${k===tTab?"on":""}">${l}</button>`).join("");
  let h="";
- if(tTab==="info")h=`<div class="grid g-2"><div class="card"><h3><span class="l"><i data-lucide="building-2"></i>基本資料</span><button class="btn sm" data-act="editTenant">編輯</button></h3><dl class="dl"><dt>租戶代碼</dt><dd>${t.code}</dd><dt>聯絡人</dt><dd>${t.ct.n} · ${t.ct.tel}</dd><dt>Email</dt><dd>${t.ct.mail}</dd><dt>建立日</dt><dd>${t.since}</dd><dt>負責業務</dt><dd>${t.sales}</dd><dt>推薦夥伴</dt><dd>${t.ptn?pById(t.ptn).n:"—"}</dd><dt>計費週期</dt><dd>${t.cycle}</dd><dt>優惠碼</dt><dd>${t.coupon||"—"}</dd></dl></div><div class="card"><h3><span class="l"><i data-lucide="landmark"></i>法人（${t.ents.length}）</span><span class="hint">由租戶自行維護</span></h3>${t.ents.map(e=>`<div class="row"><span>${e.n}</span><span class="hint">統編 ${e.tax}</span></div>`).join("")}</div></div>`;
- if(tTab==="plan"){const vs=PVERS.filter(v=>v.pid===p.id);h=`<div class="grid g-2"><div class="card"><h3><span class="l"><i data-lucide="layers"></i>目前方案</span><span class="actions"><button class="btn sm" data-act="applyCoupon">套用優惠碼</button><button class="btn sm primary" data-act="changePlan">調整方案</button></span></h3><dl class="dl"><dt>版本／級距</dt><dd>${t.ed}版・${t.tier}（${TIER_RANGE[t.tier]} 社區）</dd><dt>月費</dt><dd>${money(tPrice(t))} ${t.custom?tag("個別報價","t-info"):t.locked?tag("保留原價","t-info"):""}</dd><dt>表定價格</dt><dd>${money(listPrice(t.ed,t.tier))}（價格版本 v${vs.length?vs[vs.length-1].v:1}）</dd><dt>可用模組</dt><dd style="white-space:normal">${p.mods.join("、")}</dd><dt>配額</dt><dd>儲存 ${p.gb} GB · LINE 推播 ${fmt(p.line)} 則／月 · 客服：${QUOTA[t.tier].sup}</dd></dl></div><div class="card"><h3><span class="l"><i data-lucide="history"></i>方案異動歷史（P-SUB-08）</span></h3><ul class="timeline">${t.hist.filter(x=>/方案|開通|建立/.test(x.txt)).map(x=>`<li><b>${x.txt}</b><small>${x.d}</small></li>`).join("")}</ul></div></div>`;}
+ if(tTab==="info")h=`<div class="grid g-2"><div class="card"><h3><span class="l"><i data-lucide="building-2"></i>基本資料</span><button class="btn sm" data-act="editTenant">編輯</button></h3><dl class="dl"><dt>租戶代碼</dt><dd>${t.code}</dd><dt>聯絡人</dt><dd>${t.ct.n} · ${t.ct.tel}</dd><dt>Email</dt><dd>${t.ct.mail}</dd><dt>建立日</dt><dd>${t.since}</dd><dt>負責業務</dt><dd>${t.sales}</dd><dt>推薦夥伴</dt><dd>${t.ptn?pById(t.ptn).n:"—"}</dd><dt>LINE 官方帳號</dt><dd>${t.lineMode==="自有"?`${lineTag(t)} ${t.lineCh.at} · Channel ${t.lineCh.ch}<br><small class="hint">Secret／Token 存於金鑰管理服務（${t.lineCh.kms}），Webhook 驗證 ${t.lineCh.verified}；訊息費由租戶支付</small>`:`${lineTag(t)} 平台共用帳號 @pcmp-ops · 受方案推播配額限制`}</dd><dt>計費週期</dt><dd>${t.cycle}</dd><dt>優惠碼</dt><dd>${t.coupon||"—"}</dd></dl></div><div class="card"><h3><span class="l"><i data-lucide="landmark"></i>法人（${t.ents.length}）</span><span class="hint">由租戶自行維護</span></h3>${t.ents.map(e=>`<div class="row"><span>${e.n}</span><span class="hint">統編 ${e.tax}</span></div>`).join("")}</div></div>`;
+ if(tTab==="plan"){const vs=PVERS.filter(v=>v.pid===p.id);h=`<div class="grid g-2"><div class="card"><h3><span class="l"><i data-lucide="layers"></i>目前方案</span><span class="actions">${t.ed!=="旗艦"?`<button class="btn sm" data-act="addonToggle">${t.addon?"取消加購帳務模組":"加購帳務模組"}</button>`:""}<button class="btn sm" data-act="applyCoupon">套用優惠碼</button><button class="btn sm primary" data-act="changePlan">調整方案</button></span></h3><dl class="dl"><dt>版本／級距</dt><dd>${t.ed}版・${t.tier}（${TIER_RANGE[t.tier]} 社區）</dd><dt>月費</dt><dd>${money(tPrice(t))} ${t.custom?tag("個別報價","t-info"):t.locked?tag("保留原價","t-info"):""}</dd><dt>表定價格</dt><dd>${money(listPrice(t.ed,t.tier))}（價格版本 v${vs.length?vs[vs.length-1].v:1}）</dd><dt>可用模組</dt><dd style="white-space:normal">${p.mods.join("、")}</dd><dt>社區帳務模組</dt><dd>${t.ed==="旗艦"?tag("旗艦版內含","t-ok"):t.addon?tag("已加購","t-info")+" 月費 "+money(addonPrice(t.tier)):tag("未加購","t-mute")+` <small class="hint">加購價 ${money(addonPrice(t.tier))}／月</small>`}</dd><dt>配額</dt><dd>儲存 ${p.gb} GB · LINE 推播 ${fmt(p.line)} 則／月 · 客服：${QUOTA[t.tier].sup}</dd></dl></div><div class="card"><h3><span class="l"><i data-lucide="history"></i>方案異動歷史（P-SUB-08）</span></h3><ul class="timeline">${t.hist.filter(x=>/方案|開通|建立/.test(x.txt)).map(x=>`<li><b>${x.txt}</b><small>${x.d}</small></li>`).join("")}</ul></div></div>`;}
  if(tTab==="bill"){const ls=INVS.filter(i=>i.tid===t.id);h=`<div class="toolbar"><button class="btn" data-act="newCharge" data-t="${t.id}"><i data-lucide="plus"></i>新增一次性費用</button></div><div class="tbl-wrap"><table><thead><tr><th>帳單</th><th>期間</th><th>項目</th><th class="num">金額</th><th>到期日</th><th>狀態</th><th>收款日</th></tr></thead><tbody>${ls.length?ls.map(i=>`<tr class="click" data-act="invOpen" data-i="${i.id}"><td>${i.id}</td><td>${i.period}</td><td>${i.kind}</td><td class="num">${money(i.amt-i.credit)}</td><td>${i.due}</td><td>${invTag(i)}</td><td>${i.paidOn||"—"}</td></tr>`).join(""):empty(7,"尚無帳單（試用中不計費）")}</tbody></table></div>`;}
  if(tTab==="usage"){const u=[["LINE 推播（本月）",t.push,p.line,"則"],["儲存空間",t.gb,p.gb,"GB"],["服務社區",t.sites,TIER_MAX[t.tier],"個"]];h=`<div class="card">${u.map(([l,v,q,un])=>`<div class="bar-row" style="grid-template-columns:150px 1fr 160px"><span>${l}</span><div class="bar"><i style="width:${Math.min(100,v/q*100)}%;${v/q>.9?"background:var(--bad)":""}"></i></div><span class="num">${fmt(v)} / ${fmt(q)} ${un}</span></div>`).join("")}<p class="hint">使用者帳號數不限。推播接近配額 90% 時自動通知租戶擁有者（P-LINE-09）。</p></div>`;}
  if(tTab==="adopt"){const su=siteUsage(t);h=`<div class="card"><h3><span class="l"><i data-lucide="activity"></i>各社區近 7 天使用狀況</span><span class="hint">資料來源：租戶使用率彙總（P-ADOPT）</span></h3><div class="tbl-wrap"><table><thead><tr><th>社區</th><th>活躍天數</th><th>使用率</th><th>LINE 綁定率</th></tr></thead><tbody>${su.map(s=>`<tr><td>${s.n}</td><td>${s.days} / 7 天</td><td><div class="progress"><div class="bar"><i style="width:${s.a}%"></i></div>${s.a}%</div></td><td>${s.line}%</td></tr>`).join("")}</tbody></table></div></div>`;}
@@ -951,7 +1318,7 @@ function renderMonitor(){if(!$("#monT").options.length)$("#monT").innerHTML=`<op
  const sel=monT?[tById(monT)]:TENANTS.filter(t=>t.st!=="已終止");
  if(mTab==="status"){const k=monT?Number(monT.slice(1)):0;h=`<div class="grid g-4">${kpi("gauge","API 回應時間 p95",(380+k*17)+" ms","目標 < 2,000 ms")}${kpi("bug","錯誤率",(0.3+k*.05).toFixed(2)+"%","告警門檻 "+MTHR.err+"%")}${kpi("shield-check","本月可用率","99.97%","目標 ≥ 99.5%")}${kpi("list","佇列待處理",JOBS.filter(j=>["排隊","執行中"].includes(j.st)).length,"告警門檻 "+MTHR.queue)}</div><div class="card" style="margin-top:16px"><h3><span class="l"><i data-lucide="activity"></i>${monT?tName(monT):"全平台"} 近 12 小時錯誤率（%）</span></h3>${bars([.2,.3,.25,.4,.35,.3,.6,1.2,.5,.3,.28,.31].map(v=>v*10000),["23","00","01","02","03","04","05","06","07","08","09","10"])}<p class="hint">原型：縱軸以 ×10,000 顯示</p></div>`;}
  if(mTab==="jobs"){const js=JOBS.filter(j=>!monT||j.tid===monT||!j.tid);h=`<div class="tbl-wrap"><table><thead><tr><th>工作</th><th>類型</th><th>租戶</th><th>開始</th><th>耗時</th><th>狀態</th><th>訊息</th><th></th></tr></thead><tbody>${js.map(j=>`<tr><td>${j.id}</td><td>${j.type}</td><td>${j.tid?tName(j.tid):"全平台"}</td><td>${j.at}</td><td>${j.dur}</td><td>${stTag(j.st)}</td><td style="white-space:normal">${j.msg}</td><td>${j.st==="失敗"?`<button class="btn sm primary" data-act="jobRetry" data-j="${j.id}">重試</button>`:""}${j.st==="排隊"?`<button class="btn sm" data-act="jobCancel" data-j="${j.id}">取消</button>`:""}</td></tr>`).join("")}</tbody></table></div>`;}
- if(mTab==="line"){const tot=TENANTS.reduce((a,t)=>a+t.push,0);const proj=Math.round(tot/6*30);const cost=proj<=3000?800:proj<=6000?4000:4000+(proj-6000)*.2;h=`<div class="grid g-4">${kpi("message-circle","本月累計推播",fmt(tot)+" 則","全平台共用官方帳號")}${kpi("trending-up","預估月底",fmt(proj)+" 則","依前 6 天推估")}${kpi("wallet","預估訊息費",money(cost),"依 LINE 官方方案試算，以官方公告為準")}${kpi("x-circle","LINE API 失敗率","0.4%","門檻 "+MTHR.linefail+"%")}</div><div class="tbl-wrap" style="margin-top:16px"><table><thead><tr><th>租戶</th><th class="num">今日</th><th class="num">本月</th><th class="num">配額</th><th>使用比例</th><th class="num">預估月底</th></tr></thead><tbody>${sel.map(t=>{const q=planOf(t).line;const pr=Math.round(t.push/6*30);return `<tr><td>${t.s}</td><td class="num">${fmt(Math.round(t.push/6))}</td><td class="num">${fmt(t.push)}</td><td class="num">${fmt(q)}</td><td><div class="progress"><div class="bar"><i style="width:${Math.min(100,t.push/q*100)}%"></i></div>${Math.round(t.push/q*100)}%</div></td><td class="num">${fmt(pr)} ${pr>q?tag("將超出","t-bad"):""}</td></tr>`}).join("")}</tbody></table></div>`;}
+ if(mTab==="line"){const all=TENANTS.filter(t=>t.st!=="已終止");const tot=all.filter(t=>t.lineMode!=="自有").reduce((a,t)=>a+t.push,0);const own=all.filter(t=>t.lineMode==="自有");const ownTot=own.reduce((a,t)=>a+t.push,0);const proj=Math.round(tot/6*30);const cost=proj<=3000?800:proj<=6000?4000:4000+(proj-6000)*.2;h=`<div class="grid g-4">${kpi("message-circle","共用帳號本月推播",fmt(tot)+" 則","平台支付訊息費")}${kpi("trending-up","共用帳號預估月底",fmt(proj)+" 則","依前 6 天推估")}${kpi("wallet","預估平台訊息費",money(cost),"只計共用帳號；以 LINE 官方公告為準")}${kpi("badge-check","自有帳號租戶",own.length+" 家","本月 "+fmt(ownTot)+" 則，由租戶支付、不計入平台費用")}</div><div class="tbl-wrap" style="margin-top:16px"><table><thead><tr><th>租戶</th><th>帳號</th><th class="num">今日</th><th class="num">本月</th><th class="num">配額</th><th>使用比例</th><th class="num">預估月底</th></tr></thead><tbody>${sel.map(t=>{const pr=Math.round(t.push/6*30);if(t.lineMode==="自有")return `<tr><td>${t.s}</td><td>${lineTag(t)} ${t.lineCh.at}</td><td class="num">${fmt(Math.round(t.push/6))}</td><td class="num">${fmt(t.push)}</td><td class="num">—</td><td><span class="hint">不受平台配額限制（租戶自付）</span></td><td class="num">${fmt(pr)}</td></tr>`;const q=planOf(t).line;return `<tr><td>${t.s}</td><td>${lineTag(t)}</td><td class="num">${fmt(Math.round(t.push/6))}</td><td class="num">${fmt(t.push)}</td><td class="num">${fmt(q)}</td><td><div class="progress"><div class="bar"><i style="width:${Math.min(100,t.push/q*100)}%"></i></div>${Math.round(t.push/q*100)}%</div></td><td class="num">${fmt(pr)} ${pr>q?tag("將超出","t-bad"):""}</td></tr>`}).join("")}</tbody></table></div><p class="hint">P-LINE-01：共用帳號訊息費由平台吸收並受 P-LINE-09 配額限制；自有帳號由租戶自行向 LINE 支付。</p>`;}
  if(mTab==="storage")h=`<div class="tbl-wrap"><table><thead><tr><th>租戶</th><th class="num">使用量（GB）</th><th class="num">配額</th><th>使用比例</th></tr></thead><tbody>${sel.map(t=>{const q=planOf(t).gb;return `<tr><td>${t.s}</td><td class="num">${t.gb}</td><td class="num">${q}</td><td><div class="progress"><div class="bar"><i style="width:${Math.min(100,t.gb/q*100)}%;${t.gb/q>.9?"background:var(--bad)":""}"></i></div>${Math.round(t.gb/q*100)}%${t.gb>q?" "+tag("超出","t-bad"):""}</div></td></tr>`}).join("")}</tbody></table></div>`;
  if(mTab==="alerts")h=`<div class="grid g-2"><div class="card"><h3><span class="l"><i data-lucide="bell-ring"></i>告警紀錄</span></h3>${MALERTS.map((a,i)=>`<div class="row"><span>${tag(a.lv,a.lv==="重要"?"t-bad":"t-mute")} ${a.x}<br><small class="hint">${a.t}</small></span>${a.done?tag("已處理","t-ok"):`<button class="btn sm" data-act="alertDone" data-i="${i}">標記已處理</button>`}</div>`).join("")}</div><div class="card"><h3><span class="l"><i data-lucide="sliders-horizontal"></i>告警門檻（P-MON-05）</span></h3><div class="form-grid">${F("錯誤率（%）",I("thErr",MTHR.err,"","number"))}${F("佇列堆積（筆）",I("thQ",MTHR.queue,"","number"))}${F("LINE API 失敗率（%）",I("thL",MTHR.linefail,"","number"))}${F("通知對象",S("thTo",["平台管理員","平台管理員＋客服"],"平台管理員"))}</div><div style="margin-top:12px;text-align:right"><button class="btn primary" data-act="saveThr">儲存門檻</button></div></div></div>`;
  $("#mBody2").innerHTML=h;}
@@ -966,7 +1333,7 @@ function renderParams(){const P=PARAMS;$("#paramBox").innerHTML=`<div class="car
 let auF="全部",auQ="";
 function renderAudit(){const cats=["全部",...new Set(AUDIT.map(a=>a.cat))];$("#auChips").innerHTML=chips(cats,auF,"auF");
  const ls=AUDIT.filter(a=>(auF==="全部"||a.cat===auF)&&(!auQ||(a.obj+a.act+a.who).includes(auQ)));
- $("#auRows").innerHTML=ls.length?ls.map(a=>`<tr><td>${a.t}</td><td>${a.who}</td><td>${a.cat}</td><td>${a.obj}</td><td style="white-space:normal">${a.act}</td><td style="white-space:normal">${a.reason||"—"}</td><td>${a.g||"—"}</td></tr>`).join(""):empty(7,"沒有符合的紀錄");}
+ const ch=auditChain();$("#auRows").innerHTML=ls.length?ls.map(a=>`<tr><td>${a.t}</td><td>${a.who}</td><td>${a.cat}</td><td>${a.obj}</td><td style="white-space:normal">${a.act}</td><td style="white-space:normal">${a.reason||"—"}</td><td>${a.g||"—"}</td><td class="hash">${ch.get(a).h}<br>← ${ch.get(a).prev}</td></tr>`).join(""):empty(8,"沒有符合的紀錄");}
 
 /* =====================================================================
    業務邏輯
@@ -1173,17 +1540,353 @@ $("#docQ").addEventListener("input",e=>{docQ=e.target.value.trim();renderContent
 $("#auQ").addEventListener("input",e=>{auQ=e.target.value.trim();renderAudit();});
 const ov=$("#ov");new MutationObserver(()=>{if(!ov.classList.contains("on"))ov.style.background="";}).observe(ov,{attributes:true});
 
-function renderAll(){renderDash();renderReports();renderLeads();renderApps();renderFunnel();renderTenants();renderTenant();renderHealth();renderGrants();renderPlans();renderCoupons();renderBilling();renderDunning();renderPartners();renderComms();renderPortal();renderSupport();renderAnn();renderTpl();renderContent();renderReleases();renderTerms();renderMonitor();renderStaff();renderFlags();renderAudit();icons();}
+
+/* =====================================================================
+   v0.2 新增（需求書 v0.4）：資安、效能、備份、退租、加購模組、LINE 自有帳號
+   ===================================================================== */
+const ENG=["王柏翰","李承恩","陳映如"];
+const nowMs=()=>Date.now();
+const hm=d=>String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");
+const fmtDur=ms=>ms<1000?Math.round(ms)+" ms":ms<60000?(ms/1000).toFixed(1)+" 秒":ms<3600000?Math.round(ms/60000)+" 分":(ms/3600000).toFixed(1)+" 小時";
+
+/* ---------- 加購模組與 LINE 帳號 ---------- */
+let ADDON_VERS=["入門","標準","進階"].map(t=>({tier:t,v:1,m:{入門:3000,標準:6000,進階:11000}[t],eff:"2026/11/01",st:"適用中"}));
+const addonPrice=tier=>{const v=ADDON_VERS.filter(x=>x.tier===tier&&x.st==="適用中");return v.length?v[v.length-1].m:0;};
+const hasAddon=t=>t.ed==="旗艦"||!!t.addon;
+const addonTag=t=>t.ed==="旗艦"?tag("帳務：內含","t-ok"):t.addon?tag("帳務：加購","t-info"):"";
+TENANTS.forEach(t=>{t.lineMode="共用";t.lineCh=null;t.addon=false;});
+[["T003","@risun-ops","2007712345"],["T006","@dingfeng","2007788120"],["T011","@guolian-ops","2007700431"]].forEach(([id,at,ch])=>{const t=tById(id);t.lineMode="自有";t.lineCh={at,ch,verified:"2026/10/02",kms:"kms://tenant/"+t.code+"/line"};});
+["T002","T012","T005"].forEach(id=>tById(id).addon=true);
+const lineTag=t=>t.lineMode==="自有"?tag("自有","t-info"):tag("共用","t-mute");
+TENANTS.push(T("T014","renai","仁愛社區管理有限公司","仁愛社區","基本","入門",0,0,"已終止","月繳","2025/11/01",null,"2026/08/10",0,0,0,0.7,"吳佩珊",null,[["仁愛社區管理有限公司","27750912"]],["游小姐","02-2709-3311","yu@renai.example"],8));
+TENANTS.push(T("T015","guanghua","光華物業有限公司","光華物業","專業","入門",0,0,"已終止","月繳","2025/09/01",null,"2026/07/01",0,0,0,0,"林育成",null,[["光華物業有限公司","61880421"]],["何經理","02-2321-8890","ho@guanghua.example"],8));
+tById("T014").hist.push({d:"2026/08/10",txt:"租戶申請終止，資料唯讀保留 90 天"});
+tById("T015").hist.push({d:"2026/07/01",txt:"租戶申請終止"},{d:"2026/09/29",txt:"唯讀期滿，已刪除資料（DEL-2026-0002）"});
+TENANTS.forEach(t=>{if(!t.lineMode)t.lineMode="共用";});
+tById("T005").ents[0].tax="42210989";
+
+/* ---------- 登入狀態 ---------- */
+let LOGIN={pwd:"Ops#Platform2026",fail:0,lockUntil:0,net:"ok",mfa:"pk",at:"2026/11/06 08:02"};
+let STEP_OK=0,SU_M="pk";
+
+/* ---------- 試用申請檢核 ---------- */
+const taxOk=s=>{if(!/^\d{8}$/.test(s||""))return false;const w=[1,2,1,2,1,2,4,1];let sum=0;for(let i=0;i<8;i++){const p=+s[i]*w[i];sum+=Math.floor(p/10)+p%10;}return sum%5===0||(s[6]==="7"&&(sum+1)%5===0);};
+APPS=[
+ {id:"AP-1106-01",d:"2026/11/06",n:"立德物業管理有限公司",tax:"48812230",ct:"林小姐",tel:"02-2365-7788",mail:"lin@lide.example",sites:"1～10",tool:"Excel＋LINE 群組",ref:"HY-CHEN",st:"待審核",bot:.94,ev:true,ip:"114.32.18.7"},
+ {id:"AP-1105-02",d:"2026/11/05",n:"瑞展公寓大廈管理維護有限公司",tax:"50923314",ct:"王先生",tel:"04-2652-1100",mail:"wang@ruizhan.example",sites:"11～30",tool:"紙本",ref:"",st:"待審核",bot:.88,ev:false,ip:"61.230.4.112"},
+ {id:"AP-1105-01",d:"2026/11/05",n:"宜家社區管理有限公司",tax:"42210989",ct:"許小姐",tel:"02-8952-3300",mail:"hsu@yijia.example",sites:"1～10",tool:"試用中",ref:"",st:"待審核",bot:.91,ev:true,ip:"36.229.10.5"},
+ {id:"AP-1104-02",d:"2026/11/04",n:"百川物業管理顧問有限公司",tax:"61880427",ct:"羅經理",tel:"03-332-9090",mail:"luo@baichuan.example",sites:"1～10",tool:"Excel",ref:"",st:"待審核",bot:.83,ev:true,ip:"1.170.66.20"},
+ {id:"AP-1103-03",d:"2026/11/03",n:"測試公司",tax:"12345678",ct:"test",tel:"0900-000-000",mail:"test@test.example",sites:"1～10",tool:"",ref:"",st:"已婉拒",reason:"疑似測試資料、未通過人機驗證",bot:.12,ev:false,ip:"198.51.100.23"},
+];
+const TRIAL_HIST=[{n:"百川物業管理顧問有限公司",tax:"61880427",mail:"luo@baichuan.example",d:"2026/08/20",lead:"L09"}];
+let BLOCKED_IPS=[
+ {ip:"198.51.100.23",why:"1 小時內 23 次試用申請（上限 5 次）",at:"11/06 03:12",until:"11/06 04:12",st:"封鎖中"},
+ {ip:"203.0.113.77",why:"人機驗證連續失敗 40 次",at:"11/05 22:40",until:"11/06 22:40",st:"封鎖中"},
+ {ip:"192.0.2.15",why:"同一 Email 網域 1 小時內 9 次申請",at:"11/04 15:02",until:"11/04 16:02",st:"已解除"},
+];
+function dupOf(a){const t=TENANTS.find(t=>t.ents.some(e=>e.tax===a.tax)||t.ct.mail===a.mail);if(t)return{txt:`${t.st==="試用中"?"試用中租戶":t.st==="已終止"?"已終止租戶":"既有租戶"} ${t.s}（${t.code}）`,act:"tenantOpen",k:"t",v:t.id};const h=TRIAL_HIST.find(h=>(h.tax===a.tax||h.mail===a.mail)&&diff(TODAY,h.d)<=365);if(h)return{txt:`12 個月內曾試用（${h.d}）`,act:"go",k:"go",v:"leads"};return null;}
+function appChecks(a){const d=dupOf(a);return `${tag("人機 "+a.bot.toFixed(2),a.bot>=.5?"t-ok":"t-bad")} ${a.ev?tag("Email 已驗證","t-ok"):tag("Email 未驗證","t-warn")} ${taxOk(a.tax)?tag("統編 ✓","t-ok"):tag("統編檢查碼錯誤","t-bad")}${d?` <button class="tag t-warn tagbtn" data-act="${d.act}" data-${d.k}="${d.v}">重複：${d.txt}</button>`:""}`;}
+renderApps=function(){$("#appChips").innerHTML=chips(["全部","待審核","已建立","已婉拒"],appF,"appF");const ls=APPS.filter(a=>appF==="全部"||a.st===appF);
+ $("#appRows").innerHTML=ls.length?ls.map(a=>{const p=PARTNERS.find(p=>p.code===a.ref);return `<tr class="click" data-act="appOpen" data-a="${a.id}"><td>${a.id}</td><td>${a.d}</td><td>${a.n}<br><small class="hint">統編 ${a.tax}</small></td><td>${a.ct}</td><td class="num">${a.sites}</td><td>${a.ref?a.ref+(p?` <span class="hint">${p.n}</span>`:` <span class="hint">查無此碼</span>`):"—"}</td><td style="white-space:normal;max-width:300px">${appChecks(a)}</td><td>${stTag(a.st)}</td><td>${a.st==="待審核"?(a.ev?`<button class="btn sm primary" data-act="appApprove" data-a="${a.id}">核准開通</button>`:`<button class="btn sm" data-act="appResend" data-a="${a.id}">重寄驗證信</button>`):""}</td></tr>`}).join(""):empty(9,"沒有符合的申請");
+ $("#ipRows").innerHTML=BLOCKED_IPS.map((b,i)=>`<tr><td><code>${b.ip}</code></td><td style="white-space:normal">${b.why}</td><td>${b.at}</td><td>${b.until}</td><td>${tag(b.st,b.st==="封鎖中"?"t-bad":"t-mute")}</td><td>${b.st==="封鎖中"?`<button class="btn sm" data-act="ipUnblock" data-i="${i}">解除封鎖</button>`:""}</td></tr>`).join("");};
+
+/* ---------- 資安中心資料 ---------- */
+let SEC_EVENTS=[
+ {id:"SE-1106-04",t:"11/06 09:58",type:"大量匯出",lv:"中",src:"鼎峰物業 · 蔡財務長",x:"10 分鐘內匯出住戶資料 3 次（共 4,820 筆）",auto:"已通知租戶擁有者",st:"待確認"},
+ {id:"SE-1106-03",t:"11/06 03:14",type:"撞庫偵測",lv:"高",src:"412 個來源 IP（多國）",x:"10 分鐘內 18,420 次登入失敗，涉及 3,102 個帳號",auto:"已自動啟用人機驗證、IP 限流加嚴",st:"處理中"},
+ {id:"SE-1106-02",t:"11/06 02:40",type:"WAF 攔截",lv:"中",src:"198.51.100.0/24",x:"SQL 注入嘗試 1,240 次（/api/sites）",auto:"已攔截並封鎖 24 小時",st:"已確認"},
+ {id:"SE-1105-07",t:"11/05 21:12",type:"登入異常",lv:"中",src:"大安居 · 李主任",x:"新國家登入（越南），已通過 2FA",auto:"已通知本人與租戶管理者",st:"待確認"},
+ {id:"SE-1105-03",t:"11/05 10:05",type:"權限異常",lv:"低",src:"國聯保全 · 系統管理員",x:"單日變更 46 位使用者角色",auto:"—",st:"已確認"},
+];
+let seF="全部";
+const SLA={Critical:7,High:30,Medium:90,Low:180};
+let VULNS=[
+ {id:"V-231",src:"SCA",sev:"Critical",title:"PDF 產生套件遠端程式執行弱點（示意）",comp:"report-service",found:"2026/11/01",owner:"王柏翰",st:"修補中"},
+ {id:"V-228",src:"容器掃描",sev:"High",title:"基底映像 OpenSSL 版本過舊（示意）",comp:"api-gateway",found:"2026/10/02",owner:"李承恩",st:"修補中"},
+ {id:"V-226",src:"SAST",sev:"High",title:"CSV 匯出未處理公式注入",comp:"export-worker",found:"2026/10/20",owner:"",st:"待指派"},
+ {id:"V-219",src:"DAST",sev:"Medium",title:"部分回應缺少 Content-Security-Policy 標頭",comp:"tenant-web",found:"2026/09/15",owner:"陳映如",st:"修補中"},
+ {id:"V-210",src:"SCA",sev:"Medium",title:"日期處理套件 ReDoS（示意）",comp:"liff-web",found:"2026/07/20",owner:"王柏翰",st:"已修補",fixed:"2026/08/02",ver:"v1.3.2"},
+ {id:"V-204",src:"SAST",sev:"Low",title:"錯誤訊息包含內部堆疊資訊",comp:"ops-web",found:"2026/06/30",owner:"陳映如",st:"已修補",fixed:"2026/07/15",ver:"v1.3.0"},
+];
+const vDue=v=>addDays(v.found,SLA[v.sev]);
+const vOver=v=>v.st!=="已修補"&&diff(TODAY,vDue(v))>0;
+const openCH=()=>VULNS.filter(v=>v.st!=="已修補"&&["Critical","High"].includes(v.sev)).length;
+let JITS=[
+ {id:"JIT-0412",eng:"李承恩",target:"正式環境資料庫（唯讀副本）",reason:"調查國聯保全報表逾時（J-88130）",h:2,st:"使用中",from:"11/06 09:30",to:"11/06 11:30",exp:nowMs()+80*60e3,appr:"張子豪",sess:[{t:"09:32",c:"連線唯讀副本"},{t:"09:35",c:"查詢執行計畫（tenant=T011 報表）"},{t:"09:48",c:"匯出慢查詢紀錄（不含個資）"}]},
+ {id:"JIT-0411",eng:"陳映如",target:"正式環境 Kubernetes（唯讀）",reason:"檢查 export-worker 記憶體用量",h:1,st:"待核准",from:"—",to:"—",exp:0,appr:"—",sess:[]},
+ {id:"JIT-0405",eng:"王柏翰",target:"正式環境資料庫（讀寫）",reason:"修正鼎峰物業 10 月帳單金額（客服 S-1031）",h:1,st:"已到期",from:"11/03 14:00",to:"11/03 15:00",exp:1,appr:"張子豪",sess:[{t:"14:03",c:"連線正式資料庫"},{t:"14:10",c:"更新 INV-2610-06 金額（前後值已記錄）"},{t:"14:12",c:"中斷連線"}]},
+];
+let INCIDENTS=[
+ {id:"IR-2026-002",title:"疑似撞庫攻擊（SE-1106-03）",found:"2026/11/06 03:20",sev:"中",personal:false,tenants:[],st:"調查中",steps:{notify:null,prelim:null,authority:"不適用",subject:"不適用",root:null}},
+ {id:"IR-2026-001",title:"客服誤寄匯出檔下載連結",found:"2026/09/12 10:00",sev:"高",personal:true,tenants:["T012"],st:"已結案",steps:{notify:"2026/09/12 16:40",prelim:"2026/09/14 18:00",authority:"2026/09/13 11:00（依律師確認之時限）",subject:"2026/09/15 10:00",root:"2026/09/20 改為匯出連結限本人下載＋再次驗證"}},
+];
+const IR_STEPS=[["notify","通知受影響租戶","內部目標：確認後 24 小時內",24],["prelim","初步調查報告","內部目標：確認後 72 小時內",72],["authority","通報主管機關","法定時限依律師確認",0],["subject","通知當事人","法定時限依律師確認",0],["root","根因與改善措施","結案前完成",0]];
+let IR_DRILLS=[{d:"2026/06/20",sc:"住戶個資外洩（模擬匯出檔外流）",res:"24 小時通知達成；72 小時報告延遲 6 小時",fix:"預先準備初步報告範本"}];
+let PENTESTS=[
+ {d:"2026/09/30",kind:"上市前",vendor:"示意資安顧問股份有限公司",scope:"租戶後台、LIFF、API、平台營運後台",c:0,h:2,m:5,l:9,st:"高風險已修補",rep:"PT-2026Q3.pdf"},
+ {d:"2027/03/15",kind:"年度",vendor:"示意資安顧問股份有限公司",scope:"全平台",c:0,h:0,m:0,l:0,st:"已排程",rep:""},
+];
+
+/* ---------- 效能與 SLO ---------- */
+let SLOS=[
+ ["NF-PF-01","登入（含密碼雜湊）","p95",1000,640],["NF-PF-01","2FA 驗證","p95",500,210],["NF-PF-02","註冊／試用申請送出","p95",1500,820],
+ ["NF-PF-03","LIFF 首次開啟（4G）","—",2500,2310],["NF-PF-03","LIFF 再次開啟","—",1500,980],["NF-PF-04","API 讀取","p95",300,182],["NF-PF-04","API 寫入","p95",500,356],["NF-PF-04","API 全部","p99",1500,1120],
+ ["NF-PF-05","照片上傳（4G）","p95",3000,2140],["NF-PF-06","緊急事件推播送達","p95",30000,8400],["NF-PF-07","報表同步查詢","—",10000,6200],
+ ["NF-PF-08","帳單批次（單一租戶）","—",600000,204000],["NF-PF-08","帳單批次（全平台）","—",7200000,3100000],["NF-PF-09","完整匯出（一般租戶）","—",7200000,2880000]
+].map(([id,k,p,tv,cur])=>({id,k,p,tv,cur}));
+const AVAIL=[["整體服務",99.5,99.97],["登入（關鍵路徑）",99.9,99.96],["事件通報（關鍵路徑）",99.9,99.98]];
+let QUEUES=[{n:"緊急推播",pri:1,indep:true,w:4,depth:0,lat:"2.1 秒"},{n:"一般推播",pri:2,w:6,depth:120,lat:"18 秒"},{n:"報表與匯出",pri:3,w:8,depth:14,lat:"40 秒"},{n:"帳單批次",pri:4,w:4,depth:0,lat:"—"}];
+let RL={sus:50,burst:200};
+let RL_OVR=[{tid:"T011",sus:120,burst:400,why:"進階級距 52 社區，月初報表量大"}];
+let THROTTLED=[{tid:"T006",n:312,ep:"/api/export",at:"11/06 09:58"},{tid:"T011",n:41,ep:"/api/reports",at:"11/06 10:02"}];
+let CAP=[["租戶數",13,600,"家"],["服務社區",0,12000,"個"],["使用者",0,120000,"人"],["交接班尖峰請求",46,2000,"次／秒"],["照片上傳尖峰",3,100,"張／秒"],["每日摘要推播（15 分鐘內）",1420,120000,"則"],["資料庫連線池（尖峰）",68,100,"%"],["背景工作 CPU（月初）",54,100,"%"]];
+let CAP_PLANS=[];
+let LOADTESTS=[
+ {id:"LT-019",d:"2026/10/28",ver:"v1.4.0-rc1",sc:"交接班尖峰（持續 2,000 次／秒，瞬間 4,000）",res:"p95 241 ms、錯誤率 0.02%",pass:true},
+ {id:"LT-018",d:"2026/10/28",ver:"v1.4.0-rc1",sc:"照片上傳尖峰（100 張／秒）",res:"p95 2.3 秒",pass:true},
+ {id:"LT-017",d:"2026/10/27",ver:"v1.4.0-rc1",sc:"每日摘要推播（120,000 則 15 分鐘）",res:"13 分 20 秒",pass:true},
+ {id:"LT-016",d:"2026/10/27",ver:"v1.4.0-rc1",sc:"月初帳單批次（360 萬戶 2 小時）",res:"1 小時 42 分",pass:true},
+ {id:"LT-015",d:"2026/10/26",ver:"v1.4.0-rc1",sc:"撞庫攻擊（5,000 次／秒）下正常登入",res:"正常登入 p95 0.71 秒",pass:true},
+ {id:"LT-014",d:"2026/10/26",ver:"v1.4.0-rc1",sc:"多租戶公平性（單一租戶大量匯出＋帳單批次）",res:"其他租戶讀取 p95 412 ms（目標 300 ms）",pass:false},
+ {id:"LT-013",d:"2026/10/25",ver:"v1.4.0-rc1",sc:"長時間測試（一般負載 8 小時）",res:"記憶體穩定、無效能衰退",pass:true},
+];
+const LT_SC=["交接班尖峰（持續 2,000 次／秒，瞬間 4,000）","照片上傳尖峰（100 張／秒）","每日摘要推播（120,000 則 15 分鐘）","月初帳單批次（360 萬戶 2 小時）","撞庫攻擊（5,000 次／秒）下正常登入","多租戶公平性（單一租戶大量匯出＋帳單批次）","長時間測試（一般負載 8 小時）"];
+let sloTab="slo";
+
+/* ---------- 上線門檻 ---------- */
+const GATES=[["G1","跨租戶存取自動化測試全部通過","NF-SAAS-02",false],["G2","沒有未修補的重大與高風險弱點","NF-SVC-10",false],["G3","程式碼與設定檔中沒有機密","NF-SVC-07",false],["G4","新增或修改的 API 都有授權檢查測試","NF-SVC-01",false],["G5","壓力、攻擊情境、公平性測試達標","NF-PF-21～24",true],["G6","第三方滲透測試完成，高風險已修補","NF-SAAS-05",true],["G7","資料庫結構變更已驗證可回復","NF-BAK-04",false]];
+let RELEASES=[
+ {v:"v1.4.0",d:"2026/11/12",major:true,note:"打卡與出勤、LINE 自有帳號、薪資標準匯出",st:"待上線",g:{G1:"通過",G2:"失敗",G3:"通過",G4:"通過",G5:"失敗",G6:"通過",G7:"通過"}},
+ {v:"v1.3.4",d:"2026/10/30",major:false,note:"修正報表匯出逾時、LIFF 首頁載入優化",st:"已上線",g:{G1:"通過",G2:"通過",G3:"通過",G4:"通過",G5:"不適用",G6:"不適用",G7:"通過"}},
+ {v:"v1.3.0",d:"2026/10/01",major:true,note:"社區模組開關、使用率監控",st:"已上線",g:{G1:"通過",G2:"通過",G3:"通過",G4:"通過",G5:"通過",G6:"通過",G7:"通過"}},
+];
+function evalGate(r,g){if(!r.major&&(g==="G5"||g==="G6"))return "不適用";if(g==="G2")return openCH()?"失敗":"通過";if(g==="G5"){const last={};LOADTESTS.forEach(l=>{if(!(l.sc in last)&&l.pass!==null)last[l.sc]=l.pass;});return Object.values(last).every(Boolean)?"通過":"失敗";}if(g==="G6")return PENTESTS.some(p=>p.st==="高風險已修補")?"通過":"失敗";return "通過";}
+
+/* ---------- 備份與還原 ---------- */
+const BACKUPS=Array.from({length:7},(_,i)=>({d:addDays(TODAY,-i),size:(1.82-i*.01).toFixed(2)+" TB",exp:addDays(TODAY,35-i),ok:i!==3||true}));
+let RESTORES=[{id:"RS-0007",tid:"T002",point:"2026/10/30 14:20",mode:"還原至隔離環境供檢視",st:"完成",by:"張子豪",reason:"租戶誤刪 3 筆合約，需比對"}];
+let BK_DRILLS=[{q:"2026 Q3",d:"2026/09/18",scope:"全平台還原至演練環境",rto:"2 小時 10 分",rpo:"6 分鐘",res:"通過",note:"—"},{q:"2026 Q2",d:"2026/06/12",scope:"單一租戶（示範租戶）時間點還原",rto:"38 分鐘",rpo:"4 分鐘",res:"通過",note:"還原腳本加入租戶檔案目錄"}];
+
+/* ---------- 退租與刪除 ---------- */
+let EXITS=[
+ {tid:"T010",term:"2026/09/30",fb:{st:"已下載",d:"2026/10/02"},rem:{30:null,7:null,1:null},st:"唯讀保留中"},
+ {tid:"T014",term:"2026/08/10",fb:{st:"未下載",d:null},rem:{30:"2026/10/09",7:"2026/11/01",1:null},st:"唯讀保留中"},
+ {tid:"T015",term:"2026/07/01",fb:{st:"已下載",d:"2026/07/03"},rem:{30:"2026/08/30",7:"2026/09/22",1:"2026/09/28"},st:"已刪除",cert:"DEL-2026-0002"},
+];
+let EXT_DAYS={};
+const roUntil=e=>addDays(e.term,PARAMS.keep+(EXT_DAYS[e.tid]||0));
+let ARCH_ORDERS=[{id:"AO-0003",tid:"T010",kind:"離線交付",amt:5000,st:"製作中"}];
+let DEL_CERTS=[{id:"DEL-2026-0002",tid:"T015",d:"2026/09/29",bkEnd:"2026/11/03"}];
+
+/* =====================================================================
+   渲染
+   ===================================================================== */
+function renderExits(){const live=EXITS.filter(e=>e.st==="唯讀保留中");
+ $("#exKpi").innerHTML=kpi("archive","唯讀保留中",live.length+" 家","終止後 "+PARAMS.keep+" 天")+kpi("hourglass","7 天內到期",live.filter(e=>diff(roUntil(e),TODAY)<=7).length+" 家","到期後執行刪除")+kpi("download","未下載最終備份",live.filter(e=>e.fb.st!=="已下載").length+" 家","提醒中特別提示")+kpi("file-check-2","刪除證明",DEL_CERTS.length+" 份","本年度");
+ $("#exRows").innerHTML=EXITS.map((e,i)=>{const t=tById(e.tid);const left=diff(roUntil(e),TODAY);const ao=ARCH_ORDERS.filter(o=>o.tid===e.tid);
+  const rem=[30,7,1].map(n=>{const due=addDays(roUntil(e),-n);return `<span class="tag ${e.rem[n]?"t-ok":diff(TODAY,due)>=0?"t-warn":"t-mute"}" title="預定 ${due}">${n} 天${e.rem[n]?" ✓":""}</span>`}).join(" ");
+  if(e.st!=="唯讀保留中")return `<tr><td><b>${t.s}</b><br><small class="hint">${t.code}</small></td><td>${e.term}</td><td>${roUntil(e)}</td><td>—</td><td>${tag(e.fb.st+(e.fb.d?" "+e.fb.d:""),e.fb.st==="已下載"?"t-ok":"t-warn")}</td><td>${rem}</td><td>${ao.map(o=>o.kind).join("、")||"—"}</td><td>${e.st==="已刪除"?`<button class="btn sm" data-act="exCert" data-c="${e.cert}">刪除證明</button>`:stTag(e.st)}</td></tr>`;
+  return `<tr class="${left<=7?"overdue":""}"><td><b>${t.s}</b><br><small class="hint">${t.code} · 月費 ${money(listPrice(t.ed,t.tier))}</small></td><td>${e.term}</td><td>${roUntil(e)}</td><td>${left>0?tag(left+" 天",left<=7?"t-bad":"t-info"):tag("已到期","t-bad")}</td><td>${tag(e.fb.st+(e.fb.d?" "+e.fb.d:""),e.fb.st==="已下載"?"t-ok":"t-warn")}${e.fb.st!=="已下載"?` <button class="btn sm" data-act="exSimDl" data-i="${i}">模擬租戶下載</button>`:""}</td><td>${rem} <button class="btn sm" data-act="exRemind" data-i="${i}">重寄提醒</button></td><td>${ao.map(o=>o.kind).join("、")||"—"}</td><td><button class="btn sm" data-act="exResub" data-i="${i}">重新訂閱還原</button> <button class="btn sm danger" data-act="exDelete" data-i="${i}">執行刪除</button></td></tr>`;}).join("");
+ $("#aoRows").innerHTML=ARCH_ORDERS.length?ARCH_ORDERS.map((o,i)=>`<tr><td>${o.id}</td><td>${tName(o.tid)}</td><td>${o.kind}</td><td class="num">${money(o.amt)}</td><td>${tag(o.st,["已生效","已簽收"].includes(o.st)?"t-ok":"t-info")}</td><td>${["已生效","已簽收"].includes(o.st)?"":`<button class="btn sm" data-act="aoNext" data-i="${i}">${aoNextLabel(o)}</button>`}</td></tr>`).join(""):empty(6,"沒有訂單");
+ $("#dcRows").innerHTML=DEL_CERTS.map(c=>`<tr><td>${c.id}</td><td>${tName(c.tid)}</td><td>${c.d}</td><td>${c.bkEnd} 前</td><td><button class="btn sm" data-act="exCert" data-c="${c.id}">檢視</button></td></tr>`).join("");}
+const AO_FLOW={"延長封存 1 年":["待付款","已生效"],"延長封存 3 年":["待付款","已生效"],"離線交付":["待處理","製作中","已寄出","已簽收"]};
+const aoNextLabel=o=>{const f=AO_FLOW[o.kind];const n=f[f.indexOf(o.st)+1];return n==="已生效"?"確認收款並生效":n==="製作中"?"開始製作":n==="已寄出"?"登記寄出":n==="已簽收"?"確認簽收":"下一步";};
+
+function renderSec(){
+ const open=SEC_EVENTS.filter(e=>e.st!=="已確認"&&e.st!=="已升級");
+ $("#secDot").classList.toggle("on",open.some(e=>e.lv==="高")||VULNS.some(vOver));
+ $("#seKpi").innerHTML=kpi("siren","待處理事件",open.length,"高風險 "+open.filter(e=>e.lv==="高").length)+kpi("shield-ban","WAF 攔截（24h）","1,240 次","已封鎖 3 個網段")+kpi("user-x","登入失敗（24h）","18,602 次","撞庫偵測 1 次，已啟用人機驗證")+kpi("file-down","大量匯出告警",SEC_EVENTS.filter(e=>e.type==="大量匯出").length,"門檻：10 分鐘 3 次");
+ $("#seChips").innerHTML=chips(["全部","待確認","處理中","已確認","已升級"],seF,"seF");
+ const ls=SEC_EVENTS.filter(e=>seF==="全部"||e.st===seF);
+ $("#seRows").innerHTML=ls.length?ls.map(e=>`<tr><td>${e.t}</td><td>${e.type}</td><td>${tag(e.lv,e.lv==="高"?"t-bad":e.lv==="中"?"t-warn":"t-mute")}</td><td>${e.src}</td><td style="white-space:normal">${e.x}</td><td style="white-space:normal">${e.auto}</td><td>${tag(e.st,e.st==="已確認"?"t-ok":e.st==="已升級"?"t-info":"t-warn")}</td><td>${["待確認","處理中"].includes(e.st)?`<button class="btn sm" data-act="seAck" data-e="${e.id}">確認</button> <button class="btn sm danger" data-act="seEsc" data-e="${e.id}">升級為資安事件</button>`:e.ir?`<button class="btn sm" data-act="go" data-go="secIr">${e.ir}</button>`:""}</td></tr>`).join(""):empty(8,"沒有符合的事件");
+ $("#vuKpi").innerHTML=kpi("bug","未修補",VULNS.filter(v=>v.st!=="已修補").length,"重大＋高風險 "+openCH())+kpi("alarm-clock","已逾修補期限",VULNS.filter(vOver).length,"逾期列為紅色")+kpi("user-round-x","待指派",VULNS.filter(v=>v.st==="待指派").length,"")+kpi("badge-check","本季已修補",VULNS.filter(v=>v.st==="已修補").length,"");
+ const sevC={Critical:"t-bad",High:"t-warn",Medium:"t-info",Low:"t-mute"};
+ $("#vuRows").innerHTML=VULNS.map((v,i)=>`<tr class="${vOver(v)?"overdue":""}"><td>${v.id}</td><td>${v.src}</td><td>${tag(v.sev,sevC[v.sev])}</td><td style="white-space:normal">${v.title}</td><td><code>${v.comp}</code></td><td>${v.found}</td><td>${vDue(v)}${vOver(v)?" "+tag("逾期 "+diff(TODAY,vDue(v))+" 天","t-bad"):v.st!=="已修補"?` <small class="hint">剩 ${diff(vDue(v),TODAY)} 天</small>`:""}</td><td>${v.owner||"—"}</td><td>${tag(v.st,v.st==="已修補"?"t-ok":v.st==="待指派"?"t-warn":"t-info")}${v.ver?` <small class="hint">${v.ver}</small>`:""}</td><td>${v.st!=="已修補"?`<button class="btn sm" data-act="vuAssign" data-i="${i}">指派</button> <button class="btn sm primary" data-act="vuFix" data-i="${i}">標記已修補</button>`:""}</td></tr>`).join("");
+ JITS.forEach(j=>{if(j.st==="使用中"&&nowMs()>j.exp){j.st="已到期";audit("資安",j.id,"限時存取到期，自動收回權限");}});
+ $("#jitRows").innerHTML=JITS.map((j,i)=>`<tr><td>${j.id}</td><td>${j.eng}</td><td>${j.target}</td><td style="white-space:normal">${j.reason}</td><td>${j.h} 小時</td><td>${j.from}<br><small class="hint">至 ${j.to}${j.st==="使用中"?"（剩 "+Math.max(0,Math.round((j.exp-nowMs())/60e3))+" 分）":""}</small></td><td>${j.appr}</td><td>${tag(j.st,j.st==="使用中"?"t-info":j.st==="待核准"?"t-warn":"t-mute")}</td><td>${j.st==="待核准"?`<button class="btn sm primary" data-act="jitApprove" data-i="${i}">核准</button> <button class="btn sm" data-act="jitReject" data-i="${i}">駁回</button>`:""}${j.st==="使用中"?`<button class="btn sm" data-act="jitExpire" data-i="${i}">模擬到期</button> <button class="btn sm" data-act="jitEnd" data-i="${i}">提前收回</button> `:""}${j.sess.length?`<button class="btn sm" data-act="jitSess" data-i="${i}">操作紀錄</button>`:""}</td></tr>`).join("");
+ $("#irRows").innerHTML=INCIDENTS.map((r,i)=>{const done=IR_STEPS.filter(([k])=>r.steps[k]).length;return `<tr class="click" data-act="irOpen" data-i="${i}"><td>${r.id}</td><td>${r.title}</td><td>${r.found}</td><td>${tag(r.sev,r.sev==="高"?"t-bad":"t-warn")}</td><td>${r.personal?tag("是","t-bad"):"否"}</td><td>${r.tenants.map(tName).join("、")||"—"}</td><td><div class="progress"><div class="bar"><i style="width:${done/IR_STEPS.length*100}%"></i></div>${done}/${IR_STEPS.length}</div></td><td>${tag(r.st,r.st==="已結案"?"t-ok":"t-warn")}</td><td><button class="btn sm" data-act="irOpen" data-i="${i}">應變清單</button></td></tr>`;}).join("");
+ $("#irDrRows").innerHTML=IR_DRILLS.map(d=>`<tr><td>${d.d}</td><td>${d.sc}</td><td style="white-space:normal">${d.res}</td><td style="white-space:normal">${d.fix}</td></tr>`).join("");
+ $("#penRows").innerHTML=PENTESTS.map((p,i)=>`<tr><td>${p.d}</td><td>${p.kind}</td><td>${p.vendor}</td><td style="white-space:normal">${p.scope}</td><td class="num">${p.c}</td><td class="num">${p.h}</td><td class="num">${p.m}</td><td class="num">${p.l}</td><td>${tag(p.st,p.st==="高風險已修補"?"t-ok":p.st==="已排程"?"t-mute":"t-warn")}</td><td>${p.rep?`<button class="btn sm" data-act="penView" data-i="${i}">報告摘要</button>`:""}${p.st==="修補中"?` <button class="btn sm primary" data-act="penFixed" data-i="${i}">高風險已修補</button>`:""}${p.st==="已排程"?` <button class="btn sm" data-act="penDone" data-i="${i}">登錄結果</button>`:""}</td></tr>`).join("");}
+
+function renderSlo(){const T=[["slo","SLO 與可用率"],["queues","佇列分級"],["rl","租戶限流"],["cap","容量與設計"],["lt","壓力測試報告"]];
+ $("#sloTabs").innerHTML=T.map(([k,l])=>`<button data-act="sloTab" data-tab="${k}" class="${k===sloTab?"on":""}">${l}</button>`).join("");let h="";
+ if(sloTab==="slo"){const st=s=>{const r=s.cur/s.tv;return r<=.8?tag("達標","t-ok"):r<=1?tag("接近上限","t-warn"):tag("未達標","t-bad");};
+  h=`<div class="grid g-3">${AVAIL.map(([k,tg,c])=>kpi("shield-check",k+" 可用率",c+"%","目標 ≥ "+tg+"%"+(tg>99.5?"（關鍵路徑）":"")+" · "+(c>=tg?"達標":"未達標"))).join("")}</div>
+  <div class="tbl-wrap" style="margin-top:16px"><table><thead><tr><th>需求</th><th>項目</th><th>指標</th><th class="num">目標</th><th class="num">近 7 天</th><th>使用比例</th><th>狀態</th></tr></thead><tbody>${SLOS.map(s=>`<tr><td>${s.id}</td><td>${s.k}</td><td>${s.p}</td><td class="num">≤ ${fmtDur(s.tv)}</td><td class="num">${fmtDur(s.cur)}</td><td><div class="progress"><div class="bar"><i style="width:${Math.min(100,s.cur/s.tv*100)}%;${s.cur/s.tv>.8?"background:var(--warn)":""}"></i></div>${Math.round(s.cur/s.tv*100)}%</div></td><td>${st(s)}</td></tr>`).join("")}</tbody></table></div><p class="hint">超過 80% 列為「接近上限」並告警（NF-SAAS-09）；LIFF 首次開啟接近上限，已排入 v1.4.1 前端拆包。</p>`;}
+ if(sloTab==="queues")h=`<div class="toolbar"><button class="btn" data-act="qSurge"><i data-lucide="zap"></i>模擬月初批次尖峰</button><button class="btn" data-act="qReset"><i data-lucide="rotate-ccw"></i>恢復正常</button></div><div class="tbl-wrap"><table><thead><tr><th>優先序</th><th>佇列</th><th>工作程序</th><th class="num">待處理</th><th>平均等待</th><th></th></tr></thead><tbody>${QUEUES.map((q,i)=>`<tr><td>${q.pri}</td><td><b>${q.n}</b> ${q.indep?tag("獨立佇列與工作程序","t-info"):""}</td><td>${q.w} 個${q.indep?" <small class='hint'>（不與其他佇列共用）</small>":""}</td><td class="num">${fmt(q.depth)}</td><td>${q.lat}</td><td><button class="btn sm" data-act="qScale" data-i="${i}">增加工作程序</button></td></tr>`).join("")}</tbody></table></div><p class="hint">優先序：緊急推播 ＞ 一般推播 ＞ 報表與匯出 ＞ 帳單批次。緊急事件使用獨立佇列，不會被批次工作阻塞（NF-PF-16）。</p>`;
+ if(sloTab==="rl")h=`<div class="grid g-2"><div class="card"><h3><span class="l"><i data-lucide="gauge"></i>預設限流（NF-SAAS-06）</span></h3><div class="form-grid">${F("持續（次／秒）",I("rlSus",RL.sus,"","number"))}${F("瞬間（次／秒）",I("rlBurst",RL.burst,"","number"))}</div><div style="text-align:right;margin-top:12px"><button class="btn primary" data-act="rlSave">儲存</button></div><p class="hint">登入另有 IP 與帳號限流，且在密碼雜湊之前執行（NF-PF-12）。</p></div>
+  <div class="card"><h3><span class="l"><i data-lucide="octagon-x"></i>目前被限流的租戶（近 1 小時）</span></h3>${THROTTLED.length?THROTTLED.map(x=>`<div class="row"><span>${tName(x.tid)} · <code>${x.ep}</code><br><small class="hint">429 回應 ${x.n} 次 · 最近 ${x.at}</small></span><button class="btn sm" data-act="rlEdit" data-t="${x.tid}">調整上限</button></div>`).join(""):'<p class="hint">目前沒有</p>'}</div></div>
+  <div class="card" style="margin-top:16px"><h3><span class="l"><i data-lucide="sliders-horizontal"></i>個別租戶上限</span><button class="btn sm" data-act="rlEdit">新增</button></h3><div class="tbl-wrap"><table><thead><tr><th>租戶</th><th class="num">持續</th><th class="num">瞬間</th><th>原因</th><th></th></tr></thead><tbody>${RL_OVR.length?RL_OVR.map((o,i)=>`<tr><td>${tName(o.tid)}</td><td class="num">${o.sus}</td><td class="num">${o.burst}</td><td>${o.why}</td><td><button class="btn sm" data-act="rlEdit" data-t="${o.tid}">編輯</button> <button class="btn sm" data-act="rlDel" data-i="${i}">移除</button></td></tr>`).join(""):empty(5,"全部使用預設值")}</tbody></table></div></div>`;
+ if(sloTab==="cap"){CAP[1][1]=TENANTS.filter(t=>t.st!=="已終止").reduce((a,t)=>a+t.sites,0);CAP[2][1]=TENANTS.filter(t=>t.st!=="已終止").reduce((a,t)=>a+t.users,0);
+  h=`<div class="banner"><i data-lucide="ruler"></i><span>設計目標為第 3 年規模：600 家租戶、12,000 個社區、120,000 位使用者，交接班尖峰持續 2,000 次／秒（需求書 8.7.1、8.7.2）。使用量達設計容量 60% 時啟動擴容規劃。</span></div>
+  <div class="card">${CAP.map(([k,c,d,u],i)=>{const r=c/d;return `<div class="bar-row" style="grid-template-columns:200px 1fr 230px"><span>${k}</span><div class="bar"><i style="width:${Math.min(100,r*100)}%;${r>=.6?"background:var(--warn)":""}"></i></div><span class="num">${fmt(c)} / ${fmt(d)} ${u} ${r>=.6?tag("≥ 60%","t-warn"):""}</span></div>`}).join("")}<div style="text-align:right;margin-top:12px"><button class="btn primary" data-act="capPlan">建立擴容規劃</button></div></div>
+  ${CAP_PLANS.length?`<div class="card" style="margin-top:16px"><h3><span class="l"><i data-lucide="clipboard-list"></i>擴容規劃</span></h3>${CAP_PLANS.map(p=>`<div class="row"><span><b>${p.item}</b> · ${p.how}<br><small class="hint">負責 ${p.who} · 預定 ${p.due}</small></span>${tag("規劃中","t-info")}</div>`).join("")}</div>`:""}`;}
+ if(sloTab==="lt")h=`<div class="toolbar"><button class="btn primary" data-act="ltRun"><i data-lucide="play"></i>執行壓力測試</button></div><div class="tbl-wrap"><table><thead><tr><th>編號</th><th>日期</th><th>版本</th><th>情境</th><th>結果</th><th>判定</th></tr></thead><tbody>${LOADTESTS.map(l=>`<tr><td>${l.id}</td><td>${l.d}</td><td>${l.ver}</td><td style="white-space:normal">${l.sc}</td><td style="white-space:normal">${l.res}</td><td>${l.pass===null?tag("執行中","t-info"):l.pass?tag("通過","t-ok"):tag("未通過","t-bad")}</td></tr>`).join("")}</tbody></table></div><p class="hint">上市前與每次重大發布前，以第 3 年規模模擬所有尖峰情境（NF-PF-21～24），結果自動帶入上線門檻 G5。</p>`;
+ $("#sloBody").innerHTML=h;}
+
+function renderGates(){$("#gtDef").innerHTML=GATES.map(([g,n,ref,maj])=>`<div class="row"><span><b>${g}</b> ${n}<br><small class="hint">${ref}${maj?" · 僅重大發布":""}</small></span></div>`).join("");
+ const cls={"通過":"pass","失敗":"fail","執行中":"run","不適用":"na","未執行":""};
+ $("#gtRows").innerHTML=RELEASES.map((r,i)=>{const all=GATES.every(([g])=>["通過","不適用"].includes(r.g[g]));return `<tr><td><b>${r.v}</b></td><td>${r.d}</td><td>${r.major?tag("重大發布","t-warn"):tag("一般","t-mute")}</td><td style="white-space:normal;max-width:220px">${r.note}</td><td class="gate-cell" style="white-space:normal">${GATES.map(([g])=>`<button class="gate ${cls[r.g[g]]||""}" data-act="gateRerun" data-r="${i}" data-g="${g}" title="${r.g[g]}">${g} ${r.g[g]==="通過"?"✓":r.g[g]==="失敗"?"✕":r.g[g]==="執行中"?"…":r.g[g]==="不適用"?"—":"?"}</button>`).join("")}</td><td>${r.st==="已上線"?tag("已上線","t-ok"):all?tag("可上線","t-ok"):tag("未通過門檻","t-bad")}</td><td>${r.st!=="已上線"?`<button class="btn sm" data-act="gateRunAll" data-r="${i}">執行全部檢核</button> <button class="btn sm primary" data-act="relLive" data-r="${i}">標記上線</button>`:""}</td></tr>`;}).join("");}
+
+function renderBackup(){const last=new Date(nowMs()-2*60e3);
+ $("#bkKpi").innerHTML=kpi("history","最近可還原時間點",TODAY.slice(5)+" "+hm(last),"PITR · RPO 目標 ≤ 15 分鐘")+kpi("timer-reset","RTO 目標","≤ 4 小時","上次演練 2 小時 10 分")+kpi("hard-drive","每日完整備份","35 份","加密 · 異地 · 不可刪除")+kpi("flask-conical","下次還原演練","2026 Q4","每季一次");
+ $("#bkRows").innerHTML=BACKUPS.map((b,i)=>`<tr><td>${b.d}</td><td class="num">${b.size}</td><td>${tag("AES-256","t-ok")}</td><td>${tag("異地","t-ok")}</td><td>${tag("WORM","t-ok")}</td><td>${b.exp}</td><td><button class="btn sm" data-act="bkVerify" data-i="${i}">驗證</button></td></tr>`).join("");
+ $("#rsRows").innerHTML=RESTORES.map(r=>`<tr><td>${r.id}</td><td>${tName(r.tid)}</td><td>${r.point}</td><td>${r.mode}</td><td>${stTag(r.st)}</td><td><button class="btn sm" data-act="rsView" data-r="${r.id}">明細</button></td></tr>`).join("");
+ $("#bdRows").innerHTML=BK_DRILLS.map(d=>`<tr><td>${d.q}</td><td>${d.d}</td><td>${d.scope}</td><td>${d.rto}</td><td>${d.rpo}</td><td>${tag(d.res,d.res==="通過"?"t-ok":"t-bad")}</td><td>${d.note}</td></tr>`).join("");}
+
+/* ---------- 稽核日誌雜湊鏈 ---------- */
+const fnv=s=>{let h=0x811c9dc5;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,0x01000193)>>>0;}return h.toString(16).padStart(8,"0");};
+function auditChain(){const old=[...AUDIT].reverse();let prev="00000000";const m=new Map();old.forEach(a=>{const h=fnv(prev+a.t+a.who+a.cat+a.obj+a.act+(a.reason||"")+(a.g||""));m.set(a,{prev,h});prev=h;});return m;}
+
+/* ---------- 側邊功能列 ---------- */
+function sideState(){try{return JSON.parse(sessionStorage.getItem("ops-side")||"{}")}catch(e){return{}}}
+function saveSide(s){try{sessionStorage.setItem("ops-side",JSON.stringify(s))}catch(e){}}
+function applySide(){const s=sideState();$$(".sgrp").forEach(g=>{const c=!!s[g.dataset.g];g.classList.toggle("closed",c);g.querySelector(".sgrp-h").setAttribute("aria-expanded",String(!c));});}
+function syncSide(href){$$(".sgrp").forEach(g=>{const act=!!g.querySelector(`a[href="${href}"]`);g.classList.toggle("has-active",act);if(act&&g.classList.contains("closed")){g.classList.remove("closed");g.querySelector(".sgrp-h").setAttribute("aria-expanded","true");const s=sideState();delete s[g.dataset.g];saveSide(s);}});
+ const a=$(`.side-nav a[href="${href}"]`);if(a){const n=$(".side-nav");const r=a.getBoundingClientRect(),nr=n.getBoundingClientRect();if(r.top<nr.top+20||r.bottom>nr.bottom-20)n.scrollTop+=r.top-nr.top-nr.height/3;}}
+
+/* ---------- 再次驗證（NF-AUTH-12） ---------- */
+function stepUp(what,fn){if(nowMs()<STEP_OK){fn();return;}SU_M="pk";
+ modal("再次驗證",`<div class="banner"><i data-lucide="shield-alert"></i><span>「${what}」屬於高風險操作，需再次驗證身分（NF-AUTH-12）。驗證後 5 分鐘內不需重複驗證。</span></div><div class="mth"><button class="on" data-act="suM" data-m="pk" id="suPk"><b>Passkey</b><small>使用裝置指紋或安全金鑰</small></button><button data-act="suM" data-m="totp" id="suTotp"><b>驗證器 App</b><small>輸入 6 位數驗證碼</small></button></div><div id="suTotpBox" style="display:none">${F("6 位數驗證碼",I("suCode","","例：123456"))}</div>`,[{label:"取消"},{label:"驗證並繼續",cls:"primary",fn:()=>{if(SU_M==="totp"&&!/^\d{6}$/.test(val("suCode"))){toast("請輸入 6 位數驗證碼");return;}STEP_OK=nowMs()+5*60e3;audit("登入安全",ME.n,"再次驗證通過："+what,SU_M==="pk"?"Passkey":"驗證器 App");closeAll();fn();}}]);}
+
+/* ---------- 閒置鎖定（NF-AUTH-05） ---------- */
+let IDLE={last:nowMs(),warn:false,timer:null};
+["click","keydown","mousemove","touchstart"].forEach(ev=>document.addEventListener(ev,()=>{if(!IDLE.warn)IDLE.last=nowMs();},{passive:true}));
+setInterval(()=>{if($("#login").style.display!=="none"||IDLE.warn)return;if(nowMs()-IDLE.last>=14*60e3)idleWarn(60);},10000);
+function idleWarn(sec){IDLE.warn=true;let n=sec;
+ modal("即將自動鎖定",`<p style="margin-top:0">您已閒置 14 分鐘。平台營運後台閒置 15 分鐘會自動鎖定，需重新登入（NF-AUTH-05）。</p><div class="cd" id="idleCd">00:${String(n).padStart(2,"0")}</div><p class="hint" style="text-align:center">最長工作階段 8 小時</p>`,[{label:"立即鎖定",cls:"danger",fn:()=>lockNow("已手動鎖定")},{label:"繼續使用",cls:"primary",fn:()=>{IDLE.warn=false;IDLE.last=nowMs();closeAll();toast("已延長工作階段");}}]);
+ clearInterval(IDLE.timer);IDLE.timer=setInterval(()=>{if(!$("#idleCd")||!$("#modal").classList.contains("on")){clearInterval(IDLE.timer);IDLE.warn=false;IDLE.last=nowMs();return;}n--;$("#idleCd").textContent="00:"+String(Math.max(0,n)).padStart(2,"0");if(n<=0){clearInterval(IDLE.timer);lockNow("閒置 15 分鐘，已自動鎖定");}},1000);}
+function lockNow(why){IDLE.warn=false;clearInterval(IDLE.timer);closeAll();try{sessionStorage.removeItem("pcmp-ops")}catch(e){}A.loginBack();$$("#otp input").forEach(i=>i.value="");$("#lgErr").textContent=why+"，請重新登入。";$("#lgErr").style.display="block";$("#login").style.display="";audit("登入安全",ME.n,why);}
+function finishLogin(how){$("#login").style.display="none";LOGIN.fail=0;IDLE.last=nowMs();LOGIN.at=now();try{sessionStorage.setItem("pcmp-ops","1")}catch(e){}audit("登入安全",ME.n,"登入成功（"+how+"）","公司網路 10.20.8.41");route();toast("登入成功");}
+function setNet(ok){LOGIN.net=ok?"ok":"bad";$("#step0").style.display=ok?"none":"";$("#step1").style.display=ok?"":"none";$("#step2").style.display="none";}
+
+/* =====================================================================
+   動作（覆寫與新增）
+   ===================================================================== */
+Object.assign(A,{
+ loginNext(){const e=$("#lgErr");const show=m=>{e.textContent=m;e.style.display="block";};const u=val("lgUser"),p=$("#lgPwd").value;
+  if(LOGIN.lockUntil&&nowMs()<LOGIN.lockUntil){show(`連續失敗 5 次，帳號已鎖定 15 分鐘並已通知本人（剩 ${Math.ceil((LOGIN.lockUntil-nowMs())/60e3)} 分鐘）。`);return;}
+  if(!u||!p){show("請輸入 Email 與密碼");return;}
+  if(p.length<12){show("平台人員密碼至少 12 字元（NF-AUTH-01）");return;}
+  if(p!==LOGIN.pwd){LOGIN.fail++;audit("登入安全",u,`登入失敗（第 ${LOGIN.fail} 次）`);if(LOGIN.fail>=5){LOGIN.lockUntil=nowMs()+15*60e3;audit("登入安全",u,"連續失敗 5 次，鎖定 15 分鐘");show("連續失敗 5 次，帳號已鎖定 15 分鐘並已通知本人（NF-AUTH-04）。");}else show("Email 或密碼錯誤。");
+   $("#lgTries").innerHTML=LOGIN.fail>=5?`<button class="linkbtn" data-act="unlockSim">模擬 15 分鐘後解鎖</button>`:`連續失敗 ${LOGIN.fail} / 5 次`;return;}
+  e.style.display="none";$("#lgTries").textContent="";$("#step1").style.display="none";$("#step2").style.display="";A.mfaM({dataset:{m:LOGIN.mfa}});},
+ loginBack(){$("#step1").style.display=LOGIN.net==="ok"?"":"none";$("#step0").style.display=LOGIN.net==="ok"?"none":"";$("#step2").style.display="none";},
+ simWrongPwd(){$("#lgPwd").value="WrongPassword!"+(LOGIN.fail+1);A.loginNext();$("#lgPwd").value=LOGIN.pwd;},
+ unlockSim(){LOGIN.lockUntil=0;LOGIN.fail=0;$("#lgTries").textContent="";$("#lgErr").style.display="none";toast("鎖定已解除（模擬 15 分鐘後）");},
+ simExtNet(){setNet(false);audit("登入安全","203.0.113.40","外部網路連線遭拒（非公司網路或零信任管道）");},
+ useZT(){setNet(true);$("#connBox").innerHTML='<i data-lucide="shield-check"></i><span><b>連線來源檢查：允許</b><br>零信任代理已驗證裝置與身分（zt-gw-tpe-02）。</span>';icons();toast("已透過零信任代理連線");},
+ mfaM(el){LOGIN.mfa=el.dataset.m;$("#mPk").classList.toggle("on",LOGIN.mfa==="pk");$("#mTotp").classList.toggle("on",LOGIN.mfa==="totp");$("#mfaPk").style.display=LOGIN.mfa==="pk"?"":"none";$("#mfaTotp").style.display=LOGIN.mfa==="totp"?"":"none";},
+ loginPasskey(){finishLogin("Passkey");},
+ loginOtp(){const v=$$("#otp input").map(i=>i.value).join("");if(v.length<6){$("#otpErr").style.display="block";return;}$("#otpErr").style.display="none";finishLogin("驗證器 App");},
+ userMenu(){modal(`${ME.n} · ${ME.role}`,`<dl class="dl"><dt>Email</dt><dd>${ME.mail}</dd><dt>角色</dt><dd>平台管理員（PLAT-ADMIN）</dd><dt>雙因子驗證</dt><dd>${tag("已啟用（強制，不可關閉）","t-ok")} Passkey＋驗證器 App</dd><dt>本次登入</dt><dd>${LOGIN.at} · 公司網路 10.20.8.41</dd><dt>工作階段</dt><dd>閒置 15 分鐘自動鎖定、最長 8 小時（NF-AUTH-05）</dd></dl><p class="hint">平台帳號無法登入租戶後台；協助租戶需透過限時授權。</p>`,[{label:"模擬閒置 15 分鐘",fn:()=>idleWarn(15)},{label:"變更密碼",fn:()=>A.changePwd()},{label:"登出",cls:"danger",fn:()=>lockNow("已登出")}]);},
+ suM(el){SU_M=el.dataset.m;$("#suPk").classList.toggle("on",SU_M==="pk");$("#suTotp").classList.toggle("on",SU_M==="totp");$("#suTotpBox").style.display=SU_M==="totp"?"":"none";},
+ sideGrp(el){const g=el.closest(".sgrp");g.classList.toggle("closed");const c=g.classList.contains("closed");el.setAttribute("aria-expanded",String(!c));const s=sideState();if(c)s[g.dataset.g]=1;else delete s[g.dataset.g];saveSide(s);},
+
+ /* 試用申請 */
+ appOpen(el){const a=APPS.find(x=>x.id===el.dataset.a);const p=PARTNERS.find(p=>p.code===a.ref);const d=dupOf(a);const btns=[{label:"關閉"}];
+  if(a.st==="待審核"){btns.push({label:"婉拒",cls:"danger",fn:()=>A.appReject({dataset:{a:a.id}})},{label:"只轉為潛在客戶",fn:()=>A.appToLead({dataset:{a:a.id}})});if(a.ev)btns.push({label:"核准並開通試用",cls:"primary",fn:()=>A.appApprove({dataset:{a:a.id}})});else btns.push({label:"重寄驗證信",fn:()=>A.appResend({dataset:{a:a.id}})},{label:"模擬申請人完成驗證",cls:"primary",fn:()=>A.appSimVerify({dataset:{a:a.id}})});}
+  drawer(a.id,`<dl class="dl"><dt>申請日</dt><dd>${a.d}</dd><dt>公司</dt><dd>${a.n}</dd><dt>統編</dt><dd>${a.tax} ${taxOk(a.tax)?tag("檢查碼正確","t-ok"):tag("檢查碼錯誤","t-bad")}</dd><dt>聯絡人</dt><dd>${a.ct} · ${a.tel}</dd><dt>Email</dt><dd>${a.mail} ${a.ev?tag("已驗證","t-ok"):tag("未驗證","t-warn")}${a.resent?` <small class="hint">已重寄 ${a.resent} 次</small>`:""}</dd><dt>服務社區數</dt><dd>${a.sites}</dd><dt>目前工具</dt><dd>${a.tool||"—"}</dd><dt>推薦碼</dt><dd>${a.ref?a.ref+(p?"（"+p.n+"）":"（查無此碼）"):"—"}</dd><dt>人機驗證</dt><dd>分數 ${a.bot.toFixed(2)} ${a.bot>=.5?tag("通過","t-ok"):tag("未通過","t-bad")}</dd><dt>來源 IP</dt><dd><code>${a.ip}</code></dd><dt>重複偵測</dt><dd>${d?`<button class="tag t-warn tagbtn" data-act="${d.act}" data-${d.k}="${d.v}">${d.txt}</button>`:tag("無重複","t-ok")}</dd><dt>狀態</dt><dd>${stTag(a.st)}${a.reason?" "+a.reason:""}</dd></dl>
+  <div class="banner" style="margin-top:12px"><i data-lucide="info"></i><span>推薦碼只用於歸屬推薦夥伴，不作為任何身分驗證依據（NF-REG-09）。試用租戶的資安要求與正式租戶相同（NF-REG-10）。</span></div>`,btns);},
+ appApprove(el){const a=APPS.find(x=>x.id===el.dataset.a);
+  if(!a.ev){toast("Email 尚未驗證，無法核准（NF-REG-02）");return;}
+  if(a.bot<.5){toast("未通過人機驗證，請婉拒或人工聯繫確認（NF-REG-01）");return;}
+  if(!taxOk(a.tax)){toast("統編檢查碼錯誤，請聯繫申請人更正後再核准（NF-REG-03）");return;}
+  const d=dupOf(a);if(d){reasonBox("偵測到重複申請",`此申請與「${d.txt}」重複（同統編或 Email）。確認仍要開通新的試用租戶？`,"仍要開通",r=>{audit("客戶開發",a.id,"重複申請仍核准",r);closeAll();A.appToLead({dataset:{a:a.id}},true);});return;}
+  A.appToLead({dataset:{a:a.id}},true);},
+ appResend(el){const a=APPS.find(x=>x.id===el.dataset.a);a.resent=(a.resent||0)+1;audit("客戶開發",a.id,"重寄 Email 驗證信（單次連結、24 小時有效）");closeAll();renderApps();toast("已重寄驗證信至 "+a.mail+"（單次連結，24 小時有效）");},
+ appSimVerify(el){const a=APPS.find(x=>x.id===el.dataset.a);a.ev=true;audit("客戶開發",a.id,"申請人完成 Email 驗證");closeAll();renderApps();icons();toast("申請人已完成 Email 驗證，可以審核");},
+ ipUnblock(el){const b=BLOCKED_IPS[Number(el.dataset.i)];reasonBox("解除封鎖",`解除 ${b.ip} 的試用申請封鎖？`,"解除",r=>{b.st="已解除";audit("資安",b.ip,"解除試用申請 IP 封鎖",r);closeAll();renderApps();icons();toast("已解除封鎖");});},
+
+ /* 資安事件 */
+ seF(el){seF=el.dataset.v;renderSec();icons();},
+ seAck(el){const e=SEC_EVENTS.find(x=>x.id===el.dataset.e);reasonBox("確認資安事件",`${e.type}：${e.x}`,"確認",r=>{e.st="已確認";audit("資安",e.id,"確認資安事件",r);closeAll();renderSec();icons();toast("已確認");});},
+ seEsc(el){const e=SEC_EVENTS.find(x=>x.id===el.dataset.e);confirmBox("升級為資安事件",`將「${e.type}：${e.x}」升級為資安事件，啟動應變流程（24 小時通知、72 小時初步報告）？`,"升級",()=>{const id="IR-2026-"+String(INCIDENTS.length+1).padStart(3,"0");INCIDENTS.unshift({id,title:`${e.type}（${e.id}）`,found:now(),sev:e.lv==="高"?"高":"中",personal:e.type==="大量匯出",tenants:e.src.includes("鼎峰")?["T006"]:[],st:"調查中",steps:{notify:null,prelim:null,authority:null,subject:null,root:null}});e.st="已升級";e.ir=id;audit("資安",e.id,"升級為資安事件 "+id);closeAll();renderSec();icons();toast("已建立 "+id);},true);},
+ vuAssign(el){const v=VULNS[Number(el.dataset.i)];modal("指派修補 "+v.id,`<div class="form-grid">${F("負責人",S("vaW",ENG,v.owner||ENG[0]))}${F("修補期限",`<input class="input" value="${vDue(v)}（${v.sev} ${SLA[v.sev]} 天）" disabled>`)}</div>`,[{label:"取消"},{label:"指派",cls:"primary",fn:()=>{v.owner=val("vaW");if(v.st==="待指派")v.st="修補中";audit("資安",v.id,"指派修補給 "+v.owner);closeAll();renderSec();icons();toast("已指派");}}]);},
+ vuFix(el){const v=VULNS[Number(el.dataset.i)];modal("標記已修補 "+v.id,`<div class="form-grid">${F("修補版本 *",I("vfV","","例：v1.4.0"))}${F("驗證方式",S("vfH",["重新掃描已無此弱點","人工驗證","廠商複測"],"重新掃描已無此弱點"))}${F("說明",TA("vfN"),1)}</div>`,[{label:"取消"},{label:"確認",cls:"primary",fn:()=>{if(!required(["vfV"]))return;v.st="已修補";v.fixed=TODAY;v.ver=val("vfV");audit("資安",v.id,"弱點已修補（"+v.ver+"）",val("vfH"));closeAll();renderAll();toast("已標記修補；上線門檻 G2 可重新檢核");}}]);},
+ newVuln(){modal("登錄弱點",`<div class="form-grid">${F("來源",S("nvS",["SAST","SCA","容器掃描","DAST","滲透測試","外部通報"],"SCA"))}${F("嚴重度",S("nvL",["Critical","High","Medium","Low"],"High"))}${F("弱點 *",I("nvT"),1)}${F("元件 *",I("nvC","","例：api-gateway"))}${F("負責人",S("nvW",["（待指派）",...ENG],"（待指派）"))}</div>`,[{label:"取消"},{label:"登錄",cls:"primary",fn:()=>{if(!required(["nvT","nvC"]))return;const w=val("nvW");VULNS.unshift({id:"V-"+(232+VULNS.length),src:val("nvS"),sev:val("nvL"),title:val("nvT"),comp:val("nvC"),found:TODAY,owner:w.startsWith("（")?"":w,st:w.startsWith("（")?"待指派":"修補中"});audit("資安",val("nvT"),"登錄弱點（"+val("nvL")+"）");closeAll();renderAll();toast("已登錄，修補期限 "+SLA[val("nvL")]+" 天");}}]);},
+ newJit(){modal("申請生產環境限時存取",`<div class="form-grid">${F("工程師",S("njE",ENG,ENG[0]))}${F("存取對象",S("njT",["正式環境資料庫（唯讀副本）","正式環境資料庫（讀寫）","正式環境 Kubernetes（唯讀）","正式環境 Kubernetes（操作）"],"正式環境資料庫（唯讀副本）"))}${F("時數",S("njH",["1","2","4"],"1"))}${F("原因（必填）",TA("njR","","例：客服單號、告警編號"),1)}</div><p class="hint">核准後才生效，到期自動收回；期間所有指令與查詢全程記錄。</p>`,[{label:"取消"},{label:"送出申請",cls:"primary",fn:()=>{if(!required(["njR"]))return;JITS.unshift({id:"JIT-"+String(413+JITS.length).padStart(4,"0"),eng:val("njE"),target:val("njT"),reason:val("njR"),h:Number(val("njH")),st:"待核准",from:"—",to:"—",exp:0,appr:"—",sess:[]});audit("資安",val("njE"),"申請生產環境限時存取："+val("njT"),val("njR"));closeAll();renderSec();icons();toast("已送出，待核准");}}]);},
+ jitApprove(el){const j=JITS[Number(el.dataset.i)];if(j.eng===ME.n){toast("不能核准自己的申請");return;}const d=new Date();j.st="使用中";j.appr=ME.n;j.from=TODAY.slice(5)+" "+hm(d);const e=new Date(d.getTime()+j.h*3600e3);j.to=TODAY.slice(5)+" "+hm(e);j.exp=e.getTime();j.sess.push({t:hm(d),c:"權限已開通（"+j.target+"）"});audit("資安",j.id,`核准限時存取 ${j.h} 小時`);renderSec();icons();toast(`已核准，${j.to} 自動收回`);},
+ jitReject(el){const j=JITS[Number(el.dataset.i)];reasonBox("駁回申請",`駁回 ${j.eng} 的 ${j.target} 存取申請。`,"駁回",r=>{j.st="已駁回";audit("資安",j.id,"駁回限時存取",r);closeAll();renderSec();icons();});},
+ jitExpire(el){const j=JITS[Number(el.dataset.i)];j.exp=nowMs()-1;j.sess.push({t:hm(new Date()),c:"到期，系統自動收回權限"});renderSec();icons();toast("已到期，權限自動收回");},
+ jitEnd(el){const j=JITS[Number(el.dataset.i)];j.st="已結束";j.sess.push({t:hm(new Date()),c:"提前收回權限（"+ME.n+"）"});audit("資安",j.id,"提前收回限時存取");renderSec();icons();toast("已收回");},
+ jitSess(el){const j=JITS[Number(el.dataset.i)];modal("操作紀錄 "+j.id,`<p class="hint" style="margin-top:0">${j.eng} · ${j.target}</p><ul class="timeline">${j.sess.map(s=>`<li><b>${s.c}</b><small>${s.t}</small></li>`).join("")}</ul><p class="hint">完整指令紀錄保存於不可竄改的稽核儲存（NF-SVC-08）。</p>`);},
+ irOpen(el){const r=INCIDENTS[Number(el.dataset.i)];const [d,t]=r.found.split(" ");const base=dd(d).getTime()+Number(t.split(":")[0])*36e5;const dl=h=>{const x=new Date(base+h*36e5);return ymd(x)+" "+hm(x);};
+  modal(`${r.id} 應變清單`,`<p style="margin-top:0"><b>${r.title}</b><br><span class="hint">確認時間 ${r.found} · 涉及個資：${r.personal?"是":"否"} · 受影響租戶：${r.tenants.map(tName).join("、")||"—"}</span></p>${IR_STEPS.map(([k,n,rule,h])=>`<div class="chk"><span class="t"><b>${n}</b><small>${rule}${h?" · 截止 "+dl(h):""}</small></span>${r.steps[k]?tag(r.steps[k]==="不適用"?"不適用":"完成 "+r.steps[k],r.steps[k]==="不適用"?"t-mute":"t-ok"):`<button class="btn sm primary" data-act="irStep" data-i="${el.dataset.i}" data-k="${k}">標記完成</button>`}</div>`).join("")}`,[{label:"設定受影響租戶",fn:()=>A.irTenants({dataset:{i:el.dataset.i}})},{label:"結案",cls:"primary",fn:()=>{if(IR_STEPS.some(([k])=>!r.steps[k])){toast("尚有未完成的應變項目，無法結案");return;}r.st="已結案";audit("資安",r.id,"資安事件結案");closeAll();renderSec();icons();toast("已結案");}},{label:"關閉"}],true);},
+ irStep(el){const r=INCIDENTS[Number(el.dataset.i)];r.steps[el.dataset.k]=now().slice(5);audit("資安",r.id,"完成應變項目："+IR_STEPS.find(s=>s[0]===el.dataset.k)[1]);renderSec();A.irOpen({dataset:{i:el.dataset.i}});toast("已記錄");},
+ irTenants(el){const r=INCIDENTS[Number(el.dataset.i)];modal("受影響租戶",`<div>${TENANTS.filter(t=>t.st!=="已終止").map(t=>`<label class="check"><input type="checkbox" class="irT" value="${t.id}" ${r.tenants.includes(t.id)?"checked":""}> ${t.s}</label>`).join("")}</div><label class="check"><input type="checkbox" id="irP" ${r.personal?"checked":""}> 涉及個人資料</label>`,[{label:"取消"},{label:"儲存",cls:"primary",fn:()=>{r.tenants=$$(".irT").filter(x=>x.checked).map(x=>x.value);r.personal=chk("irP");audit("資安",r.id,"更新受影響租戶："+(r.tenants.map(tName).join("、")||"無"));closeAll();renderSec();icons();toast("已更新");}}]);},
+ newIncident(){modal("登錄資安事件",`<div class="form-grid">${F("事件 *",I("niT"),1)}${F("等級",S("niL",["高","中","低"],"中"))}${F("涉及個資",S("niP",["否","是"],"否"))}</div>`,[{label:"取消"},{label:"登錄並啟動應變",cls:"primary",fn:()=>{if(!required(["niT"]))return;const id="IR-2026-"+String(INCIDENTS.length+1).padStart(3,"0");INCIDENTS.unshift({id,title:val("niT"),found:now(),sev:val("niL"),personal:val("niP")==="是",tenants:[],st:"調查中",steps:{notify:null,prelim:null,authority:null,subject:null,root:null}});audit("資安",id,"登錄資安事件："+val("niT"));closeAll();renderSec();icons();toast("已建立 "+id+"，24 小時內需通知受影響租戶");}}]);},
+ newDrill(){modal("記錄應變演練",`<div class="form-grid">${F("日期",I("ndD",TODAY))}${F("情境 *",I("ndS","","例：勒索軟體加密資料庫"),1)}${F("結果 *",TA("ndR"),1)}${F("改善事項",TA("ndF"),1)}</div>`,[{label:"取消"},{label:"儲存",cls:"primary",fn:()=>{if(!required(["ndS","ndR"]))return;IR_DRILLS.unshift({d:val("ndD"),sc:val("ndS"),res:val("ndR"),fix:val("ndF")||"—"});audit("資安","應變演練","記錄演練："+val("ndS"));closeAll();renderSec();icons();toast("已記錄");}}]);},
+ newPentest(){modal("新增滲透測試紀錄",`<div class="form-grid">${F("日期",I("npD",TODAY))}${F("類型",S("npK",["上市前","年度","重大改版"],"重大改版"))}${F("廠商 *",I("npV"),1)}${F("範圍 *",I("npS"),1)}${F("重大",I("npC","0","","number"))}${F("高",I("npH","0","","number"))}${F("中",I("npM","0","","number"))}${F("低",I("npL","0","","number"))}</div>`,[{label:"取消"},{label:"儲存",cls:"primary",fn:()=>{if(!required(["npV","npS"]))return;const c=+val("npC"),h=+val("npH");PENTESTS.unshift({d:val("npD"),kind:val("npK"),vendor:val("npV"),scope:val("npS"),c,h,m:+val("npM"),l:+val("npL"),st:c+h?"修補中":"高風險已修補",rep:"PT-"+val("npD").replace(/\//g,"")+".pdf"});audit("資安","滲透測試",val("npK")+"："+val("npV"));closeAll();renderAll();toast("已新增");}}]);},
+ penView(el){const p=PENTESTS[Number(el.dataset.i)];modal("報告摘要 "+p.rep,`<dl class="dl"><dt>日期</dt><dd>${p.d}</dd><dt>廠商</dt><dd>${p.vendor}</dd><dt>範圍</dt><dd>${p.scope}</dd><dt>發現</dt><dd>重大 ${p.c} · 高 ${p.h} · 中 ${p.m} · 低 ${p.l}</dd><dt>狀態</dt><dd>${p.st}</dd></dl><p class="hint">完整報告限平台管理員下載，下載行為寫入稽核日誌。</p>`,[{label:"關閉"},{label:"下載報告",cls:"primary",fn:()=>{audit("資安",p.rep,"下載滲透測試報告");closeAll();toast("已下載 "+p.rep+"（模擬）");}}]);},
+ penFixed(el){const p=PENTESTS[Number(el.dataset.i)];p.st="高風險已修補";audit("資安","滲透測試 "+p.d,"高風險項目已修補");renderSec();icons();toast("已更新；上線門檻 G6 可重新檢核");},
+ penDone(el){const p=PENTESTS[Number(el.dataset.i)];p.d=TODAY;p.st="修補中";p.h=1;p.m=3;p.l=6;p.rep="PT-"+TODAY.replace(/\//g,"")+".pdf";audit("資安","滲透測試","登錄測試結果");renderSec();icons();toast("已登錄結果（高 1、中 3、低 6）");},
+
+ /* SLO 與效能 */
+ sloTab(el){sloTab=el.dataset.tab;renderSlo();icons();},
+ qSurge(){QUEUES[3].depth=48000;QUEUES[3].lat="6 分";QUEUES[2].depth=320;QUEUES[2].lat="3 分";QUEUES[1].depth=900;QUEUES[1].lat="45 秒";renderSlo();icons();toast("批次尖峰中：緊急推播佇列仍為 0 筆、平均 2.1 秒（獨立佇列）");},
+ qReset(){QUEUES[3].depth=0;QUEUES[3].lat="—";QUEUES[2].depth=14;QUEUES[2].lat="40 秒";QUEUES[1].depth=120;QUEUES[1].lat="18 秒";renderSlo();icons();toast("已恢復正常");},
+ qScale(el){const q=QUEUES[Number(el.dataset.i)];q.w++;audit("維運",q.n+" 佇列","工作程序增加為 "+q.w);renderSlo();icons();toast(`${q.n}：工作程序 ${q.w} 個`);},
+ rlSave(){const s=+val("rlSus"),b=+val("rlBurst");if(!(s>0&&b>=s)){toast("瞬間上限需大於等於持續上限");return;}RL={sus:s,burst:b};audit("維運","預設限流",`持續 ${s}／瞬間 ${b} 次／秒`);toast("已儲存預設限流");},
+ rlEdit(el){const tid=el.dataset.t||"";const o=RL_OVR.find(x=>x.tid===tid);modal("個別租戶上限",`<div class="form-grid">${F("租戶",S("rlT",TENANTS.filter(t=>t.st!=="已終止").map(t=>[t.id,t.s]),tid||"T002"))}${F("持續（次／秒）",I("rlS",o?o.sus:RL.sus*2,"","number"))}${F("瞬間（次／秒）",I("rlB",o?o.burst:RL.burst*2,"","number"))}${F("原因（必填）",TA("rlW",o?o.why:""),1)}</div>`,[{label:"取消"},{label:"儲存",cls:"primary",fn:()=>{if(!required(["rlW"]))return;const id=val("rlT");const ex=RL_OVR.find(x=>x.tid===id);const rec={tid:id,sus:+val("rlS"),burst:+val("rlB"),why:val("rlW")};if(ex)Object.assign(ex,rec);else RL_OVR.push(rec);THROTTLED=THROTTLED.filter(x=>x.tid!==id);audit("維運",tName(id),`個別限流 ${rec.sus}／${rec.burst}`,rec.why);closeAll();renderSlo();icons();toast("已儲存");}}]);},
+ rlDel(el){const o=RL_OVR[Number(el.dataset.i)];RL_OVR.splice(Number(el.dataset.i),1);audit("維運",tName(o.tid),"移除個別限流，改用預設");renderSlo();icons();toast("已移除");},
+ capPlan(){const over=CAP.filter(([k,c,d])=>c/d>=.6).map(x=>x[0]);modal("建立擴容規劃",`<div class="form-grid">${F("項目",S("cpI",CAP.map(x=>x[0]),over[0]||CAP[0][0]))}${F("負責人",S("cpW",ENG,ENG[1]))}${F("預定完成",I("cpD",addDays(TODAY,30)))}${F("做法 *",TA("cpH","","例：資料庫連線池上限 100 → 200，加開唯讀副本"),1)}</div>`,[{label:"取消"},{label:"建立",cls:"primary",fn:()=>{if(!required(["cpH"]))return;CAP_PLANS.push({item:val("cpI"),how:val("cpH"),who:val("cpW"),due:val("cpD")});audit("維運",val("cpI"),"建立擴容規劃");closeAll();renderSlo();icons();toast("已建立擴容規劃");}}]);},
+ ltRun(){modal("執行壓力測試",`<div class="form-grid">${F("情境",S("ltS",LT_SC,LT_SC[5]),1)}${F("版本",I("ltV","v1.4.0-rc2"))}</div><p class="hint">在獨立的壓測環境以第 3 年規模執行，不影響正式環境。</p>`,[{label:"取消"},{label:"開始",cls:"primary",fn:()=>{const l={id:"LT-"+String(20+LOADTESTS.length-7).padStart(3,"0"),d:TODAY,ver:val("ltV"),sc:val("ltS"),res:"執行中…",pass:null};LOADTESTS.unshift(l);audit("維運",l.id,"執行壓力測試："+l.sc);closeAll();renderSlo();icons();toast("壓力測試執行中…");setTimeout(()=>{l.pass=true;l.res=l.sc.includes("公平性")?"其他租戶讀取 p95 268 ms（目標 300 ms）":"達成目標";renderAll();toast(l.id+" 完成：通過");},1200);}}]);},
+
+ /* 上線門檻 */
+ gateRerun(el){const r=RELEASES[Number(el.dataset.r)];const g=el.dataset.g;if(r.st==="已上線"){toast("已上線的發布不可重新檢核");return;}if(r.g[g]==="不適用"){toast(g+" 僅適用於重大發布");return;}r.g[g]="執行中";renderGates();setTimeout(()=>{r.g[g]=evalGate(r,g);audit("維運",r.v,`重新執行 ${g}：${r.g[g]}`);renderGates();toast(`${r.v} ${g}：${r.g[g]}${r.g[g]==="失敗"?(g==="G2"?"（仍有未修補的重大／高風險弱點）":g==="G5"?"（公平性測試未通過）":""):""}`);},600);},
+ gateRunAll(el){const r=RELEASES[Number(el.dataset.r)];GATES.forEach(([g])=>r.g[g]="執行中");renderGates();setTimeout(()=>{GATES.forEach(([g])=>r.g[g]=evalGate(r,g));audit("維運",r.v,"執行全部上線檢核");renderGates();toast(r.v+" 檢核完成");},700);},
+ relLive(el){const r=RELEASES[Number(el.dataset.r)];const bad=GATES.filter(([g])=>!["通過","不適用"].includes(r.g[g]));if(bad.length){modal("不得上線",`<p style="margin-top:0">${r.v} 尚有 ${bad.length} 項上線門檻未通過：</p>${bad.map(([g,n,ref])=>`<div class="chk"><span class="t"><b>${g} ${n}</b><small>${ref} · 目前：${r.g[g]}</small></span></div>`).join("")}<p class="hint">修正後點選該項重新檢核，全部通過才能標記上線（需求書 8.8）。</p>`,[{label:"前往弱點與修補",fn:()=>{closeAll();location.hash="secVulns";}},{label:"前往壓力測試",fn:()=>{closeAll();sloTab="lt";location.hash="slo";renderSlo();}},{label:"關閉"}]);return;}
+  confirmBox("標記上線",`${r.v} 的上線門檻已全部通過，確認上線？`,"上線",()=>{r.st="已上線";r.d=TODAY;audit("維運",r.v,"版本上線（門檻全數通過）");closeAll();renderGates();icons();toast(r.v+" 已上線");});},
+ newRelease(){modal("建立發布",`<div class="form-grid">${F("版本 *",I("nrV","","例：v1.4.1"))}${F("預定日",I("nrD",addDays(TODAY,7)))}${F("內容 *",I("nrN"),1)}</div><label class="check"><input type="checkbox" id="nrM"> 重大發布（需通過 G5 壓力測試與 G6 滲透測試）</label>`,[{label:"取消"},{label:"建立",cls:"primary",fn:()=>{if(!required(["nrV","nrN"]))return;const g={};GATES.forEach(([k])=>g[k]="未執行");const r={v:val("nrV"),d:val("nrD"),major:chk("nrM"),note:val("nrN"),st:"待上線",g};if(!r.major){g.G5="不適用";g.G6="不適用";}RELEASES.unshift(r);audit("維運",r.v,"建立發布");closeAll();renderGates();icons();toast("已建立，請執行上線檢核");}}]);},
+
+ /* 備份與還原 */
+ bkVerify(el){const b=BACKUPS[Number(el.dataset.i)];audit("維運","備份 "+b.d,"驗證備份完整性");toast(`${b.d} 備份校驗通過（SHA-256 ${fnv(b.d+b.size)}…，加密金鑰可用）`);},
+ tenantRestore(){modal("單一租戶時間點還原",`<div class="form-grid">${F("租戶",S("trT",TENANTS.filter(t=>t.st!=="已終止").map(t=>[t.id,t.s]),"T002"))}${F("還原時間點",I("trP",TODAY+" 09:00"))}${F("方式",S("trM",["還原至隔離環境供檢視","覆蓋正式資料（需租戶書面同意）"],"還原至隔離環境供檢視"),1)}${F("原因（必填）",TA("trR","","例：租戶誤刪、客服單號"),1)}</div><p class="hint">可還原到最近 35 天內任一時間點（RPO ≤ 15 分鐘），不影響其他租戶。</p>`,[{label:"取消"},{label:"下一步",cls:"primary",fn:()=>{if(!required(["trR"]))return;const o={tid:val("trT"),point:val("trP"),mode:val("trM"),reason:val("trR")};stepUp("單一租戶還原",()=>{const id="RS-"+String(8+RESTORES.length-1).padStart(4,"0");const r={id,...o,st:"執行中",by:ME.n};RESTORES.unshift(r);JOBS.unshift({id:"J-"+(88160+JOBS.length),type:"單一租戶還原",tid:o.tid,st:"執行中",at:now().slice(5),dur:"—",msg:`還原至 ${o.point}（${o.mode}）`});audit("維運",tName(o.tid),`單一租戶還原至 ${o.point}（${o.mode}）`,o.reason);renderAll();toast("還原工作已排入背景佇列");setTimeout(()=>{r.st="完成";const j=JOBS.find(x=>x.type==="單一租戶還原"&&x.st==="執行中");if(j){j.st="完成";j.dur="6 分 40 秒";}renderAll();toast(id+" 還原完成");},1500);});}}]);},
+ rsView(el){const r=RESTORES.find(x=>x.id===el.dataset.r);modal("還原明細 "+r.id,`<dl class="dl"><dt>租戶</dt><dd>${tName(r.tid)}</dd><dt>時間點</dt><dd>${r.point}</dd><dt>方式</dt><dd>${r.mode}</dd><dt>執行人</dt><dd>${r.by}（已再次驗證）</dd><dt>原因</dt><dd>${r.reason}</dd><dt>狀態</dt><dd>${r.st}</dd></dl>`);},
+ newBkDrill(){modal("記錄還原演練",`<div class="form-grid">${F("季度",S("bdQ",["2026 Q4","2027 Q1"],"2026 Q4"))}${F("日期",I("bdD",TODAY))}${F("範圍",S("bdS",["全平台還原至演練環境","單一租戶時間點還原"],"單一租戶時間點還原"),1)}${F("實際 RTO *",I("bdT","","例：1 小時 20 分"))}${F("實際 RPO *",I("bdP","","例：5 分鐘"))}${F("結果",S("bdR",["通過","未通過"],"通過"))}${F("備註",I("bdN"))}</div>`,[{label:"取消"},{label:"儲存",cls:"primary",fn:()=>{if(!required(["bdT","bdP"]))return;BK_DRILLS.unshift({q:val("bdQ"),d:val("bdD"),scope:val("bdS"),rto:val("bdT"),rpo:val("bdP"),res:val("bdR"),note:val("bdN")||"—"});audit("維運","還原演練",val("bdQ")+" "+val("bdR"));closeAll();renderBackup();icons();toast("已記錄演練");}}]);},
+
+ /* 退租與刪除 */
+ exSimDl(el){const e=EXITS[Number(el.dataset.i)];e.fb={st:"已下載",d:TODAY};audit("退租",tName(e.tid),"租戶擁有者下載最終完整備份（再次驗證 2FA）");renderExits();icons();toast("已記錄下載");},
+ exRemind(el){const e=EXITS[Number(el.dataset.i)];const n=[30,7,1].find(n=>!e.rem[n]&&diff(TODAY,addDays(roUntil(e),-n))>=0)||[30,7,1].find(n=>!e.rem[n]);if(n&&diff(TODAY,addDays(roUntil(e),-n))>=0)e.rem[n]=TODAY;audit("退租",tName(e.tid),"寄送刪除前提醒"+(e.fb.st!=="已下載"?"（特別提示：尚未下載最終備份）":""));renderExits();icons();toast("已以 Email 與後台通知寄送提醒"+(e.fb.st!=="已下載"?"，並特別提示尚未下載最終備份":""));},
+ exResub(el){const e=EXITS[Number(el.dataset.i)];const t=tById(e.tid);reasonBox("重新訂閱還原",`${t.s} 在唯讀期間重新訂閱，資料立即恢復可用（P-EXIT-11）。`,"恢復",r=>{e.st="已回流";closeAll();setStatus(t,"正式",r,"唯讀期間重新訂閱，資料恢復可用");toast(t.s+" 已恢復為正式");});},
+ exDelete(el){const e=EXITS[Number(el.dataset.i)];const t=tById(e.tid);const left=diff(roUntil(e),TODAY);
+  stepUp("執行租戶資料刪除",()=>{reasonBox("執行資料刪除",`刪除 <b>${t.s}</b> 的資料庫、物件儲存、搜尋索引、快取與應用日誌中的租戶資料；系統備份於 35 天輪替後消滅且不再用於還原（P-EXIT-10）。${left>0?`<br><b style="color:var(--bad)">唯讀期尚餘 ${left} 天，提前刪除需租戶書面同意。</b>`:""}${e.fb.st!=="已下載"?`<br><b style="color:var(--warn)">租戶尚未下載最終完整備份。</b>`:""}`,"刪除並產生證明",r=>{if(val("dlC")!==t.code){toast("請輸入正確的租戶代碼");$("#dlC").style.borderColor="var(--bad)";return;}const id="DEL-2026-"+String(DEL_CERTS.length+2).padStart(4,"0");DEL_CERTS.unshift({id,tid:t.id,d:TODAY,bkEnd:addDays(TODAY,35)});e.st="已刪除";e.cert=id;t.hist.push({d:TODAY,txt:"已刪除租戶資料（"+id+"）",by:ME.n});audit("退租",t.s,"執行資料刪除並產生刪除證明 "+id,r);closeAll();renderAll();A.exCert({dataset:{c:id}});},true,F(`請輸入租戶代碼「${t.code}」確認`,I("dlC"),1));});},
+ exCert(el){const c=DEL_CERTS.find(x=>x.id===el.dataset.c);const t=tById(c.tid);modal("資料刪除證明",`<div class="cert"><h4>資料刪除證明　${c.id}</h4><dl class="dl"><dt>租戶</dt><dd>${t.n}（${t.code}）</dd><dt>刪除日</dt><dd>${c.d}</dd><dt>刪除範圍</dt><dd style="white-space:normal">資料庫（所有模組資料）、物件儲存（照片、文件、憑證影像）、搜尋索引、快取、應用日誌中的租戶資料</dd><dt>系統備份</dt><dd>依輪替週期於 ${c.bkEnd} 前自然消滅，期間不會再用於還原此租戶</dd><dt>執行紀錄</dt><dd>${c.id}-LOG（平台稽核日誌，雜湊鏈驗證）</dd><dt>保留項目</dt><dd>訂閱帳單與發票（依法令保存）、本證明</dd></dl><p class="hint" style="margin-bottom:0">本證明依 P-EXIT-10、NF-SAAS-14 產生，已寄送租戶擁有者。</p></div>`,[{label:"關閉"},{label:"下載 PDF",cls:"primary",fn:()=>{audit("退租",c.id,"下載刪除證明");closeAll();toast("已下載 "+c.id+".pdf（模擬）");}}],true);},
+ exOrder(){const ls=EXITS.filter(e=>e.st==="唯讀保留中");if(!ls.length){toast("目前沒有唯讀保留中的租戶");return;}const price=()=>{const t=tById(val("aoT"));const m=listPrice(t.ed,t.tier);const k=val("aoK");return k==="延長封存 1 年"?m*2:k==="延長封存 3 年"?m*5:5000;};
+  modal("新增加值服務訂單",`<div class="form-grid">${F("租戶",S("aoT",ls.map(e=>[e.tid,tName(e.tid)]),ls[0].tid))}${F("項目",S("aoK",["延長封存 1 年","延長封存 3 年","離線交付"],"延長封存 1 年"))}</div><p class="hint" id="aoP"></p>`,[{label:"取消"},{label:"建立訂單",cls:"primary",fn:()=>{const o={id:"AO-"+String(4+ARCH_ORDERS.length-1).padStart(4,"0"),tid:val("aoT"),kind:val("aoK"),amt:price(),st:AO_FLOW[val("aoK")][0]};ARCH_ORDERS.unshift(o);audit("退租",tName(o.tid),"建立加值服務訂單："+o.kind+" "+money(o.amt));closeAll();renderExits();icons();toast("已建立 "+o.id);}}]);
+  const upd=()=>{const t=tById(val("aoT"));$("#aoP").textContent=`金額 ${money(price())}（${val("aoK")==="離線交付"?"每次 NT$5,000 起":"退租時方案月費 "+money(listPrice(t.ed,t.tier))+" × "+(val("aoK").includes("1 年")?2:5)}）`;};["aoT","aoK"].forEach(id=>$("#"+id).addEventListener("change",upd));upd();},
+ aoNext(el){const o=ARCH_ORDERS[Number(el.dataset.i)];const f=AO_FLOW[o.kind];o.st=f[f.indexOf(o.st)+1];if(o.st==="已生效"){EXT_DAYS[o.tid]=(EXT_DAYS[o.tid]||0)+(o.kind.includes("1 年")?365:1095);}audit("退租",tName(o.tid),`${o.id} ${o.kind}：${o.st}`);renderExits();icons();toast(o.st==="已生效"?`已生效，唯讀保留延長至 ${roUntil(EXITS.find(e=>e.tid===o.tid))}`:"已更新為「"+o.st+"」");},
+
+ /* 加購模組 */
+ addonEdit(el){const tier=el.dataset.tier;modal(`社區帳務模組加購價：${tier}`,`<div class="form-grid">${F("新月費 *",I("adM",addonPrice(tier),"","number"))}${F("生效日",I("adE","2027/01/01"))}${F("原因（必填）",TA("adR"),1)}</div><p class="hint">建立新價格版本；建議維持「旗艦版－專業版」的價差（需求書 7.1.1）。</p>`,[{label:"取消"},{label:"建立價格版本",cls:"primary",fn:()=>{if(!required(["adM","adR"]))return;const vs=ADDON_VERS.filter(x=>x.tier===tier);ADDON_VERS.push({tier,v:vs.length+1,m:+val("adM"),eff:val("adE"),st:"待生效"});audit("方案","社區帳務模組 "+tier,`建立加購價版本 ${money(+val("adM"))}（${val("adE")} 生效）`,val("adR"));closeAll();renderPlans();icons();toast("已建立待生效版本");}}]);},
+ addonApply(el){const v=ADDON_VERS[Number(el.dataset.i)];ADDON_VERS.filter(x=>x.tier===v.tier&&x.st==="適用中").forEach(x=>x.st="已停用");v.st="適用中";audit("方案","社區帳務模組 "+v.tier,`加購價 v${v.v} ${money(v.m)} 生效`);renderAll();toast("已生效");},
+ addonToggle(){const t=tById(curT);if(t.ed==="旗艦"){toast("旗艦版已內含社區帳務模組");return;}reasonBox(t.addon?"取消加購社區帳務模組":"加購社區帳務模組",t.addon?`取消後於下一計費週期停用管理費收繳、社區財務、住戶完整資料（資料保留）。`:`加購後立即開通，月費加 ${money(addonPrice(t.tier))}（${t.tier}）。`,"確認",r=>{t.addon=!t.addon;t.hist.push({d:TODAY,txt:(t.addon?"加購":"取消加購")+"社區帳務模組",by:ME.n});audit("方案",t.s,(t.addon?"加購":"取消加購")+"社區帳務模組",r);closeAll();renderAll();toast("已更新");});},
+
+ /* 稽核日誌 */
+ auVerify(){const m=auditChain();const last=m.get(AUDIT[0]);modal("驗證稽核日誌完整性",`<div class="cert"><h4>${tag("雜湊鏈完整","t-ok")}</h4><dl class="dl"><dt>筆數</dt><dd>${AUDIT.length}</dd><dt>起始雜湊</dt><dd class="hash">00000000</dd><dt>最新雜湊</dt><dd class="hash">${last?last.h:"—"}</dd><dt>驗證時間</dt><dd>${now()}</dd></dl></div><p class="hint">每筆紀錄的雜湊包含前一筆雜湊，任何修改或刪除都會使之後的雜湊不一致。稽核日誌只能新增，不能修改或刪除（NF-SVC-08），保存至少 2 年。</p>`,[{label:"關閉"},{label:"模擬竄改偵測",fn:()=>{const k=Math.min(3,AUDIT.length-1);modal("竄改偵測結果",`<div class="cert"><h4>${tag("偵測到不一致","t-bad")}</h4><p style="margin:0">第 ${AUDIT.length-k} 筆（${AUDIT[k].t} ${AUDIT[k].act}）重新計算的雜湊與下一筆記錄的前一筆雜湊不符，自此之後 ${k} 筆無法驗證。</p></div><p class="hint">原型模擬：實際資料未被修改。正式系統偵測到不一致時會立即告警並啟動資安事件應變。</p>`);}}]);},
+});
+
+/* ---------- 需要再次驗證的既有操作（NF-AUTH-12） ---------- */
+[["terminate","終止租戶"],["grantEnter","以授權存取進入租戶"],["newPriceVer","建立價格版本"],["pvApply","價格版本生效"],["payout","佣金撥付"]].forEach(([k,label])=>{const f=A[k];A[k]=el=>stepUp(label,()=>f(el));});
+
+/* ---------- 終止時建立退租紀錄 ---------- */
+{const _set=setStatus;setStatus=function(t,st,reason,txt){_set(t,st,reason,txt);if(st==="已終止"&&!EXITS.some(e=>e.tid===t.id&&e.st==="唯讀保留中")){EXITS.unshift({tid:t.id,term:TODAY,fb:{st:"未下載",d:null},rem:{30:null,7:null,1:null},st:"唯讀保留中"});renderExits();}};}
+
+function renderAddon(){const card=$("#addonCard");if(!card)return;card.innerHTML=`<h3><span class="l"><i data-lucide="calculator"></i>社區帳務模組（加購，需求書 7.1.1）</span><span class="hint">旗艦版內含；基本版、專業版可加購</span></h3><div class="tbl-wrap"><table><thead><tr><th>級距</th><th class="num">加購月費</th><th>與「旗艦－專業」價差</th><th class="num">加購租戶數</th><th>待生效版本</th><th></th></tr></thead><tbody>${["入門","標準","進階"].map(t=>{const gap=listPrice("旗艦",t)-listPrice("專業",t);const pend=ADDON_VERS.filter(v=>v.tier===t&&v.st==="待生效");return `<tr><td>${t}（${TIER_RANGE[t]}）</td><td class="num">${money(addonPrice(t))}</td><td>${money(gap)} ${gap===addonPrice(t)?tag("一致","t-ok"):tag("不一致","t-warn")}</td><td class="num">${TENANTS.filter(x=>x.addon&&x.ed!=="旗艦"&&x.tier===t&&x.st!=="已終止").length}</td><td>${pend.map(v=>`v${v.v} ${money(v.m)}（${v.eff}） <button class="btn sm" data-act="addonApply" data-i="${ADDON_VERS.indexOf(v)}">立即生效</button>`).join("<br>")||"—"}</td><td><button class="btn sm" data-act="addonEdit" data-tier="${t}">調整價格</button></td></tr>`}).join("")}<tr><td>企業（60 以上）</td><td class="num">另行報價</td><td>—</td><td class="num">0</td><td>—</td><td></td></tr></tbody></table></div><p class="hint">基本版、專業版的模組清單已含「打卡與出勤」「薪資標準匯出」（S2、S7）。</p>`;}
+{const _rp=renderPlans;renderPlans=function(){_rp();renderAddon();};}
+function renderAll(){renderDash();renderReports();renderLeads();renderApps();renderFunnel();renderTenants();renderTenant();renderHealth();renderGrants();renderPlans();renderCoupons();renderBilling();renderDunning();renderPartners();renderComms();renderPortal();renderSupport();renderAnn();renderTpl();renderContent();renderReleases();renderTerms();renderMonitor();renderStaff();renderFlags();renderAudit();renderExits();renderSec();renderSlo();renderGates();renderBackup();icons();}
 function route(){
   const id=(location.hash||"#dashboard").slice(1);const sec=document.getElementById("s-"+id)?id:"dashboard";
   if(sec==="tenant")renderTenant();if(sec==="params")renderParams();
   $$("section.screen").forEach(s=>s.classList.toggle("on",s.id==="s-"+sec));
-  $$("aside a").forEach(a=>a.classList.toggle("active",a.getAttribute("href")==="#"+(sec==="tenant"?"tenants":sec)));
+  const href="#"+(sec==="tenant"?"tenants":sec);$$("aside a").forEach(a=>{const on=a.getAttribute("href")===href;a.classList.toggle("active",on);if(on)a.setAttribute("aria-current","page");else a.removeAttribute("aria-current");});syncSide(href);
+  if(sec==="secJit"||sec==="secEvents")renderSec();
   A.closeMenu();closeAll();window.scrollTo(0,0);icons();
 }
 window.addEventListener("hashchange",route);
 try{if(sessionStorage.getItem("pcmp-ops"))$("#login").style.display="none"}catch(e){}
-renderAll();renderParams();route();
+applySide();renderAll();renderParams();route();
 </script>
 </body>
 </html>

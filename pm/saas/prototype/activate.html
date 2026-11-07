@@ -1,0 +1,334 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>租戶開通</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+<style>
+:root{
+  --bg:#f4f6fa; --panel:#ffffff; --panel-2:#f8fafc; --text:#0f172a; --muted:#64748b; --border:#e2e8f0;
+  --accent:#0ea5e9; --accent-2:#6366f1; --accent-soft:#e0f2fe;
+  --ok:#059669; --ok-bg:#d1fae5; --bad:#dc2626; --bad-bg:#fee2e2; --info-bg:#e0e7ff; --info:#4338ca;
+  --shadow:0 1px 2px rgba(15,23,42,.04),0 4px 16px rgba(15,23,42,.06);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0a0f1a; --panel:#111827; --panel-2:#0f1623; --text:#e5e7eb; --muted:#94a3b8; --border:#1f2a3c; --accent-soft:#0c2a3d;
+    --ok:#34d399; --ok-bg:#06281f; --bad:#f87171; --bad-bg:#2e1111; --info-bg:#1e1b4b; --info:#a5b4fc; --shadow:0 1px 2px rgba(0,0,0,.3);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0a0f1a; --panel:#111827; --panel-2:#0f1623; --text:#e5e7eb; --muted:#94a3b8; --border:#1f2a3c; --accent-soft:#0c2a3d;
+  --ok:#34d399; --ok-bg:#06281f; --bad:#f87171; --bad-bg:#2e1111; --info-bg:#1e1b4b; --info:#a5b4fc; --shadow:0 1px 2px rgba(0,0,0,.3);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,"Noto Sans TC",system-ui,sans-serif;font-size:15px;line-height:1.6}
+button,input,select,textarea{font:inherit;color:inherit}
+svg.lucide{width:18px;height:18px;stroke-width:1.8;flex-shrink:0}
+a{color:var(--accent)}
+.top{display:flex;align-items:center;justify-content:space-between;padding:16px 24px;max-width:1120px;margin:0 auto}
+.logo{display:flex;align-items:center;gap:10px;font-weight:700}
+.logo .mark{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent-2));display:grid;place-items:center;color:#fff}
+.iconbtn{width:38px;height:38px;border-radius:10px;border:1px solid var(--border);background:var(--panel);display:grid;place-items:center;cursor:pointer}
+.wrap{max-width:1120px;margin:0 auto;padding:16px 24px 64px;display:grid;grid-template-columns:1fr 1.1fr;gap:40px;align-items:start}
+.hero h1{font-size:36px;line-height:1.3;margin:24px 0 12px;font-weight:900;letter-spacing:-.01em}
+.hero p{color:var(--muted);margin:0 0 20px}
+.pts{list-style:none;padding:0;margin:0;display:grid;gap:14px}
+.pts li{display:flex;gap:12px;align-items:flex-start}
+.pts .i{width:36px;height:36px;border-radius:10px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;flex-shrink:0}
+.pts b{display:block}.pts small{color:var(--muted)}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow);padding:28px}
+.card h2{margin:0 0 4px;font-size:22px}
+.hint{font-size:13px;color:var(--muted)}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:18px}
+.full{grid-column:1/-1}
+.field span{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
+.field span em{color:var(--bad);font-style:normal}
+.input{width:100%;height:42px;border:1px solid var(--border);border-radius:10px;padding:0 12px;background:var(--panel);outline:none}
+.input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.input.bad{border-color:var(--bad)}
+.err{color:var(--bad);font-size:12.5px;margin-top:4px;display:none}
+.err.on{display:block}
+.ref{display:none;margin-top:6px;font-size:12.5px;padding:6px 10px;border-radius:8px;background:var(--ok-bg);color:var(--ok)}
+.ref.on{display:block}.ref.bad{background:var(--bad-bg);color:var(--bad)}
+.check{display:flex;gap:8px;align-items:flex-start;font-size:13.5px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:44px;padding:0 18px;border-radius:10px;border:1px solid var(--border);background:var(--panel);cursor:pointer;font-weight:600}
+.btn.primary{background:linear-gradient(135deg,var(--accent),var(--accent-2));border:0;color:#fff}
+.btn.block{width:100%}
+.linkbtn{border:0;background:none;color:var(--accent);cursor:pointer;padding:0;font-size:inherit;text-decoration:underline}
+.done{text-align:center;padding:12px 0}
+.done .big{width:64px;height:64px;border-radius:50%;background:var(--ok-bg);color:var(--ok);display:grid;place-items:center;margin:0 auto 12px}
+.done .big svg{width:32px;height:32px}
+.steps{text-align:left;margin:18px 0;padding:0;list-style:none;display:grid;gap:10px}
+.steps li{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:var(--panel-2)}
+.steps b{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--accent);color:#fff;font-size:12px;flex-shrink:0}
+.ov{position:fixed;inset:0;background:rgba(2,6,23,.5);z-index:40;display:none}
+.ov.on{display:block}
+.modal{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(620px,calc(100vw - 32px));max-height:calc(100vh - 48px);display:none;flex-direction:column;background:var(--panel);border:1px solid var(--border);border-radius:16px;z-index:45}
+.modal.on{display:flex}
+.m-head{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid var(--border)}
+.m-head h2{margin:0;font-size:17px}
+.m-body{padding:20px;overflow-y:auto;font-size:14px}
+.m-foot{display:flex;gap:8px;justify-content:flex-end;padding:14px 20px;border-top:1px solid var(--border)}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(20px);opacity:0;background:var(--text);color:var(--panel);padding:10px 16px;border-radius:10px;transition:.25s;z-index:60;pointer-events:none}
+.toast.on{opacity:1;transform:translateX(-50%)}
+footer{text-align:center;color:var(--muted);font-size:12.5px;padding:0 16px 32px}
+@media (max-width:860px){.wrap{grid-template-columns:1fr;gap:16px}.hero h1{font-size:28px;margin-top:8px}}
+@media (max-width:520px){.wrap{padding:8px 16px 48px}.top{padding:12px 16px}.form-grid{grid-template-columns:1fr}.card{padding:20px}}
+/* ---------- v0.4：人機驗證、Email 驗證、統編檢核 ---------- */
+.botchk{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--ok);background:var(--ok-bg);border-radius:8px;padding:6px 10px}
+.botchk.bad{color:var(--bad);background:var(--bad-bg)}
+.botchk svg.lucide{width:15px;height:15px}
+.note{display:flex;gap:8px;align-items:flex-start;font-size:13px;border-radius:10px;padding:10px 12px;background:var(--info-bg);color:var(--info);margin:12px 0}
+.note.bad{background:var(--bad-bg);color:var(--bad)}
+.note svg.lucide{width:16px;height:16px;margin-top:2px}
+.mailart{width:76px;height:76px;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;margin:4px auto 12px}
+.mailart svg.lucide{width:38px;height:38px}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;text-align:left;font-size:13.5px;background:var(--panel-2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin:14px 0}
+.kv span{color:var(--muted)}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:10px}
+.dev{max-width:1120px;margin:0 auto 18px;padding:0 24px}
+.dev .box{border:1px dashed var(--border);border-radius:12px;padding:12px 14px;background:var(--panel);font-size:12.5px;color:var(--muted);display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.dev .box b{color:var(--text)}
+.dev .btn{height:32px;font-size:12.5px;padding:0 10px}
+.devnote{border:1px dashed var(--border);border-radius:10px;padding:8px 12px;font-size:12px;color:var(--muted);margin-top:12px;text-align:left}
+
+/* =====================================================================
+   捲軸設計（所有 SaaS 雛型共用）
+   - 全站：細捲軸（8px）、軌道透明、拇指圓角並隨深淺色主題變化
+   - 側邊功能列：品牌區與底部固定，只有選單區捲動；捲軸平常隱藏，
+     滑鼠移入或鍵盤聚焦時才淡入；上下緣淡出遮罩提示「還有更多」
+   - 手機外框（LIFF）：比照手機，不顯示捲軸
+   ===================================================================== */
+:root{
+  --sb-size:8px;
+  --sb-thumb:rgba(100,116,139,.28);
+  --sb-thumb-hover:rgba(100,116,139,.5);
+  --sb-side-thumb:rgba(148,163,184,.28);
+  --sb-side-thumb-hover:rgba(148,163,184,.55);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){--sb-thumb:rgba(148,163,184,.22);--sb-thumb-hover:rgba(148,163,184,.45)}
+}
+:root[data-theme="dark"]{--sb-thumb:rgba(148,163,184,.22);--sb-thumb-hover:rgba(148,163,184,.45)}
+
+/* Firefox */
+/* Firefox 專用：Chromium 設了標準屬性會停用 ::-webkit-scrollbar 並出現箭頭按鈕 */
+@supports not selector(::-webkit-scrollbar){
+  *{scrollbar-width:thin;scrollbar-color:var(--sb-thumb) transparent}
+  .side-nav{scrollbar-color:rgba(148,163,184,.16) transparent}
+  .side-nav:hover,.side-nav:focus-within{scrollbar-color:var(--sb-side-thumb) transparent}
+}
+::-webkit-scrollbar-button{display:none;width:0;height:0}
+/* Chromium / Safari */
+::-webkit-scrollbar{width:var(--sb-size);height:var(--sb-size)}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--sb-thumb);border-radius:999px;border:2px solid transparent;background-clip:padding-box;min-height:40px}
+::-webkit-scrollbar-thumb:hover{background:var(--sb-thumb-hover);background-clip:padding-box}
+::-webkit-scrollbar-corner{background:transparent}
+
+/* ---------- 側邊功能列 ----------
+   建議結構：
+   <aside id="side">
+     <div class="side-head">…Logo / 租戶名稱…</div>
+     <nav class="side-nav">…選單連結與分組標題…</nav>
+     <div class="side-foot">…目前使用者 / 方案 / 版本…</div>
+   </aside>
+   aside 本身不捲動（overflow:hidden），由 .side-nav 捲動 */
+.side-nav{
+  flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;
+  scrollbar-gutter:stable;padding:6px 2px 10px;margin:0 -4px 0 0;
+  display:flex;flex-direction:column;gap:2px;
+  -webkit-mask-image:linear-gradient(to bottom,transparent 0,#000 14px,#000 calc(100% - 22px),transparent 100%);
+          mask-image:linear-gradient(to bottom,transparent 0,#000 14px,#000 calc(100% - 22px),transparent 100%);
+}
+
+.side-nav::-webkit-scrollbar{width:6px}
+.side-nav::-webkit-scrollbar-thumb{background:rgba(148,163,184,.16);border:1px solid transparent;background-clip:padding-box}
+.side-nav:hover::-webkit-scrollbar-thumb,.side-nav:focus-within::-webkit-scrollbar-thumb{background:var(--sb-side-thumb);background-clip:padding-box}
+.side-nav::-webkit-scrollbar-thumb:hover{background:var(--sb-side-thumb-hover)!important;background-clip:padding-box!important}
+.side-head{flex-shrink:0;padding-bottom:10px;border-bottom:1px solid rgba(148,163,184,.12);margin-bottom:4px}
+.side-foot{flex-shrink:0;border-top:1px solid rgba(148,163,184,.12);padding-top:10px;margin-top:4px;font-size:12px}
+@media (prefers-reduced-motion: reduce){.side-nav{transition:none}}
+
+/* ---------- 手機外框（LIFF）內不顯示捲軸 ---------- */
+.phone *, .phone{scrollbar-width:none}
+.phone ::-webkit-scrollbar, .phone::-webkit-scrollbar{width:0;height:0;display:none}
+
+/* ---------- 橫向捲動的表格容器：細且只在需要時出現 ---------- */
+.table-wrap,.tbl-wrap,.tw{overflow-x:auto;scrollbar-gutter:auto}
+
+/* ---------- 開通頁 ---------- */
+.act-wrap{max-width:640px;margin:0 auto;padding:8px 24px 48px}
+.stepper{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:0 0 18px}
+.stepper div{font-size:12px;color:var(--muted);text-align:center}
+.stepper div i{display:block;height:6px;border-radius:99px;background:var(--border);margin-bottom:6px}
+.stepper div.on{color:var(--text);font-weight:700}.stepper div.on i{background:linear-gradient(135deg,var(--accent),var(--accent-2))}
+.acct{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:13.5px;background:var(--panel-2);border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin:12px 0 4px}
+.acct span{color:var(--muted)}
+.pw{position:relative}.pw .input{padding-right:44px}
+.pw .eye{position:absolute;right:6px;top:4px;width:34px;height:34px;border:0;background:none;cursor:pointer;color:var(--muted);display:grid;place-items:center}
+.meter2{height:8px;border-radius:99px;background:var(--border);overflow:hidden;margin:8px 0 4px}.meter2 i{display:block;height:100%;width:0;transition:width .2s}
+.rules{list-style:none;padding:0;margin:8px 0 0;font-size:13px;display:grid;gap:4px}
+.rules li{display:flex;gap:6px;align-items:center;color:var(--muted)}.rules li.ok{color:var(--ok)}.rules li.bad{color:var(--bad)}
+.rules svg.lucide{width:15px;height:15px}
+.qrbox{display:grid;grid-template-columns:auto 1fr;gap:18px;align-items:center;margin:14px 0}
+.qr{width:150px;height:150px;background:#fff;border-radius:10px;padding:8px;border:1px solid var(--border)}
+.secret{font-family:ui-monospace,Consolas,monospace;font-size:15px;font-weight:700;letter-spacing:.08em;background:var(--panel-2);border:1px dashed var(--border);border-radius:8px;padding:8px 10px;margin:6px 0}
+.otp{display:flex;gap:8px;justify-content:center;margin:12px 0}
+.otp input{width:46px;height:54px;text-align:center;font-size:22px;font-weight:800;border:1px solid var(--border);border-radius:10px;background:var(--panel)}
+.otp input:focus{border-color:var(--accent);outline:none;box-shadow:0 0 0 3px var(--accent-soft)}
+.codes{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin:14px 0;font-family:ui-monospace,Consolas,monospace;font-size:15px;font-weight:700}
+.codes span{background:var(--panel-2);border:1px solid var(--border);border-radius:8px;padding:8px;text-align:center;letter-spacing:.06em}
+.state{text-align:center;padding:10px 0}
+.state .big{width:72px;height:72px;border-radius:50%;display:grid;place-items:center;margin:0 auto 12px;background:var(--bad-bg);color:var(--bad)}
+.state .big svg.lucide{width:36px;height:36px}
+.state .big.ok{background:var(--ok-bg);color:var(--ok)}
+@media (max-width:520px){.qrbox{grid-template-columns:1fr;justify-items:center}.otp input{width:40px;height:50px}}
+.lbtn{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:44px;padding:0 18px;border-radius:10px;border:1px solid var(--border);background:var(--panel);cursor:pointer;font-weight:600;color:var(--text);text-decoration:none}
+.lbtn.primary{background:linear-gradient(135deg,var(--accent),var(--accent-2));border:0;color:#fff}
+.lbtn:hover{border-color:var(--accent)}
+
+/* =====================================================================
+   下拉式選單與表單元件：跟隨網站深淺色主題
+   - color-scheme 讓瀏覽器原生的下拉清單、日期選擇器、捲軸改用對應主題
+   - option 明確指定底色與字色，避免深色模式出現「淺底淺字」
+   - 自訂箭頭、hover 與 focus 樣式，與網站輸入框一致
+   ===================================================================== */
+:root{
+  color-scheme:light;
+  --sel-chev:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  --sel-opt-bg:#ffffff; --sel-opt-text:#0f172a; --sel-opt-muted:#64748b;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --sel-chev:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    --sel-opt-bg:#111827; --sel-opt-text:#e5e7eb; --sel-opt-muted:#94a3b8;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --sel-chev:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  --sel-opt-bg:#111827; --sel-opt-text:#e5e7eb; --sel-opt-muted:#94a3b8;
+}
+html select{
+  -webkit-appearance:none!important;appearance:none!important;
+  font:inherit;color:var(--text,var(--sel-opt-text));cursor:pointer;
+  /* 以 !important 確保自訂箭頭不被 .input{background:…} 等簡寫屬性覆蓋 */
+  background-image:var(--sel-chev)!important;background-repeat:no-repeat!important;background-position:right 10px center!important;background-size:16px 16px!important;
+  padding-right:34px!important;text-overflow:ellipsis;
+  transition:border-color .15s,box-shadow .15s;
+}
+html select:not([multiple]){line-height:1.3}
+html select option,html select optgroup{background-color:var(--sel-opt-bg);color:var(--sel-opt-text);font-weight:400}
+html select optgroup{color:var(--sel-opt-muted);font-weight:600}
+html select option:disabled{color:var(--sel-opt-muted)}
+html select:hover{border-color:var(--accent,#0ea5e9)}
+html select:focus-visible{outline:none;border-color:var(--accent,#0ea5e9);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent,#0ea5e9) 22%,transparent)}
+html select:disabled{opacity:.55;cursor:not-allowed}
+html select::-ms-expand{display:none}
+</style>
+</head>
+<body>
+<div class="top">
+  <div class="logo"><div class="mark"><i data-lucide="building-2"></i></div>物業社區管理平台</div>
+  <button class="iconbtn" data-act="theme" aria-label="深淺色"><i data-lucide="sun-moon"></i></button>
+</div>
+
+<div class="act-wrap">
+  <div class="card" id="card"></div>
+  <div class="devnote" style="margin-top:14px">原型控制：
+    <a href="activate.html">有效連結</a> · <a href="activate.html?state=expired">已過期（72 小時）</a> · <a href="activate.html?state=used">已使用</a>
+    ・對應需求：NF-REG-05、NF-REG-06、NF-AUTH-01～03</div>
+</div>
+<footer>原型 · 資料為虛構 · <a href="index.html">回原型總覽</a></footer>
+
+<div class="ov" id="ov" data-act="closeAll"></div>
+<div class="modal" id="modal" role="dialog" aria-modal="true"><div class="m-head"><h2 id="mTitle"></h2><button class="iconbtn" data-act="closeAll" aria-label="關閉"><i data-lucide="x"></i></button></div><div class="m-body" id="mBody"></div><div class="m-foot" id="mFoot"></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+let tt;function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("on");clearTimeout(tt);tt=setTimeout(()=>t.classList.remove("on"),2600);}
+let FOOT={};
+function modal(title,body,btns){$("#mTitle").textContent=title;$("#mBody").innerHTML=body;FOOT={};$("#mFoot").innerHTML=btns.map((b,i)=>{FOOT[i]=b.fn;return `<button class="btn ${b.cls||""}" data-foot="${i}">${b.label}</button>`}).join("");$("#modal").classList.add("on");$("#ov").classList.add("on");lucide.createIcons();}
+function closeAll(){$("#modal").classList.remove("on");$("#ov").classList.remove("on");}
+const STATE=({expired:"expired",used:"used"})[new URLSearchParams(location.search).get("state")]||"valid";
+const ACCT={tenant:"永信物業管理股份有限公司",code:"yongxin",mail:"owner@yongxin-pm.com.tw",role:"租戶擁有者",sent:"2026/11/06 10:12",expires:"2026/11/09 10:12"};
+/* 外洩或常見弱密碼清單（原型：正式版以 k-匿名方式比對外洩資料庫） */
+const BREACHED=["password1234","1234567890","12345678910","qwerty12345","iloveyou123","abcd123456","p@ssw0rd123","yongxin1234","1qaz2wsx3edc","aa12345678"];
+const SECRET="JBSW Y3DP EHPK 3PXP Q7RT";
+const CODES=["4KQ7-M2XD","9HTR-3WZP","C6YB-8NQF","T2LM-5VJK","XP3D-7HRG","8FWN-2KCQ","M5ZT-9BXL","R7JH-4DPW","6QVC-3TMN","LW9K-2FYB"];
+let step=1,pwOk=false,otpTries=0,saved=false,downloaded=false;
+const STEPS=["設定密碼","綁定雙因子驗證","保存救援碼","完成"];
+function stepper(){return `<div class="stepper">${STEPS.map((s,i)=>`<div class="${i<step?"on":""}"><i></i>${i+1}. ${s}</div>`).join("")}</div>`;}
+function acctBox(){return `<div class="acct"><span>公司</span><b>${ACCT.tenant}</b><span>帳號</span><b>${ACCT.mail}</b><span>角色</span><b>${ACCT.role}</b><span>連結有效至</span><b>${ACCT.expires}（單次使用）</b></div>`;}
+function qrSvg(){let seed=7,cells="";const n=25;const rnd=()=>{seed=(seed*9301+49297)%233280;return seed/233280;};
+ const finder=(x,y)=>`<rect x="${x}" y="${y}" width="7" height="7" fill="#0f172a"/><rect x="${x+1}" y="${y+1}" width="5" height="5" fill="#fff"/><rect x="${x+2}" y="${y+2}" width="3" height="3" fill="#0f172a"/>`;
+ for(let y=0;y<n;y++)for(let x=0;x<n;x++){const inF=(x<8&&y<8)||(x>16&&y<8)||(x<8&&y>16);if(!inF&&rnd()>.52)cells+=`<rect x="${x}" y="${y}" width="1" height="1" fill="#0f172a"/>`;}
+ return `<svg class="qr" viewBox="0 0 25 25" shape-rendering="crispEdges" aria-label="雙因子驗證 QR Code（示意）">${cells}${finder(0,0)}${finder(18,0)}${finder(0,18)}</svg>`;}
+function render(){const c=$("#card");
+ if(STATE==="expired"){c.innerHTML=`<div class="state"><div class="big"><i data-lucide="clock-alert"></i></div><h2>開通連結已過期</h2><p class="hint">開通連結自寄出起 72 小時內有效（寄出時間 ${ACCT.sent}）。為了安全，過期連結無法使用。</p><div class="note"><i data-lucide="info"></i><span>請聯絡您的業務窗口重新寄送開通信，新連結寄出後舊連結即失效。</span></div><button class="btn primary" data-act="requestResend"><i data-lucide="send"></i>請求重新寄送開通信</button></div>`;lucide.createIcons();return;}
+ if(STATE==="used"){c.innerHTML=`<div class="state"><div class="big"><i data-lucide="link-2-off"></i></div><h2>此開通連結已使用過</h2><p class="hint">每個開通連結只能使用一次。如果您已完成開通，請直接登入。</p><div class="btnrow"><a class="lbtn primary" href="admin.html"><i data-lucide="log-in"></i>前往登入</a><button class="btn" data-act="forgot"><i data-lucide="key-round"></i>忘記密碼？</button></div></div>`;lucide.createIcons();return;}
+ if(step===1){c.innerHTML=stepper()+`<h2>歡迎使用，請設定密碼</h2>${acctBox()}
+  <div class="form-grid" style="grid-template-columns:1fr">
+   <label class="field"><span>新密碼（至少 10 個字元）</span><div class="pw"><input class="input" id="pw1" type="password" autocomplete="new-password"><button class="eye" type="button" data-act="eye" data-t="pw1" aria-label="顯示密碼"><i data-lucide="eye"></i></button></div>
+    <div class="meter2"><i id="pwBar"></i></div><div class="hint" id="pwLbl">密碼強度：—</div>
+    <ul class="rules" id="pwRules"></ul></label>
+   <label class="field"><span>再輸入一次</span><div class="pw"><input class="input" id="pw2" type="password" autocomplete="new-password"><button class="eye" type="button" data-act="eye" data-t="pw2" aria-label="顯示密碼"><i data-lucide="eye"></i></button></div><div class="err" id="ePw2">兩次輸入的密碼不一致</div></label>
+  </div>
+  <div class="note"><i data-lucide="info"></i><span>不需要特殊符號組合；建議用一句好記的長句。系統會比對外洩密碼清單，命中的密碼不能使用（NF-AUTH-01），密碼以 Argon2id 雜湊保存（NF-AUTH-02）。</span></div>
+  <button class="btn primary block" data-act="pwNext"><i data-lucide="arrow-right"></i>下一步：綁定雙因子驗證</button>`;lucide.createIcons();pwCheck();return;}
+ if(step===2){c.innerHTML=stepper()+`<h2>綁定雙因子驗證（必要）</h2><p class="hint">租戶擁有者必須使用雙因子驗證，<b>無法略過</b>（NF-REG-05、NF-AUTH-03）。請用驗證器 App（Google Authenticator、Microsoft Authenticator 等）掃描：</p>
+  <div class="qrbox">${qrSvg()}<div><div class="hint">無法掃描？改為手動輸入金鑰：</div><div class="secret" id="secret">${SECRET}</div><button class="btn" data-act="copySecret"><i data-lucide="copy"></i>複製金鑰</button><div class="hint" style="margin-top:8px">帳號：${ACCT.mail}<br>發行者：物業社區管理平台</div></div></div>
+  <div class="hint" style="text-align:center">輸入 App 上顯示的 6 位數驗證碼</div>
+  <div class="otp" id="otp">${[0,1,2,3,4,5].map(()=>`<input inputmode="numeric" maxlength="1" aria-label="驗證碼">`).join("")}</div>
+  <div class="err" id="eOtp" style="text-align:center"></div>
+  <p class="hint" style="text-align:center">原型：輸入 <b>123456</b> 即可通過</p>
+  <button class="btn primary block" data-act="otpVerify"><i data-lucide="shield-check"></i>驗證並啟用</button>`;lucide.createIcons();$("#otp input").focus();return;}
+ if(step===3){c.innerHTML=stepper()+`<h2>保存救援碼</h2><p class="hint">手機遺失或換機時，可用救援碼登入。每組只能使用一次，<b>只會顯示這一次</b>，請下載或抄寫後妥善保存。</p>
+  <div class="codes">${CODES.map(x=>`<span>${x}</span>`).join("")}</div>
+  <div class="btnrow"><button class="btn" data-act="dlCodes"><i data-lucide="download"></i>下載 .txt</button><button class="btn" data-act="copyCodes"><i data-lucide="copy"></i>複製全部</button></div>
+  <label class="check" style="margin:16px 0 4px"><input type="checkbox" id="savedChk" ${saved?"checked":""}><span>我已妥善保存救援碼</span></label>
+  <div class="err" id="eSaved">請先確認已妥善保存救援碼</div>
+  <button class="btn primary block" data-act="finish" style="margin-top:10px"><i data-lucide="check"></i>完成開通</button>`;lucide.createIcons();return;}
+ c.innerHTML=stepper()+`<div class="state"><div class="big ok"><i data-lucide="badge-check"></i></div><h2>開通完成</h2><p class="hint">${ACCT.tenant} 的租戶後台已可使用。<br>之後登入需要輸入<b>密碼＋驗證器 App 的驗證碼</b>。</p>
+  <div class="acct" style="text-align:left"><span>帳號</span><b>${ACCT.mail}</b><span>雙因子驗證</span><b>已啟用（驗證器 App）</b><span>救援碼</span><b>10 組，${downloaded?"已下載":"已確認保存"}</b><span>開通連結</span><b>已失效（單次使用）</b></div>
+  <div class="btnrow"><a class="lbtn primary" href="admin.html"><i data-lucide="layout-dashboard"></i>前往租戶後台</a></div></div>`;lucide.createIcons();}
+/* 密碼檢查 */
+function pwScore(p){let s=0;if(p.length>=10)s+=2;if(p.length>=14)s++;if(p.length>=18)s++;if(/[a-z]/.test(p)&&/[A-Z]/.test(p))s++;if(/\d/.test(p))s++;if(/[^\w]/.test(p)||/\s/.test(p))s++;return Math.min(s,6);}
+function pwCheck(){const el=$("#pw1");if(!el)return;const p=el.value,low=p.toLowerCase();
+ const longOk=p.length>=10,breached=BREACHED.includes(low),personal=low.includes("yongxin")||low.includes("owner");
+ const rules=[[longOk,"至少 10 個字元"],[p&&!breached,"不在外洩或常見密碼清單中"],[p&&!personal,"不包含公司代碼或帳號名稱"]];
+ $("#pwRules").innerHTML=rules.map(([ok,t])=>`<li class="${!p?"":ok?"ok":"bad"}"><i data-lucide="${!p?"circle":ok?"circle-check":"circle-x"}"></i>${t}${!ok&&p&&t.startsWith("不在")?"：此密碼曾出現在外洩資料中，請換一個":""}</li>`).join("");
+ const sc=breached?1:pwScore(p),pct=p?Math.max(8,sc/6*100):0,col=sc<=2?"var(--bad)":sc<=4?"#d97706":"var(--ok)";
+ $("#pwBar").style.width=pct+"%";$("#pwBar").style.background=col;$("#pwLbl").textContent="密碼強度："+(!p?"—":breached?"不安全（外洩）":sc<=2?"弱":sc<=4?"中":"強");
+ pwOk=longOk&&!breached&&!personal;lucide.createIcons();}
+const A={
+ theme(){const r=document.documentElement;const dark=r.dataset.theme?r.dataset.theme==="dark":matchMedia("(prefers-color-scheme: dark)").matches;r.dataset.theme=dark?"light":"dark";},
+ closeAll(){closeAll();},
+ eye(el){const i=$("#"+el.dataset.t);i.type=i.type==="password"?"text":"password";el.innerHTML=`<i data-lucide="${i.type==="password"?"eye":"eye-off"}"></i>`;lucide.createIcons();},
+ pwNext(){pwCheck();if(!pwOk){toast("密碼不符合要求，請依提示修改");$("#pw1").focus();return;}const m=$("#pw1").value===$("#pw2").value;$("#ePw2").classList.toggle("on",!m);if(!m){$("#pw2").focus();return;}step=2;render();toast("密碼已設定");},
+ copySecret(){try{navigator.clipboard.writeText(SECRET.replace(/\s/g,""));}catch(e){}toast("已複製金鑰");},
+ otpVerify(){const code=$$("#otp input").map(i=>i.value).join("");const e=$("#eOtp");
+  if(!/^\d{6}$/.test(code)){e.textContent="請輸入 6 位數驗證碼";e.classList.add("on");return;}
+  if(code!=="123456"){otpTries++;e.textContent=otpTries>=5?"錯誤次數過多，請稍後再試（已通知帳號擁有者）":"驗證碼錯誤，請確認手機時間是否正確（還可嘗試 "+(5-otpTries)+" 次）";e.classList.add("on");$$("#otp input").forEach(i=>i.value="");$("#otp input").focus();return;}
+  step=3;render();toast("雙因子驗證已啟用");},
+ dlCodes(){downloaded=true;toast("已下載 recovery-codes-yongxin.txt");},
+ copyCodes(){try{navigator.clipboard.writeText(CODES.join("\n"));}catch(e){}toast("已複製 10 組救援碼");},
+ finish(){saved=$("#savedChk").checked;$("#eSaved").classList.toggle("on",!saved);if(!saved)return;step=4;render();toast("開通完成");},
+ requestResend(){modal("請求重新寄送開通信",`<p>我們會通知您的業務窗口，確認身分後重新寄送開通信到 <b>ow***@yongxin-pm.com.tw</b>。</p><p class="hint">為了安全，系統不會直接重寄；新連結寄出後舊連結即失效。</p>`,[{label:"取消"},{label:"送出請求",cls:"primary",fn:()=>{closeAll();toast("已送出請求，業務窗口將與您聯繫");}}]);},
+ forgot(){modal("忘記密碼",`<p>請到登入頁按「忘記密碼」，輸入帳號 Email 後會收到重設連結（30 分鐘內有效、單次使用）。</p><p class="hint">無論 Email 是否存在，畫面訊息都相同（NF-REG-06）。重設後會登出所有裝置。</p><p><a class="lbtn primary" href="admin.html"><i data-lucide="log-in"></i>前往登入頁</a></p>`,[{label:"關閉"}]);},
+};
+document.addEventListener("click",e=>{const f=e.target.closest("[data-foot]");if(f){const fn=FOOT[f.dataset.foot];fn?fn():closeAll();return;}const el=e.target.closest("[data-act]");if(!el)return;const fn=A[el.dataset.act];if(fn){e.preventDefault();fn(el);}});
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeAll();if(e.key==="Backspace"&&e.target.closest("#otp")&&!e.target.value&&e.target.previousElementSibling)e.target.previousElementSibling.focus();});
+document.addEventListener("input",e=>{if(e.target.id==="pw1")pwCheck();if(e.target.closest&&e.target.closest("#otp")){e.target.value=e.target.value.replace(/\D/g,"").slice(-1);if(e.target.value&&e.target.nextElementSibling)e.target.nextElementSibling.focus();}});
+document.addEventListener("paste",e=>{if(!e.target.closest||!e.target.closest("#otp"))return;const t=(e.clipboardData.getData("text")||"").replace(/\D/g,"").slice(0,6);if(!t)return;e.preventDefault();$$("#otp input").forEach((i,k)=>i.value=t[k]||"");});
+render();
+</script>
+</body>
+</html>

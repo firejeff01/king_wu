@@ -27,12 +27,118 @@ ul{margin:12px 0 0;padding-left:20px;color:var(--muted);line-height:1.8;font-siz
 .note{margin-top:28px;color:var(--muted);font-size:13px;line-height:1.9;border-top:1px solid var(--border);padding-top:18px}
 .note a{color:#7dd3fc}
 @media (max-width:720px){.grid{grid-template-columns:1fr}h1{font-size:26px}body{padding:32px 16px}}
+.tag.sec{background:#3f0d12;color:#fda4af}
+/* =====================================================================
+   捲軸設計（所有 SaaS 雛型共用）
+   - 全站：細捲軸（8px）、軌道透明、拇指圓角並隨深淺色主題變化
+   - 側邊功能列：品牌區與底部固定，只有選單區捲動；捲軸平常隱藏，
+     滑鼠移入或鍵盤聚焦時才淡入；上下緣淡出遮罩提示「還有更多」
+   - 手機外框（LIFF）：比照手機，不顯示捲軸
+   ===================================================================== */
+:root{
+  --sb-size:8px;
+  --sb-thumb:rgba(100,116,139,.28);
+  --sb-thumb-hover:rgba(100,116,139,.5);
+  --sb-side-thumb:rgba(148,163,184,.28);
+  --sb-side-thumb-hover:rgba(148,163,184,.55);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){--sb-thumb:rgba(148,163,184,.22);--sb-thumb-hover:rgba(148,163,184,.45)}
+}
+:root[data-theme="dark"]{--sb-thumb:rgba(148,163,184,.22);--sb-thumb-hover:rgba(148,163,184,.45)}
+
+/* Firefox */
+/* Firefox 專用：Chromium 設了標準屬性會停用 ::-webkit-scrollbar 並出現箭頭按鈕 */
+@supports not selector(::-webkit-scrollbar){
+  *{scrollbar-width:thin;scrollbar-color:var(--sb-thumb) transparent}
+  .side-nav{scrollbar-color:rgba(148,163,184,.16) transparent}
+  .side-nav:hover,.side-nav:focus-within{scrollbar-color:var(--sb-side-thumb) transparent}
+}
+::-webkit-scrollbar-button{display:none;width:0;height:0}
+/* Chromium / Safari */
+::-webkit-scrollbar{width:var(--sb-size);height:var(--sb-size)}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--sb-thumb);border-radius:999px;border:2px solid transparent;background-clip:padding-box;min-height:40px}
+::-webkit-scrollbar-thumb:hover{background:var(--sb-thumb-hover);background-clip:padding-box}
+::-webkit-scrollbar-corner{background:transparent}
+
+/* ---------- 側邊功能列 ----------
+   建議結構：
+   <aside id="side">
+     <div class="side-head">…Logo / 租戶名稱…</div>
+     <nav class="side-nav">…選單連結與分組標題…</nav>
+     <div class="side-foot">…目前使用者 / 方案 / 版本…</div>
+   </aside>
+   aside 本身不捲動（overflow:hidden），由 .side-nav 捲動 */
+.side-nav{
+  flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;
+  scrollbar-gutter:stable;padding:6px 2px 10px;margin:0 -4px 0 0;
+  display:flex;flex-direction:column;gap:2px;
+  -webkit-mask-image:linear-gradient(to bottom,transparent 0,#000 14px,#000 calc(100% - 22px),transparent 100%);
+          mask-image:linear-gradient(to bottom,transparent 0,#000 14px,#000 calc(100% - 22px),transparent 100%);
+}
+
+.side-nav::-webkit-scrollbar{width:6px}
+.side-nav::-webkit-scrollbar-thumb{background:rgba(148,163,184,.16);border:1px solid transparent;background-clip:padding-box}
+.side-nav:hover::-webkit-scrollbar-thumb,.side-nav:focus-within::-webkit-scrollbar-thumb{background:var(--sb-side-thumb);background-clip:padding-box}
+.side-nav::-webkit-scrollbar-thumb:hover{background:var(--sb-side-thumb-hover)!important;background-clip:padding-box!important}
+.side-head{flex-shrink:0;padding-bottom:10px;border-bottom:1px solid rgba(148,163,184,.12);margin-bottom:4px}
+.side-foot{flex-shrink:0;border-top:1px solid rgba(148,163,184,.12);padding-top:10px;margin-top:4px;font-size:12px}
+@media (prefers-reduced-motion: reduce){.side-nav{transition:none}}
+
+/* ---------- 手機外框（LIFF）內不顯示捲軸 ---------- */
+.phone *, .phone{scrollbar-width:none}
+.phone ::-webkit-scrollbar, .phone::-webkit-scrollbar{width:0;height:0;display:none}
+
+/* ---------- 橫向捲動的表格容器：細且只在需要時出現 ---------- */
+.table-wrap,.tbl-wrap,.tw{overflow-x:auto;scrollbar-gutter:auto}
+
+
+/* =====================================================================
+   下拉式選單與表單元件：跟隨網站深淺色主題
+   - color-scheme 讓瀏覽器原生的下拉清單、日期選擇器、捲軸改用對應主題
+   - option 明確指定底色與字色，避免深色模式出現「淺底淺字」
+   - 自訂箭頭、hover 與 focus 樣式，與網站輸入框一致
+   ===================================================================== */
+:root{
+  color-scheme:light;
+  --sel-chev:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  --sel-opt-bg:#ffffff; --sel-opt-text:#0f172a; --sel-opt-muted:#64748b;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --sel-chev:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    --sel-opt-bg:#111827; --sel-opt-text:#e5e7eb; --sel-opt-muted:#94a3b8;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --sel-chev:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  --sel-opt-bg:#111827; --sel-opt-text:#e5e7eb; --sel-opt-muted:#94a3b8;
+}
+html select{
+  -webkit-appearance:none!important;appearance:none!important;
+  font:inherit;color:var(--text,var(--sel-opt-text));cursor:pointer;
+  /* 以 !important 確保自訂箭頭不被 .input{background:…} 等簡寫屬性覆蓋 */
+  background-image:var(--sel-chev)!important;background-repeat:no-repeat!important;background-position:right 10px center!important;background-size:16px 16px!important;
+  padding-right:34px!important;text-overflow:ellipsis;
+  transition:border-color .15s,box-shadow .15s;
+}
+html select:not([multiple]){line-height:1.3}
+html select option,html select optgroup{background-color:var(--sel-opt-bg);color:var(--sel-opt-text);font-weight:400}
+html select optgroup{color:var(--sel-opt-muted);font-weight:600}
+html select option:disabled{color:var(--sel-opt-muted)}
+html select:hover{border-color:var(--accent,#0ea5e9)}
+html select:focus-visible{outline:none;border-color:var(--accent,#0ea5e9);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent,#0ea5e9) 22%,transparent)}
+html select:disabled{opacity:.55;cursor:not-allowed}
+html select::-ms-expand{display:none}
 </style>
 </head>
 <body>
 <div class="w">
   <h1>物業社區管理平台 SaaS 版 · 畫面原型</h1>
-  <p class="sub">v0.1 · 三個端：平台營運後台（我們）、租戶後台與前台（物業公司）。每個按鈕皆可操作，資料皆為虛構，對應《SaaS 版需求規劃書》v0.2。</p>
+  <p class="sub">v0.2 · 三個端：平台營運後台（我們）、租戶後台與前台（物業公司），另含官網申請與租戶開通頁。每個按鈕皆可操作，資料皆為虛構，對應《SaaS 版需求規劃書》v0.4（資安與效能最優先）。</p>
   <div class="grid">
     <a class="card" href="ops.html">
       <span class="tag ops">平台營運方 · 我們自己用</span>
@@ -59,7 +165,7 @@ ul{margin:12px 0 0;padding-left:20px;color:var(--muted);line-height:1.8;font-siz
         <li>員工 LINE 綁定邀請碼、使用率監控與低使用率警示</li>
         <li>訂閱與帳單、平台客服授權、資料匯出、終止服務、說明中心</li>
       </ul>
-      <div class="links"><a href="admin.html">開啟（旗艦版）</a><a href="admin.html?edition=basic">基本版</a><a href="admin.html?edition=pro">專業版</a><a href="admin.html?status=trial">試用中</a><a href="admin.html?status=overdue">付款逾期</a></div>
+      <div class="links"><a href="admin.html">開啟（旗艦版）</a><a href="admin.html?edition=basic">基本版</a><a href="admin.html?edition=pro">專業版</a><a href="admin.html?edition=pro&addon=acct">專業版＋社區帳務模組</a><a href="admin.html?status=trial">試用中</a><a href="admin.html?status=overdue">付款逾期</a><a href="admin.html?status=deleted">退租後（已刪除）</a></div>
     </div>
     <a class="card" href="liff.html">
       <span class="tag line">前台 · 社區工作人員個人手機</span>
@@ -68,31 +174,53 @@ ul{margin:12px 0 0;padding-left:20px;color:var(--muted);line-height:1.8;font-siz
       <ul>
         <li>綁定流程：加入好友 → 掃邀請碼 → 確認身分 → 選語系</li>
         <li>依角色切換的圖文選單（總幹事、保全、清潔、機電）</li>
+        <li>上下班打卡（GPS 範圍或掃 QR、範圍外打卡、補卡申請）</li>
         <li>LIFF 頁面：交接日誌、報修、事件通報、巡邏、班表、請假、公告、改善單</li>
-        <li>推播訊息：緊急事件、逾期工單、每日摘要</li>
+        <li>邀請碼 8 碼、錯誤 5 次鎖定；工作階段逾期重新驗證；離職停用</li>
+        <li>照片自動壓縮並移除位置資訊；巡邏 PWA 離線備案；共用或自有官方帳號</li>
       </ul>
+      <div class="links"><span style="color:var(--muted);font-size:13px;align-self:center">點整張卡片開啟 liff.html</span></div>
     </a>
     <div class="card">
       <span class="tag">前台 · 櫃台共用電腦</span>
       <h2><a href="site.html" style="color:inherit;text-decoration:none">網頁前台（櫃台模式／PWA） →</a></h2>
       <div class="d">包裹、訪客、管理費收款等櫃台作業；顯示租戶名稱</div>
       <ul>
-        <li>櫃台模式：點名字＋4 碼 PIN 快速切換使用者</li>
-        <li>依方案隱藏模組（巡邏、改善單屬專業版；管理費、社區財務屬旗艦版）</li>
+        <li>櫃台裝置需總幹事核准才能使用</li>
+        <li>點名字＋6 碼 PIN 切換使用者，錯誤 5 次鎖定該員工</li>
+        <li>住戶個資一律遮罩、櫃台模式不能匯出</li>
+        <li>依方案隱藏模組（巡邏、改善單屬專業版；管理費、社區財務屬旗艦版或加購社區帳務模組）</li>
         <li>提示個人作業改用 LINE</li>
       </ul>
-      <div class="links"><a href="site.html">開啟（旗艦版）</a><a href="site.html?edition=basic">基本版</a><a href="site.html?edition=pro">專業版</a></div>
+      <div class="links"><a href="site.html">開啟（旗艦版）</a><a href="site.html?edition=basic">基本版</a><a href="site.html?edition=pro">專業版</a><a href="site.html?edition=basic&addon=acct">基本版＋社區帳務模組</a></div>
     </div>
-    <div class="card wide">
+    <div class="card">
       <span class="tag trial">官網 · 潛在客戶</span>
       <h2><a href="signup.html" style="color:inherit;text-decoration:none">試用申請 →</a></h2>
-      <div class="d">官網表單：公司資料、社區數、推薦碼；送出後進入平台營運後台的潛在客戶清單</div>
-      <div class="links"><a href="signup.html">一般申請</a><a href="signup.html?ref=HY-CHEN">透過推薦連結申請（推薦碼 HY-CHEN）</a></div>
+      <div class="d">官網表單送出後進入平台營運後台的潛在客戶清單</div>
+      <ul>
+        <li>背景人機驗證、同網路每小時最多 3 次</li>
+        <li>統一編號檢查碼驗證（含第 7 碼為 7 的特例）</li>
+        <li>Email 驗證連結，驗證後才進入審核</li>
+        <li>重複申請顯示相同訊息，不透露是否已是客戶</li>
+      </ul>
+      <div class="links"><a href="signup.html">一般申請</a><a href="signup.html?ref=HY-CHEN">推薦連結（HY-CHEN）</a><a href="signup.html?bot=1">人機驗證失敗</a></div>
+    </div>
+    <div class="card">
+      <span class="tag sec">租戶擁有者 · 開通連結</span>
+      <h2><a href="activate.html" style="color:inherit;text-decoration:none">租戶開通 →</a></h2>
+      <div class="d">業務審核通過後寄出的開通信連結（72 小時、單次使用）</div>
+      <ul>
+        <li>設定密碼：至少 10 字元、強度提示、比對外洩密碼清單</li>
+        <li>強制綁定雙因子驗證（驗證器 App），無法略過</li>
+        <li>10 組救援碼，下載或複製並確認已保存</li>
+      </ul>
+      <div class="links"><a href="activate.html">有效連結</a><a href="activate.html?state=expired">已過期</a><a href="activate.html?state=used">已使用</a></div>
     </div>
   </div>
   <div class="note">
     <b>相關文件</b>：<a href="../社區管理系統SaaS版需求規劃書.html">SaaS 版需求規劃書</a> · <a href="../SaaS商業計畫書.html">SaaS 商業計畫書</a> · <a href="../../prototype/index.html">原單一公司版原型</a><br>
-    <b>原型展示提示</b>：租戶後台「訂閱與帳單」頁最下方有「原型展示用」區塊，可切換方案版本與訂閱狀態；也可用網址參數 <code>?edition=basic|pro|flag</code>、<code>?status=trial|overdue|readonly</code>。
+    <b>原型展示提示</b>：租戶後台「訂閱與帳單」頁最下方有「原型展示用」區塊，可切換方案版本與訂閱狀態；也可用網址參數 <code>?edition=basic|pro|flag</code>、<code>&amp;addon=acct</code>（加購社區帳務模組）、<code>?status=trial|overdue|readonly|deleted</code>。LINE 前台的打卡、巡邏驗證結果、工作階段逾期、離職停用等情境，在頁面左側「原型控制」切換。
   </div>
 </div>
 </body>

@@ -221,6 +221,154 @@ button.item:active{background:var(--accent-soft)}
 .linebar .ed{opacity:.85;font-weight:600}
 .linebar button{margin-left:auto;background:none;border:0;color:#fff;font-size:1.2rem;cursor:pointer;line-height:1}
 .tenant{font-size:.75rem;color:var(--muted);font-weight:700;white-space:nowrap}
+
+/* ---------- v0.4：櫃台裝置核准、PIN 鎖定、住戶查詢 ---------- */
+.devcard{max-width:520px;margin:28px auto 0;background:rgba(15,23,42,.55);border:1px solid #334155;border-radius:20px;padding:26px;text-align:center}
+.devcard .devicon{width:84px;height:84px;border-radius:50%;background:#78350f;color:#fde68a;display:grid;place-items:center;margin:0 auto 12px}
+.devcard .devicon svg.lucide{width:44px;height:44px}
+.devcode{font-family:ui-monospace,Consolas,monospace;font-size:1.9rem;font-weight:900;letter-spacing:.12em;background:#0b1220;border:2px dashed #475569;border-radius:14px;padding:10px;margin:14px 0}
+.devmeta{text-align:left;font-size:.9rem;color:#94a3b8;display:grid;grid-template-columns:auto 1fr;gap:4px 14px;margin:10px 0 16px}
+.devmeta b{color:#e2e8f0}
+.pinerr{color:#fca5a5;font-weight:800;min-height:1.4em;margin-top:-8px;margin-bottom:8px}
+.mask-note{display:flex;gap:8px;align-items:flex-start;background:rgba(14,165,233,.12);color:var(--accent);border:1px solid rgba(14,165,233,.35);border-radius:12px;padding:10px 12px;font-size:.9rem;margin:10px 0}
+.res-row{display:grid;grid-template-columns:90px 1fr auto;gap:10px;align-items:center}
+.res-row .mono{font-family:ui-monospace,Consolas,monospace}
+/* =====================================================================
+   捲軸設計（所有 SaaS 雛型共用）
+   - 全站：細捲軸（8px）、軌道透明、拇指圓角並隨深淺色主題變化
+   - 側邊功能列：品牌區與底部固定，只有選單區捲動；捲軸平常隱藏，
+     滑鼠移入或鍵盤聚焦時才淡入；上下緣淡出遮罩提示「還有更多」
+   - 手機外框（LIFF）：比照手機，不顯示捲軸
+   ===================================================================== */
+:root{
+  --sb-size:8px;
+  --sb-thumb:rgba(100,116,139,.28);
+  --sb-thumb-hover:rgba(100,116,139,.5);
+  --sb-side-thumb:rgba(148,163,184,.28);
+  --sb-side-thumb-hover:rgba(148,163,184,.55);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){--sb-thumb:rgba(148,163,184,.22);--sb-thumb-hover:rgba(148,163,184,.45)}
+}
+:root[data-theme="dark"]{--sb-thumb:rgba(148,163,184,.22);--sb-thumb-hover:rgba(148,163,184,.45)}
+
+/* Firefox */
+/* Firefox 專用：Chromium 設了標準屬性會停用 ::-webkit-scrollbar 並出現箭頭按鈕 */
+@supports not selector(::-webkit-scrollbar){
+  *{scrollbar-width:thin;scrollbar-color:var(--sb-thumb) transparent}
+  .side-nav{scrollbar-color:rgba(148,163,184,.16) transparent}
+  .side-nav:hover,.side-nav:focus-within{scrollbar-color:var(--sb-side-thumb) transparent}
+}
+::-webkit-scrollbar-button{display:none;width:0;height:0}
+/* Chromium / Safari */
+::-webkit-scrollbar{width:var(--sb-size);height:var(--sb-size)}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--sb-thumb);border-radius:999px;border:2px solid transparent;background-clip:padding-box;min-height:40px}
+::-webkit-scrollbar-thumb:hover{background:var(--sb-thumb-hover);background-clip:padding-box}
+::-webkit-scrollbar-corner{background:transparent}
+
+/* ---------- 側邊功能列 ----------
+   建議結構：
+   <aside id="side">
+     <div class="side-head">…Logo / 租戶名稱…</div>
+     <nav class="side-nav">…選單連結與分組標題…</nav>
+     <div class="side-foot">…目前使用者 / 方案 / 版本…</div>
+   </aside>
+   aside 本身不捲動（overflow:hidden），由 .side-nav 捲動 */
+.side-nav{
+  flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;
+  scrollbar-gutter:stable;padding:6px 2px 10px;margin:0 -4px 0 0;
+  display:flex;flex-direction:column;gap:2px;
+  -webkit-mask-image:linear-gradient(to bottom,transparent 0,#000 14px,#000 calc(100% - 22px),transparent 100%);
+          mask-image:linear-gradient(to bottom,transparent 0,#000 14px,#000 calc(100% - 22px),transparent 100%);
+}
+
+.side-nav::-webkit-scrollbar{width:6px}
+.side-nav::-webkit-scrollbar-thumb{background:rgba(148,163,184,.16);border:1px solid transparent;background-clip:padding-box}
+.side-nav:hover::-webkit-scrollbar-thumb,.side-nav:focus-within::-webkit-scrollbar-thumb{background:var(--sb-side-thumb);background-clip:padding-box}
+.side-nav::-webkit-scrollbar-thumb:hover{background:var(--sb-side-thumb-hover)!important;background-clip:padding-box!important}
+.side-head{flex-shrink:0;padding-bottom:10px;border-bottom:1px solid rgba(148,163,184,.12);margin-bottom:4px}
+.side-foot{flex-shrink:0;border-top:1px solid rgba(148,163,184,.12);padding-top:10px;margin-top:4px;font-size:12px}
+@media (prefers-reduced-motion: reduce){.side-nav{transition:none}}
+
+/* ---------- 手機外框（LIFF）內不顯示捲軸 ---------- */
+.phone *, .phone{scrollbar-width:none}
+.phone ::-webkit-scrollbar, .phone::-webkit-scrollbar{width:0;height:0;display:none}
+
+/* ---------- 橫向捲動的表格容器：細且只在需要時出現 ---------- */
+.table-wrap,.tbl-wrap,.tw{overflow-x:auto;scrollbar-gutter:auto}
+
+
+/* =====================================================================
+   下拉式選單與表單元件：跟隨網站深淺色主題
+   - color-scheme 讓瀏覽器原生的下拉清單、日期選擇器、捲軸改用對應主題
+   - option 明確指定底色與字色，避免深色模式出現「淺底淺字」
+   - 自訂箭頭、hover 與 focus 樣式，與網站輸入框一致
+   ===================================================================== */
+:root{
+  color-scheme:light;
+  --sel-chev:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  --sel-opt-bg:#ffffff; --sel-opt-text:#0f172a; --sel-opt-muted:#64748b;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --sel-chev:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    --sel-opt-bg:#111827; --sel-opt-text:#e5e7eb; --sel-opt-muted:#94a3b8;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --sel-chev:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  --sel-opt-bg:#111827; --sel-opt-text:#e5e7eb; --sel-opt-muted:#94a3b8;
+}
+html select{
+  -webkit-appearance:none!important;appearance:none!important;
+  font:inherit;color:var(--text,var(--sel-opt-text));cursor:pointer;
+  /* 以 !important 確保自訂箭頭不被 .input{background:…} 等簡寫屬性覆蓋 */
+  background-image:var(--sel-chev)!important;background-repeat:no-repeat!important;background-position:right 10px center!important;background-size:16px 16px!important;
+  padding-right:34px!important;text-overflow:ellipsis;
+  transition:border-color .15s,box-shadow .15s;
+}
+html select:not([multiple]){line-height:1.3}
+html select option,html select optgroup{background-color:var(--sel-opt-bg);color:var(--sel-opt-text);font-weight:400}
+html select optgroup{color:var(--sel-opt-muted);font-weight:600}
+html select option:disabled{color:var(--sel-opt-muted)}
+html select:hover{border-color:var(--accent,#0ea5e9)}
+html select:focus-visible{outline:none;border-color:var(--accent,#0ea5e9);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent,#0ea5e9) 22%,transparent)}
+html select:disabled{opacity:.55;cursor:not-allowed}
+html select::-ms-expand{display:none}
+
+/* ---------- 廠商合約（F-VND，個人登入） ---------- */
+.p-mute{background:var(--bg);color:var(--muted);border:1px solid var(--border)}
+.vnav{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 16px}
+.vnav a{display:inline-flex;align-items:center;gap:6px;padding:10px 16px;border-radius:999px;border:2px solid var(--border);background:var(--panel);color:var(--text);text-decoration:none;font-weight:800}
+.vnav a.on,.vnav a:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+.vtool{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin:0 0 14px}
+.vcard{padding:16px 18px}
+.vtop{display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap}
+.vtop b{display:block;font-size:1.1rem}
+.vtop .ic{width:48px;height:48px;border-radius:14px;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent);flex-shrink:0}
+.vtags{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.vbtns{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.sb{display:inline-flex;align-items:center;gap:6px;min-height:46px;padding:0 14px;border-radius:12px;border:2px solid var(--border);background:var(--panel);color:var(--text);font-weight:800;cursor:pointer}
+.sb:hover{border-color:var(--accent);color:var(--accent)}
+.sb.pri{background:var(--accent);border-color:var(--accent);color:#fff}
+.vbar{height:10px;border-radius:999px;background:var(--bg);border:1px solid var(--border);overflow:hidden;margin-top:10px}
+.vbar i{display:block;height:100%;border-radius:999px}
+.vblock{text-align:center;padding:30px 22px}
+.vblock .ic{width:72px;height:72px;border-radius:20px;display:grid;place-items:center;margin:0 auto 10px;background:var(--warn-bg);color:var(--warn)}
+.vblock h2{margin:0 0 8px;font-weight:900}
+.vperm{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:6px 18px}
+.vperm label{display:flex;gap:10px;align-items:flex-start;font-weight:700;padding:6px 0;cursor:pointer}
+.vperm input{width:22px;height:22px;margin-top:2px;accent-color:var(--accent)}
+.vperm small{display:block;color:var(--muted);font-weight:600;font-size:.82rem}
+.vperm label.dis{opacity:.6;cursor:not-allowed}
+.perbox{max-width:520px;margin:24px auto 0;background:rgba(15,23,42,.55);border:1px solid #334155;border-radius:20px;padding:24px}
+.perbox h2{margin:0 0 6px;font-size:1.4rem;font-weight:900}
+.perbox .field span{color:#e2e8f0}
+#perEntry{margin-top:26px;text-align:center}
+#perEntry .big{max-width:520px;margin:0 auto;background:rgba(17,27,46,.85);color:#fff;border:2px solid #38bdf8}
 </style>
 </head>
 <body>
@@ -239,20 +387,57 @@ button.item:active{background:var(--accent-soft)}
       </div>
     </div>
 
+    <div id="devStep" style="display:none">
+      <div class="devcard">
+        <div class="devicon"><i data-lucide="monitor-x"></i></div>
+        <h2 style="margin:0 0 4px;font-size:1.5rem;font-weight:900">此裝置尚未核准</h2>
+        <p style="color:#94a3b8;margin:0">櫃台裝置需由總幹事在後台核准後才能使用（NF-AUTH-09）</p>
+        <div class="devcode" id="devCode">DEV-7Q4K-29</div>
+        <div class="devmeta"><span>裝置</span><b>櫃台電腦（Windows・Chrome）</b><span>社區</span><b>春暉苑</b><span>申請時間</span><b id="devTime">--</b><span>狀態</span><b id="devSt">已送出申請・等待總幹事核准</b></div>
+        <div class="btn-row" style="grid-template-columns:1fr 1fr"><button class="big ghost" data-act="devRefresh"><i data-lucide="refresh-cw"></i>重新檢查</button><button class="big primary" data-act="devApprove"><i data-lucide="badge-check"></i>（原型）模擬總幹事核准</button></div>
+        <p style="color:#64748b;font-size:.85rem;margin-top:10px">請將裝置代碼告知總幹事，於「租戶後台 → 系統設定 → 櫃台裝置」核准。</p>
+      </div>
+    </div>
+
     <div id="whoStep">
       <h2 style="font-size:1.6rem;margin:28px 0 0;font-weight:900">請點選您的名字</h2>
       <div class="who" id="who"></div>
+    </div>
+
+    <div id="perEntry">
+      <button class="big" data-act="perStart"><i data-lucide="user-round-check"></i>個人登入（總幹事等，需雙因子驗證）</button>
+      <p style="color:#94a3b8;font-size:.9rem;margin-top:8px">個人登入可使用依權限開放的功能（例如「廠商合約」）；櫃台共用電腦請點上方名字登入。</p>
+    </div>
+
+    <div id="perStep" style="display:none">
+      <div class="perbox">
+        <h2>個人登入</h2>
+        <p style="color:#94a3b8;margin:0 0 6px">請用自己的帳號登入；登入後需雙因子驗證（NF-AUTH-03）。</p>
+        <label class="field"><span>帳號</span><select class="in" id="perUser"></select></label>
+        <label class="field"><span>密碼（原型：任意 10 字元以上）</span><input class="in" id="perPwd" type="password" placeholder="至少 10 字元"></label>
+        <div class="btn-row"><button class="big ghost" data-act="perBack">返回</button><button class="big primary" data-act="perLogin"><i data-lucide="log-in"></i>下一步</button></div>
+      </div>
+    </div>
+
+    <div id="perOtpStep" style="display:none">
+      <div class="perbox">
+        <h2>雙因子驗證</h2>
+        <p style="color:#94a3b8;margin:0 0 6px" id="perOtpWho"></p>
+        <label class="field"><span>驗證器 App 的 6 位數驗證碼（原型：任意 6 位數，000000 模擬錯誤）</span><input class="in" id="perOtp" inputmode="numeric" maxlength="6" placeholder="123456" style="letter-spacing:.3em;text-align:center;font-size:1.4rem"></label>
+        <div class="btn-row"><button class="big ghost" data-act="perBack">返回</button><button class="big primary" data-act="perOtpOk"><i data-lucide="shield-check"></i>驗證並登入</button></div>
+      </div>
     </div>
 
     <div id="pinStep" style="display:none">
       <div class="pin">
         <div class="face" style="margin:20px auto 8px;width:84px;height:84px;font-size:2rem" id="pinFace">劉</div>
         <div style="font-size:1.4rem;font-weight:900" id="pinName">劉德華</div>
-        <div style="color:#94a3b8;margin-top:6px">請輸入 4 位數密碼</div>
-        <div class="dots" id="dots"><i></i><i></i><i></i><i></i></div>
+        <div style="color:#94a3b8;margin-top:6px">請輸入 6 位數 PIN</div>
+        <div class="dots" id="dots"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+        <div class="pinerr" id="pinErr"></div>
         <div class="pad" id="pad"></div>
         <button class="linkw" data-act="forgotPin">忘記密碼？</button>
-        <p style="color:#64748b;font-size:.85rem;margin-top:8px">原型：任意輸入 4 碼即可登入</p>
+        <p style="color:#64748b;font-size:.85rem;margin-top:8px">原型：PIN 為 135790；輸入錯誤 5 次會鎖定該員工的 PIN</p>
       </div>
     </div>
   </div>
@@ -281,6 +466,24 @@ button.item:active{background:var(--accent-soft)}
       <div class="tiles" id="tiles"></div>
       <div class="sec-title"><i data-lucide="list-todo"></i>待辦事項</div>
       <div class="todo" id="todo"></div>
+      <div id="perPanel"></div>
+    </section>
+
+    <!-- ========== 廠商合約（個人登入，F-VND-05～09） ========== -->
+    <section class="screen" id="s-vnd"><div class="title-row"><button class="back" data-go="home"><i data-lucide="arrow-left"></i>首頁</button><h1>廠商合約</h1></div><div id="vndBody"></div></section>
+    <section class="screen" id="s-vndlogs"><div class="title-row"><button class="back" data-go="home"><i data-lucide="arrow-left"></i>首頁</button><h1>履約總覽</h1></div><div id="vndlogsBody"></div></section>
+    <section class="screen" id="s-vndven"><div class="title-row"><button class="back" data-go="home"><i data-lucide="arrow-left"></i>首頁</button><h1>廠商資料</h1></div><div id="vndvenBody"></div></section>
+    <section class="screen" id="s-vndact"><div class="title-row"><button class="back" data-go="home"><i data-lucide="arrow-left"></i>首頁</button><h1>申請與紀錄</h1></div><div id="vndactBody"></div></section>
+
+    <!-- ========== 住戶查詢（遮罩） ========== -->
+    <section class="screen" id="s-resident">
+      <div class="title-row"><button class="back" data-go="home"><i data-lucide="arrow-left"></i>首頁</button><h1>住戶查詢</h1></div>
+      <div class="card">
+        <label class="field"><span>輸入戶別或姓氏</span><input class="in" id="resQ" placeholder="例：12-3 或 周"></label>
+        <div class="mask-note"><i data-lucide="shield"></i><span>櫃台模式只顯示遮罩後的個資，<b>不能查看完整資料，也不能匯出</b>（NF-AUTH-09）。需要完整資料請由總幹事在後台查詢。</span></div>
+        <div class="list" id="resList"></div>
+        <div class="btn-row" style="grid-template-columns:1fr"><button class="big ghost" data-act="exportWhy"><i data-lucide="file-lock"></i>為什麼不能匯出？</button></div>
+      </div>
     </section>
 
     <!-- ========== 包裹登記 ========== -->
@@ -716,6 +919,7 @@ const TILES=[
   {id:"patrol",t:"巡邏打點",s:"掃 QR Code",i:"scan-line",c:"c8",roles:"mgr guard"},
   {id:"handover",t:"交接班",s:"下班前填寫",i:"repeat",c:"c7",roles:"mgr sec guard"},
   {id:"fin",t:"社區財務",s:"支出、月報",i:"book-open-check",c:"c3",roles:"mgr"},
+  {id:"resident",t:"住戶查詢",s:"遮罩顯示",i:"contact",c:"c2",roles:"mgr sec guard"},
   {id:"me",t:"我的班表",s:"班表、請假",i:"calendar-days",c:"c8",roles:"mgr sec guard clean tech"},
 ];
 let me=USERS[0], site="春暉苑";
@@ -724,10 +928,13 @@ let state={pkg:12,repairs:[{id:"R-28812",t:"電梯門感應器",st:"待料",who:
   check:{fee:true,sign:true,petty:false,bank:false,improve:false},closed:false,notices:[{t:"11/15 起颱風防災 SOP 更新",d:"請各社區於 11/15 前完成防颱物資盤點，並將沙包放置於 B2 車道入口。",read:false},{t:"冬季制服發放",d:"11/20 起由督導帶至各社區發放，請確認尺寸。",read:false},{t:"10 月優良社區表揚",d:"恭喜河畔晴空獲得 10 月服務品質第一名！",read:true}],
   leaves:[["10/15","特休 1 天","已核准"]],patrol:3};
 /* SaaS：依租戶方案顯示模組（網址參數 ?edition=basic|pro|flag，預設旗艦版） */
-const EDITION=({basic:"basic",pro:"pro",flag:"flag"})[new URLSearchParams(location.search).get("edition")]||"flag";
+const QS=new URLSearchParams(location.search);
+const EDITION=({basic:"basic",pro:"pro",flag:"flag"})[QS.get("edition")]||"flag";
+const ADDON_ACCT=QS.get("addon")==="acct";
 const ERANK={basic:0,pro:1,flag:2},EDN={basic:"基本版",pro:"專業版",flag:"旗艦版"};
 const MODED={fee:"flag",fin:"flag",expense:"flag",petty:"flag",pettycount:"flag",bank:"flag",report:"flag",patrol:"pro",improve:"pro"};
-const allowed=id=>!MODED[id]||ERANK[EDITION]>=ERANK[MODED[id]];
+const ACCT=["fee","fin","expense","petty","pettycount","bank","report"];
+const allowed=id=>!MODED[id]||ERANK[EDITION]>=ERANK[MODED[id]]||(ADDON_ACCT&&ACCT.includes(id));
 const PATROL=["大廳","中庭花園","B1 停車場","B2 機房","頂樓水塔","垃圾集中區"];
 
 /* ---------- 對話框 / 提示 ---------- */
@@ -741,6 +948,21 @@ $("#who").innerHTML=USERS.map((u,i)=>`<button data-act="pickUser" data-i="${i}">
 $("#pad").innerHTML=[1,2,3,4,5,6,7,8,9,"返回",0,"刪除"].map(k=>`<button class="${typeof k==="string"?"fn":""}" data-act="pin" data-k="${k}">${k}</button>`).join("");
 let pin="";
 function dots(){$$("#dots i").forEach((d,i)=>d.classList.toggle("on",i<pin.length));}
+const PIN_OK="135790",pinFails={},pinLocked={};
+function checkPin(){if(pin===PIN_OK){pinFails[me.n]=0;$("#pinErr").textContent="";login();return;}
+  pinFails[me.n]=(pinFails[me.n]||0)+1;pin="";dots();
+  if(pinFails[me.n]>=5){pinLocked[me.n]=true;$("#pinErr").textContent="";pinLockDlg();return;}
+  $("#pinErr").textContent="PIN 錯誤，還可嘗試 "+(5-pinFails[me.n])+" 次";}
+function pinLockDlg(){dialog("PIN 已鎖定",`<p>「${me.n}」的 PIN 連續輸入錯誤 5 次，已鎖定。</p><p class="note">請找總幹事在「租戶後台 → 人事管理」為您解鎖或重設 PIN（NF-AUTH-09）。其他同仁仍可正常登入。</p>`,[{label:"返回",fn:()=>{closeDlg();$("#whoStep").style.display="";$("#pinStep").style.display="none";}},{label:"（原型）總幹事解鎖",cls:"primary",fn:()=>{pinLocked[me.n]=false;pinFails[me.n]=0;closeDlg();toast("已解鎖 "+me.n+" 的 PIN");}}]);}
+/* 櫃台裝置核准 */
+let devApproved=false;try{devApproved=sessionStorage.getItem("pcmp-site-dev")==="1"}catch(e){}
+if(QS.get("device")==="approved")devApproved=true;
+function showLoginStep(){$("#devStep").style.display=devApproved?"none":"";$("#whoStep").style.display=devApproved?"":"none";$("#pinStep").style.display="none";}
+$("#devTime").textContent=new Date().toLocaleString("zh-TW",{month:"numeric",day:"numeric",hour:"2-digit",minute:"2-digit"});
+/* 住戶（遮罩） */
+const RES=[["A-12-3","周○○","0912-***-678","區權人・自住"],["A-07-2","林○○","0933-***-105","租客・繳費人"],["B-03-1","陳○○","0928-***-552","區權人・出租"],["C-09-2","黃○○","0955-***-019","區權人・自住"]];
+function renderRes(){const q=($("#resQ")?.value||"").trim();const L=RES.filter(r=>!q||r[0].includes(q.replace(/\s/g,""))||r[1].startsWith(q));
+  $("#resList").innerHTML=L.length?L.map(r=>`<button class="item" data-act="resInfo" data-u="${r[0]}"><span class="res-row" style="width:100%"><b>${r[0]}</b><span>${r[1]}・${r[3]}</span><span class="mono">${r[2]}</span></span></button>`).join(""):`<p class="note">查無資料</p>`;lucide.createIcons();}
 function login(){
   $("#s-login").classList.remove("on");$("#app").style.display="";
   site=me.sites[0];$("#siteName").textContent=site;$("#userName").textContent=me.n+" · 交班登出";
@@ -778,6 +1000,7 @@ window.addEventListener("hashchange",route);
 /* 每個畫面進入時重設／渲染 */
 const resetOpts=sel=>$$(sel+" .opt").forEach((o,i)=>o.classList.remove("sel"));
 const R={
+  resident(){const q=$("#resQ");if(q)q.value="";renderRes();},
   home:renderHome,
   pkgin(){c=1;$("#cnt").textContent=1;resetPhoto("#s-pkgin");},
   pkgout(){clearSign();},
@@ -864,10 +1087,10 @@ window.addEventListener("pointerup",()=>drawing=false);
 const now=()=>{const d=new Date();return String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");};
 const A={
   lang(el){$$("#lang button").forEach(x=>x.classList.remove("on"));el.classList.add("on");if(el.textContent!=="中文")toast("原型僅示意中文，正式版會顯示 "+el.textContent+" 介面");},
-  pickUser(el){me=USERS[+el.dataset.i];$("#pinFace").textContent=me.n[0];$("#pinName").textContent=me.n+" · "+me.r;$("#whoStep").style.display="none";$("#pinStep").style.display="";pin="";dots();},
-  pin(el){const k=el.dataset.k;if(k==="返回"){$("#whoStep").style.display="";$("#pinStep").style.display="none";return;}if(k==="刪除")pin=pin.slice(0,-1);else if(pin.length<4)pin+=k;dots();if(pin.length===4)setTimeout(login,200);},
-  forgotPin(){dialog("忘記密碼","<p>請找總幹事或督導幫您重設密碼。</p><p class='note'>重設後會用簡訊通知您新的 4 位數密碼。</p>",[{label:"我知道了",cls:"primary",fn:closeDlg}]);},
-  logout(){dialog("交班登出",`<p>確定要登出「${me.n}」嗎？</p><p class="note">還沒填交接日誌的話，建議先填寫。</p>`,[{label:"先填交接",fn:()=>{closeDlg();go("handover");}},{label:"確定登出",cls:"primary",fn:()=>{closeDlg();try{sessionStorage.removeItem("pcmp-site-user")}catch(e){}$("#app").style.display="none";$("#whoStep").style.display="";$("#pinStep").style.display="none";$("#s-login").classList.add("on");history.replaceState(null,"","#");}}]);},
+  pickUser(el){me=USERS[+el.dataset.i];if(pinLocked[me.n]){pinLockDlg();return;}$("#pinErr").textContent="";$("#pinFace").textContent=me.n[0];$("#pinName").textContent=me.n+" · "+me.r;$("#whoStep").style.display="none";$("#pinStep").style.display="";pin="";dots();},
+  pin(el){const k=el.dataset.k;if(k==="返回"){$("#whoStep").style.display="";$("#pinStep").style.display="none";$("#pinErr").textContent="";return;}if(pinLocked[me.n]){pinLockDlg();return;}if(k==="刪除")pin=pin.slice(0,-1);else if(pin.length<6)pin+=k;dots();if(pin.length===6)setTimeout(checkPin,200);},
+  forgotPin(){dialog("忘記 PIN","<p>請找總幹事或督導在後台幫您重設 PIN。</p><p class='note'>重設後會用簡訊通知您新的 6 位數 PIN。</p>",[{label:"我知道了",cls:"primary",fn:closeDlg}]);},
+  logout(){dialog("交班登出",`<p>確定要登出「${me.n}」嗎？</p><p class="note">還沒填交接日誌的話，建議先填寫。</p>`,[{label:"先填交接",fn:()=>{closeDlg();go("handover");}},{label:"確定登出",cls:"primary",fn:()=>{closeDlg();try{sessionStorage.removeItem("pcmp-site-user")}catch(e){}$("#app").style.display="none";showLoginStep();$("#s-login").classList.add("on");history.replaceState(null,"","#");}}]);},
   switchSite(){if(me.sites.length<2){toast("您目前只派駐在「"+site+"」");return;}
     dialog("切換社區",`<div class="list">${me.sites.map(s=>`<button class="item ${s===site?"sel":""}" data-act="pickSite" data-s="${s}"><span class="ic"><i data-lucide="building"></i></span><span><b>${s}</b></span></button>`).join("")}</div>`,[{label:"取消",fn:closeDlg}]);},
   pickSite(el){site=el.dataset.s;$("#siteName").textContent=site;closeDlg();toast("已切換到「"+site+"」");go("home");},
@@ -922,10 +1145,14 @@ const A={
 
 /* ---------- SaaS 擴充 ---------- */
 Object.assign(A,{
+  devRefresh(){toast(devApproved?"已核准":"尚未核准，請總幹事至後台核准裝置 DEV-7Q4K-29");},
+  devApprove(){devApproved=true;try{sessionStorage.setItem("pcmp-site-dev","1")}catch(e){}$("#devSt").textContent="已核准（總幹事 劉德華）";toast("裝置已核准，請點選您的名字登入");setTimeout(showLoginStep,500);},
+  resInfo(el){const r=RES.find(x=>x[0]===el.dataset.u);dialog("住戶資料 "+r[0],`<div class="list"><div class="item"><span><b>姓名</b></span><span class="r">${r[1]}</span></div><div class="item"><span><b>電話</b></span><span class="r">${r[2]}</span></div><div class="item"><span><b>身分</b></span><span class="r">${r[3]}</span></div></div><p class="note" style="margin-top:10px">櫃台模式不提供「顯示完整資料」。需聯絡住戶時，請用社區對講機或請總幹事協助。</p>`,[{label:"關閉",cls:"primary",fn:closeDlg}]);},
+  exportWhy(){dialog("櫃台模式不能匯出",`<p>櫃台電腦是多人共用，為了保護住戶個資，<b>櫃台模式停用所有匯出與完整個資顯示</b>（NF-AUTH-09）。</p><p class="note">需要報表或住戶清冊時，請由總幹事登入租戶後台（需雙因子驗證）匯出，系統會留下稽核紀錄。</p>`,[{label:"我知道了",cls:"primary",fn:closeDlg}]);},
   lineBarClose(){$("#lineBar").style.display="none";toast("已隱藏提示，可在 LINE 官方帳號「物業社區管理平台」使用個人作業");},
 });
-$("#edTxt").textContent="方案："+EDN[EDITION];
-function __skipLogin(){me=USERS[0];login();}
+$("#edTxt").textContent="方案："+EDN[EDITION]+(ADDON_ACCT&&EDITION!=="flag"?"＋社區帳務模組":"");
+function __skipLogin(){devApproved=true;me=USERS[0];login();}
 
 /* ---------- 事件委派 ---------- */
 document.addEventListener("click",e=>{
@@ -944,9 +1171,209 @@ setInterval(tick,10000);tick();
 const sizes=["19px","22px","25px"];let si=0;
 try{const s=+localStorage.getItem("pcmp-fs");if(s){si=s;document.documentElement.style.setProperty("--fs",sizes[si]);}}catch(e){}
 
+
+/* =====================================================================
+   社區廠商合約：網頁前台（個人登入）F-VND-05～09；櫃台模式不提供
+   權限細項 §5.10.6；廠商、合約編號與 admin.html 的 B-VND 假資料一致
+   ===================================================================== */
+let MODE="counter";
+try{const m=sessionStorage.getItem("pcmp-site-mode");if(m)MODE=m;}catch(e){}
+if(QS.get("mode")==="counter")MODE="counter";
+const VPERM=[["view","查看廠商與合約（不含金額）"],["amt","查看合約金額"],["log","登記履約"],["conf","確認履約"],["maint","維護合約（新增、編輯草稿、附件）"],["req","提出續約、變更、解約申請"],["apprv","確認續約、變更、解約"]];
+const VPERM_DEF={mgr:{view:1,amt:1,log:1,conf:1,maint:1,req:1},sec:{},guard:{},clean:{},tech:{}};
+const vPerm=JSON.parse(JSON.stringify(VPERM_DEF));
+const vBlocked=(role,k)=>k==="apprv"?"只能授予督導以上的後台角色（避免同一人申請又確認）":((role==="guard"||role==="clean")&&(k==="amt"||k==="conf"))?"不能開放給保全、清潔角色（§5.10.6 限制）":"";
+function vp(k){const r=vPerm[me.role]||{};if(MODE!=="personal")return false;if(k==="view")return !!(r.view||r.amt||r.log||r.conf||r.maint||r.req);return !!r[k];}
+const VTODAY=new Date(2026,10,6);
+const vpd=s=>{const [y,m,d]=s.split("/").map(Number);return new Date(y,m-1,d);};
+const vDaysTo=s=>Math.round((vpd(s)-VTODAY)/864e5);
+const vFd=d=>`${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,"0")}/${String(d.getDate()).padStart(2,"0")}`;
+const vAdd=(s,n)=>{const d=vpd(s);d.setDate(d.getDate()+n);return vFd(d);};
+const vOkDate=s=>/^\d{4}\/\d{2}\/\d{2}$/.test(s)&&!isNaN(vpd(s));
+const VVEN={
+ hs:{n:"恆昇電梯工程股份有限公司",s:"恆昇電梯",ct:"簡志明",ph:"02-2765-3381",em:"service@hengsheng-lift.example",cert:["電梯維護業登記","2027/03/31"],ev:[]},
+ ax:{n:"安心消防工程有限公司",s:"安心消防",ct:"林雅雯",ph:"02-2931-0476",em:"fire@anxin.example",cert:["消防設備師證書","2026/12/20"],ev:[]},
+ gl:{n:"綠環清運有限公司",s:"綠環清運",ct:"吳俊德",ph:"0910-552-813",em:"eco@greenloop.example",cert:["甲級廢棄物清除許可","2027/08/15"],ev:[]},
+ cc:{n:"除蟲專家環境衛生有限公司",s:"除蟲專家",ct:"蔡明哲",ph:"02-2647-9020",em:"pest@chuchong.example",cert:["病媒防治業許可","2026/10/31"],ev:[]},
+ kt:{n:"康泰保險經紀人股份有限公司",s:"康泰保險經紀人",ct:"許佩珊",ph:"02-2509-6611",em:"risk@kangtai.example",cert:["保險經紀人執業證照","2028/06/30"],ev:[]},
+ jj:{n:"潔淨家環境服務股份有限公司",s:"潔淨家",ct:"黃怡君",ph:"02-8771-2050",em:"ops@jjjclean.example",cert:null,ev:[]},
+ qy:{n:"清源水塔清洗工程行",s:"清源水塔",ct:"陳國榮",ph:"0932-118-406",em:"water@qingyuan.example",cert:["水質檢驗合作實驗室證明","2027/05/31"],ev:[]},
+};
+const VCATS=["電梯","消防","機電","水塔清洗","外包清潔","垃圾清運","消毒","園藝","保全設備","保險","其他"];
+const VMODES=["月費","年費","按次","按台","按人"],VCYC=["月","季","半年","年","按次"],LEGAL=["永信物業管理(股)","永信保全(股)"];
+let VCS=[
+ {id:"VC-2026-001",site:"春暉苑",v:"hs",cat:"電梯",party:"管委會",le:null,start:"2026/01/01",end:"2026/12/31",auto:true,notice:40,mode:"按台",price:14800,cycle:"月",amtTxt:"每台每月 NT$7,400 × 2 台",freq:"每月保養 1 次",scope:"電梯 1、2 號機定期保養、年度安全檢查代辦",sla:"故障 4 小時內到場；困人 30 分鐘內到場",due:10,logs:10,st:"生效中",files:["合約書（掃描檔）.pdf"],ver:["v1 2026/01/01 簽訂合約"]},
+ {id:"VC-2026-002",site:"春暉苑",v:"ax",cat:"消防",party:"管委會",le:null,start:"2025/07/01",end:"2027/06/30",auto:false,notice:30,mode:"年費",price:48000,cycle:"年",amtTxt:"年費 NT$48,000",freq:"每季巡檢 1 次、每年檢修申報 1 次",scope:"消防安全設備檢修申報、季巡檢",sla:"故障 24 小時內到場",due:6,logs:6,st:"生效中",files:["合約書（掃描檔）.pdf"],ver:["v1 2025/07/01 簽訂合約"]},
+ {id:"VC-2026-018",site:"春暉苑",v:"gl",cat:"垃圾清運",party:"管委會",le:null,start:"2025/12/06",end:"2026/12/05",auto:false,notice:30,mode:"月費",price:18000,cycle:"月",amtTxt:"月費 NT$18,000",freq:"每週清運 3 次",scope:"一般垃圾與資源回收清運",sla:"漏收 12 小時內補收",due:143,logs:141,st:"生效中",files:["合約書（掃描檔）.pdf"],ver:["v1 2025/12/06 簽訂合約"]},
+ {id:"VC-2026-019",site:"春暉苑",v:"cc",cat:"消毒",party:"管委會",le:null,start:"2026/01/01",end:"2026/12/31",auto:false,notice:30,mode:"按次",price:6500,cycle:"按次",amtTxt:"每次 NT$6,500",freq:"每月消毒 1 次",scope:"地下室、垃圾集中區、化糞池病媒防治",sla:"病媒急件 48 小時內到場",due:10,logs:7,st:"生效中",files:["合約書（掃描檔）.pdf"],ver:["v1 2026/01/01 簽訂合約"]},
+ {id:"VC-2026-011",site:"雲頂閱",v:"kt",cat:"保險",party:"管委會",le:null,start:"2026/04/01",end:"2027/03/31",auto:false,notice:30,mode:"年費",price:36000,cycle:"年",amtTxt:"年費 NT$36,000",freq:"—",scope:"公共意外責任險（每人 500 萬、每事故 2,000 萬）",sla:"出險後 24 小時內聯繫",due:0,logs:0,st:"生效中",files:["保單.pdf"],ver:["v1 2026/04/01 簽訂合約"]},
+];
+let VPEND=[
+ {id:"PL-101",c:"VC-2026-001",d:"11/05",by:"機電 王志強",src:"LINE",ph:2,note:"恆昇到場調整 2 號機門機，順便完成月保",st:"待確認"},
+ {id:"PL-102",c:"VC-2026-019",d:"11/04",by:"機電 王志強",src:"LINE",ph:1,note:"除蟲專家到場消毒 B1、B2 與垃圾集中區",st:"待確認"},
+];
+let VREQ=[],VACT=[
+ {tm:"11/05 16:20",src:"LINE",by:"機電 王志強",txt:"登記履約（待確認）：VC-2026-001"},
+ {tm:"11/04 10:05",src:"LINE",by:"機電 王志強",txt:"登記履約（待確認）：VC-2026-019"},
+];
+let vResUp=false,vFileUp=false;
+const vC=id=>VCS.find(c=>c.id===id);
+const vMine=()=>VCS.filter(c=>c.site===site);
+const vRate=c=>c.due?Math.min(100,Math.round(c.logs/c.due*100)):null;
+const vNoticeDate=c=>c.auto?vAdd(c.end,-c.notice):null;
+const vReqOpen=c=>VREQ.find(r=>r.c===c.id&&r.st==="待督導確認");
+function vStLabel(c){if(c.st!=="生效中")return c.st;const d=vDaysTo(c.end);return d<0?"已到期":d<=90?"即將到期":"生效中";}
+const vPill=(t,cls)=>`<span class="pill ${cls}">${t}</span>`;
+const vStPill=c=>{const s=vStLabel(c);return vPill(s,{生效中:"p-ok",即將到期:"p-warn",已到期:"p-bad",草稿:"p-mute",待督導確認:"p-info",督導退回:"p-bad",已解約:"p-mute"}[s]||"p-mute");};
+const vRatePill=c=>{const r=vRate(c);return r==null?vPill("不計履約率","p-mute"):vPill("履約率 "+r+"%",r>=90?"p-ok":r>=80?"p-warn":"p-bad");};
+const vMoney=n=>"NT$"+Number(n).toLocaleString("zh-TW");
+function vAct(txt){const d=new Date();VACT.unshift({tm:"11/06 "+String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0"),src:"網頁前台",by:me.r+" "+me.n,txt});}
+const vNav=cur=>`<div class="vnav">${[["vnd","file-text","合約"],["vndlogs","clipboard-check","履約總覽"],["vndven","building","廠商資料"],["vndact","history","申請與紀錄"]].map(([h,i,n])=>`<a href="#${h}" class="${cur===h?"on":""}"><i data-lucide="${i}"></i>${n}</a>`).join("")}</div>`;
+function vGate(el){
+ if(MODE!=="personal"){el.innerHTML=`<div class="card vblock"><span class="ic"><i data-lucide="monitor-x"></i></span><h2>櫃台模式不提供此功能</h2><p class="note">櫃台電腦是多人共用，看不到合約金額與完整資料（NF-AUTH-09）。廠商合約請用<b>個人登入</b>（需雙因子驗證）或在 LINE 操作（F-VND）。</p><div class="btn-row"><button class="big ghost" data-go="home">回首頁</button><button class="big primary" data-act="vWhyCounter"><i data-lucide="info"></i>為什麼？</button></div></div>`;lucide.createIcons();return false;}
+ if(!vp("view")){el.innerHTML=`<div class="card vblock"><span class="ic"><i data-lucide="shield-off"></i></span><h2>您沒有廠商合約的權限</h2><p class="note">廠商合約依權限開放（§5.10.6）。請洽總幹事或公司管理者在「角色權限設定」開放。</p><div class="btn-row"><button class="big ghost" data-go="home">回首頁</button><button class="big primary" data-act="vPermJump"><i data-lucide="sliders-horizontal"></i>（原型）調整權限</button></div></div>`;lucide.createIcons();return false;}
+ return true;}
+
+/* ---------- F-VND-05 合約維護 ---------- */
+R.vnd=function(){const el=$("#vndBody");if(!vGate(el))return;
+ const cs=vMine();
+ el.innerHTML=vNav("vnd")+`<div class="vtool">${vp("maint")?`<button class="big primary" style="min-height:56px;width:auto;padding:0 22px" data-act="vNew"><i data-lucide="plus"></i>新增合約</button>`:""}<span class="note">${site}・${cs.length} 份合約・${vp("amt")?"可查看金額":"沒有「查看合約金額」權限，金額不顯示"}</span></div>
+ <div class="list">${cs.map(c=>{const v=VVEN[c.v],q=vReqOpen(c),d=vDaysTo(c.end),live=c.st==="生效中";
+  return `<div class="card vcard"><div class="vtop"><span class="ic"><i data-lucide="handshake"></i></span><span style="flex:1;min-width:0"><b>${c.cat}・${v.s}</b><span class="note">${c.id}・甲方：${c.party==="本公司"?"本公司（"+LEGAL[c.le]+"）":"管委會"}・${c.start}–${c.end}${live&&d>=0?"（剩 "+d+" 天）":""}</span></span><span class="vtags">${vStPill(c)}${vRatePill(c)}${q?vPill("申請中："+q.type,"p-info"):""}</span></div>
+  <div class="note" style="margin:8px 0">${c.freq}・${c.sla}${vp("amt")?"・<b style='color:var(--text)'>"+c.amtTxt+"</b>":""}${c.auto?"・自動續約，解約通知期限 "+vNoticeDate(c):""}</div>
+  ${c.st==="督導退回"?`<p class="note" style="color:var(--bad)">督導退回：${c.back||""}</p>`:""}
+  <div class="vbtns"><button class="sb" data-act="vDetail" data-id="${c.id}"><i data-lucide="file-text"></i>詳情</button><button class="sb" data-act="vPay" data-id="${c.id}"><i data-lucide="calendar-range"></i>付款排程</button><button class="sb" data-act="vFiles" data-id="${c.id}"><i data-lucide="paperclip"></i>附件 ${c.files.length}</button>
+  ${vp("maint")&&(c.st==="草稿"||c.st==="督導退回")?`<button class="sb" data-act="vEdit" data-id="${c.id}"><i data-lucide="pencil"></i>編輯</button><button class="sb pri" data-act="vSubmit" data-id="${c.id}"><i data-lucide="send"></i>送督導確認</button>`:""}
+  ${vp("req")&&live&&!q?`<button class="sb" data-act="vReq" data-t="續約" data-id="${c.id}"><i data-lucide="refresh-cw"></i>續約</button><button class="sb" data-act="vReq" data-t="變更" data-id="${c.id}"><i data-lucide="pen-line"></i>變更</button><button class="sb" data-act="vReq" data-t="解約" data-id="${c.id}"><i data-lucide="circle-x"></i>解約</button>`:""}
+  ${c.st==="待督導確認"?`<button class="sb" data-act="vSupNew" data-ok="1" data-id="${c.id}"><i data-lucide="badge-check"></i>（原型）模擬督導確認</button><button class="sb" data-act="vSupNew" data-ok="0" data-id="${c.id}"><i data-lucide="undo-2"></i>（原型）模擬督導退回</button>`:""}</div></div>`;}).join("")||`<p class="note">此社區目前沒有廠商合約。</p>`}</div>`;
+ lucide.createIcons();};
+
+/* ---------- F-VND-07 履約總覽 ---------- */
+R.vndlogs=function(){const el=$("#vndlogsBody");if(!vGate(el))return;
+ const cs=vMine().filter(c=>c.st==="生效中"&&c.due),pend=VPEND.filter(x=>vC(x.c)?.site===site);
+ el.innerHTML=vNav("vndlogs")+`<div class="vtool">${vp("log")?`<button class="big primary" style="min-height:56px;width:auto;padding:0 22px" data-act="vLog"><i data-lucide="clipboard-pen"></i>登記履約</button>`:""}<span class="note">應服務次數依合約頻率計算；低於 80% 會提醒總幹事與督導（B-VND-15）</span></div>
+ <div class="list">${cs.map(c=>{const r=vRate(c);return `<div class="card vcard"><div class="vtop"><span style="flex:1"><b>${c.cat}・${VVEN[c.v].s}</b><span class="note">${c.id}・${c.freq}・應 ${c.due} 次／實際 ${c.logs} 次</span></span>${vRatePill(c)}</div><div class="vbar"><i style="width:${r}%;background:${r>=90?"var(--ok)":r>=80?"var(--warn)":"var(--bad)"}"></i></div></div>`;}).join("")}</div>
+ <div class="sec-title"><i data-lucide="list-checks"></i>待確認的履約（${pend.filter(x=>x.st==="待確認").length}）</div>
+ <div class="list">${pend.map(x=>{const c=vC(x.c);return `<div class="card vcard"><div class="vtop"><span style="flex:1"><b>${c.cat}・${VVEN[c.v].s}</b><span class="note">${x.d}・${x.by}・來源 ${x.src}・照片 ${x.ph} 張</span></span>${vPill(x.st,x.st==="待確認"?"p-warn":x.st==="已確認"?"p-ok":"p-bad")}</div><p style="margin:8px 0 0">${x.note}</p>
+  ${x.st==="待確認"&&vp("conf")?`<div class="vbtns"><button class="sb pri" data-act="vPendOk" data-id="${x.id}"><i data-lucide="check"></i>確認</button><button class="sb" data-act="vPendNo" data-id="${x.id}"><i data-lucide="x"></i>退回</button></div>`:x.st==="待確認"?`<p class="note">您沒有「確認履約」權限，請總幹事確認。</p>`:""}</div>`;}).join("")||`<p class="note">目前沒有待確認的履約。</p>`}</div>`;
+ lucide.createIcons();};
+
+/* ---------- F-VND-08 廠商資料與評鑑意見 ---------- */
+R.vndven=function(){const el=$("#vndvenBody");if(!vGate(el))return;
+ const ks=[...new Set(vMine().map(c=>c.v))];
+ el.innerHTML=vNav("vndven")+`<div class="list">${ks.map(k=>{const v=VVEN[k],cd=v.cert?vDaysTo(v.cert[1]):null;return `<div class="card vcard"><div class="vtop"><span class="ic"><i data-lucide="building"></i></span><span style="flex:1;min-width:0"><b>${v.n}</b><span class="note">${v.ct}・${v.ph}・${v.em}</span></span>${v.cert?vPill(v.cert[0]+(cd<0?" 已過期":cd<=60?" "+cd+" 天後到期":" 有效"),cd<0?"p-bad":cd<=60?"p-warn":"p-ok"):vPill("無須特定資格","p-mute")}</div>
+  <p class="note" style="margin:8px 0">本社區合約：${vMine().filter(c=>c.v===k).map(c=>c.id+"（"+c.cat+"）").join("、")}</p>
+  ${v.ev.map(e=>`<p class="note">評鑑意見 ${e.d}：到場 ${e.s[0]}・品質 ${e.s[1]}・配合 ${e.s[2]}・價格 ${e.s[3]}｜${e.c}</p>`).join("")}
+  <div class="vbtns"><button class="sb" data-act="vEval" data-k="${k}"><i data-lucide="star"></i>填寫評鑑意見</button></div></div>`;}).join("")}</div>`;
+ lucide.createIcons();};
+
+/* ---------- F-VND-06／09 申請與紀錄 ---------- */
+R.vndact=function(){const el=$("#vndactBody");if(!vGate(el))return;
+ const rq=VREQ.filter(r=>vC(r.c)?.site===site);
+ el.innerHTML=vNav("vndact")+`<div class="sec-title" style="margin-top:6px"><i data-lucide="send"></i>續約、變更、解約申請</div>
+ <div class="list">${rq.map(r=>{const c=vC(r.c);return `<div class="card vcard"><div class="vtop"><span style="flex:1"><b>${r.type}・${c.cat}・${VVEN[c.v].s}</b><span class="note">${r.id}・${r.tm}・${r.by}・來源 ${r.src}${r.res?"・已附管委會決議":""}</span></span>${vPill(r.st,r.st==="待督導確認"?"p-info":r.st==="督導已確認"?"p-ok":"p-bad")}</div><p style="margin:8px 0 0">${r.detail}｜原因：${r.reason}</p>${r.back?`<p class="note" style="color:var(--bad)">退回原因：${r.back}</p>`:""}
+  ${r.st==="待督導確認"?`<div class="vbtns"><button class="sb pri" data-act="vSupReq" data-ok="1" data-id="${r.id}"><i data-lucide="badge-check"></i>（原型）模擬督導確認</button><button class="sb" data-act="vSupReq" data-ok="0" data-id="${r.id}"><i data-lucide="undo-2"></i>（原型）模擬督導退回</button></div>`:""}</div>`;}).join("")||`<p class="note">目前沒有申請。可在「合約」頁對生效中的合約提出續約、變更或解約。</p>`}</div>
+ <div class="sec-title"><i data-lucide="history"></i>操作紀錄（F-VND-09）</div>
+ <div class="list">${VACT.map(a=>`<div class="item"><span class="ic"><i data-lucide="${a.src==="LINE"?"message-circle":"monitor"}"></i></span><span><b>${a.txt}</b><span class="note">${a.tm}・${a.by}</span></span><span class="r">${vPill(a.src,a.src==="LINE"?"p-ok":"p-info")}</span></div>`).join("")}</div>`;
+ lucide.createIcons();};
+
+/* ---------- 表單 ---------- */
+function vForm(c){c=c||{};const sel=(id,opts,v)=>`<select class="in" id="${id}">${opts.map(o=>`<option ${o===v?"selected":""}>${o}</option>`).join("")}</select>`;
+ const vk=Object.keys(VVEN);
+ return `<label class="field"><span>廠商</span><select class="in" id="vf_v">${vk.map(k=>`<option value="${k}" ${c.v===k?"selected":""}>${VVEN[k].n}</option>`).join("")}</select></label>
+ <div class="two"><label class="field"><span>服務類別</span>${sel("vf_cat",VCATS,c.cat||"電梯")}</label><label class="field"><span>甲方</span>${sel("vf_party",["管委會","本公司"],c.party||"管委會")}</label></div>
+ <label class="field" id="vf_leW" style="${c.party==="本公司"?"":"display:none"}"><span>本公司法人（必填）</span><select class="in" id="vf_le"><option value="">請選擇</option>${LEGAL.map((l,i)=>`<option value="${i}" ${c.le===i?"selected":""}>${l}</option>`).join("")}</select></label>
+ <div class="two"><label class="field"><span>起日（YYYY/MM/DD）</span><input class="in" id="vf_s" value="${c.start||"2026/12/01"}"></label><label class="field"><span>迄日（YYYY/MM/DD）</span><input class="in" id="vf_e" value="${c.end||"2027/11/30"}"></label></div>
+ <div class="two"><label class="field"><span>計價方式</span>${sel("vf_mode",VMODES,c.mode||"月費")}</label><label class="field"><span>每期金額（元）</span><input class="in" id="vf_p" inputmode="numeric" value="${c.price||""}" placeholder="例：15000"></label></div>
+ <div class="two"><label class="field"><span>付款週期</span>${sel("vf_cyc",VCYC,c.cycle||"月")}</label><label class="field"><span>服務頻率</span><input class="in" id="vf_f" value="${c.freq||""}" placeholder="例：每月修剪 2 次"></label></div>
+ <label class="field"><span>服務範圍</span><textarea class="in" id="vf_sc" placeholder="例：中庭與前庭植栽養護">${c.scope||""}</textarea></label>
+ <p class="note">儲存後為「草稿」，送出後由督導確認生效（F-VND-05）。</p>`;}
+function vReadForm(){const g=id=>($("#"+id)?.value||"").trim();const f={v:g("vf_v"),cat:g("vf_cat"),party:g("vf_party"),le:g("vf_le"),start:g("vf_s"),end:g("vf_e"),mode:g("vf_mode"),price:g("vf_p"),cycle:g("vf_cyc"),freq:g("vf_f"),scope:g("vf_sc")};
+ const bad=id=>{const e=$("#"+id);if(e)e.classList.add("err");};
+ if(f.party==="本公司"&&f.le===""){bad("vf_le");toast("甲方為本公司時，請選擇法人");return null;}
+ if(!vOkDate(f.start)){bad("vf_s");toast("起日格式應為 YYYY/MM/DD");return null;}
+ if(!vOkDate(f.end)||vpd(f.end)<=vpd(f.start)){bad("vf_e");toast("迄日需晚於起日");return null;}
+ if(!(+f.price>0)){bad("vf_p");toast("請填寫每期金額");return null;}
+ if(!f.freq){bad("vf_f");toast("請填寫服務頻率");return null;}
+ if(!f.scope){bad("vf_sc");toast("請填寫服務範圍");return null;}
+ return f;}
+function vApplyForm(c,f){Object.assign(c,{v:f.v,cat:f.cat,party:f.party,le:f.party==="本公司"?+f.le:null,start:f.start,end:f.end,mode:f.mode,price:+f.price,cycle:f.cycle,freq:f.freq,scope:f.scope,amtTxt:f.mode+" NT$"+Number(f.price).toLocaleString("zh-TW")+"（"+f.cycle+"繳）"});}
+document.addEventListener("change",e=>{if(e.target.id==="vf_party"){const w=$("#vf_leW");if(w)w.style.display=e.target.value==="本公司"?"":"none";}
+ const k=e.target.dataset.perm;if(k){if(vBlocked(me.role,k)){e.target.checked=false;return;}vPerm[me.role][k]=e.target.checked?1:0;toast((e.target.checked?"已開放：":"已取消：")+VPERM.find(x=>x[0]===k)[1]);renderHome();const id=(location.hash||"").slice(1);if(R[id]&&/^vnd/.test(id))R[id]();}});
+
+/* ---------- 動作 ---------- */
+Object.assign(A,{
+ perStart(){$("#whoStep").style.display="none";$("#devStep").style.display="none";$("#perStep").style.display="";$("#perOtpStep").style.display="none";$("#perPwd").value="";},
+ perBack(){$("#perStep").style.display="none";$("#perOtpStep").style.display="none";showLoginStep();},
+ perLogin(){const i=+$("#perUser").value,p=$("#perPwd").value;if(p.length<10){$("#perPwd").classList.add("err");toast("帳號或密碼錯誤");return;}me=USERS[i];$("#perStep").style.display="none";$("#perOtpStep").style.display="";$("#perOtp").value="";$("#perOtpWho").textContent=me.n+" · "+me.r;},
+ perOtpOk(){const v=$("#perOtp").value.trim();if(!/^\d{6}$/.test(v)){$("#perOtp").classList.add("err");toast("請輸入 6 位數驗證碼");return;}if(v==="000000"){$("#perOtp").classList.add("err");toast("驗證碼錯誤（原型：000000 模擬錯誤）");return;}MODE="personal";try{sessionStorage.setItem("pcmp-site-mode","personal")}catch(e){}$("#perOtpStep").style.display="none";login();toast("已以個人身分登入（雙因子驗證通過）");},
+ vWhyCounter(){dialog("櫃台模式不提供廠商合約",`<p>櫃台電腦是多人共用，為保護合約金額與廠商資料，<b>櫃台模式不顯示「廠商合約」</b>（NF-AUTH-09、F-VND）。</p><p class="note">總幹事或被授權的同仁，請用「個人登入」（需雙因子驗證），或在 LINE 的「廠商與合約」操作。</p>`,[{label:"我知道了",cls:"primary",fn:closeDlg}]);},
+ vPermJump(){go("home");setTimeout(()=>{const p=$("#perPanel");if(p)p.scrollIntoView({block:"center"});},50);},
+ vDetail(el){const c=vC(el.dataset.id),v=VVEN[c.v];dialog(c.cat+"・"+v.s,`<div class="list">${[["合約",c.id],["廠商",v.n],["甲方",c.party==="本公司"?"本公司（"+LEGAL[c.le]+"）":"管委會"],["期間",c.start+"–"+c.end],["自動續約",c.auto?"是，解約通知期限 "+vNoticeDate(c):"否"],["服務範圍",c.scope],["頻率",c.freq],["到場時限",c.sla],["金額",vp("amt")?c.amtTxt:"無查看金額權限"],["版本",c.ver.join("；")]].map(([a,b])=>`<div class="item" style="padding:12px"><span><b style="font-size:1rem">${a}</b></span><span class="r" style="max-width:62%;flex-shrink:1">${b}</span></div>`).join("")}</div>`,[{label:"關閉",cls:"primary",fn:closeDlg}]);},
+ vPay(el){const c=vC(el.dataset.id),step={月:1,季:3,半年:6,年:12,按次:1}[c.cycle];const rows=[];let d=vpd(c.start);while(d<=vpd(c.end)&&rows.length<12){const s=vFd(d);rows.push([s,vpd(s)<VTODAY?"已付":"未付"]);d=new Date(d.getFullYear(),d.getMonth()+step,d.getDate());}
+  dialog("付款排程 "+c.id,`<p class="note">${c.party==="管委會"?"管委會簽約：有社區帳務模組時自動轉為社區財務的固定支出待付款項（B-VND-20）。":"本公司簽約：旗艦版計入社區直接成本（B-VND-21）。"}</p><div class="list">${rows.map(([s,st],i)=>`<div class="item" style="padding:12px"><span><b style="font-size:1rem">第 ${i+1} 期・${s}</b></span><span class="r">${vp("amt")?vMoney(c.price)+"　":""}${vPill(st,st==="已付"?"p-ok":"p-warn")}</span></div>`).join("")}</div>${vp("amt")?"":`<p class="note">您沒有「查看合約金額」權限，金額不顯示。</p>`}`,[{label:"關閉",cls:"primary",fn:closeDlg}]);},
+ vFiles(el){const c=vC(el.dataset.id);vFileUp=false;const can=vp("maint");
+  dialog("附件 "+c.id,`<div class="list">${c.files.map(f=>`<div class="item" style="padding:12px"><span class="ic" style="width:44px;height:44px"><i data-lucide="file-text"></i></span><span><b style="font-size:1rem">${f}</b></span></div>`).join("")}</div>${can?`<button class="big ghost" style="margin-top:12px;min-height:56px" data-act="vFilePick" id="vFileBtn"><i data-lucide="upload"></i>選擇檔案上傳（模擬）</button>`:`<p class="note">您沒有「維護合約」權限，只能查看附件。</p>`}`,
+   can?[{label:"取消",fn:closeDlg},{label:"上傳",cls:"primary",fn:()=>{if(!vFileUp){toast("請先選擇檔案");return;}c.files.push("補充附件_"+(c.files.length+1)+".pdf");vAct("上傳附件："+c.id);closeDlg();toast("已上傳附件");R.vnd();}}]:[{label:"關閉",cls:"primary",fn:closeDlg}]);lucide.createIcons();},
+ vFilePick(el){vFileUp=true;el.innerHTML='<i data-lucide="file-check"></i>已選擇：補充附件.pdf（420 KB）';lucide.createIcons();},
+ vNew(){dialog("新增合約（草稿）",vForm({}),[{label:"取消",fn:closeDlg},{label:"儲存草稿",cls:"primary",fn:()=>{const f=vReadForm();if(!f)return;const c={id:"VC-2026-0"+(30+VCS.length),site,auto:false,notice:30,sla:"—",due:0,logs:0,st:"草稿",files:[],ver:["v1 11/06 建立草稿（"+me.n+"）"]};vApplyForm(c,f);VCS.push(c);vAct("新增合約草稿："+c.id);closeDlg();toast("已儲存草稿 "+c.id+"，送出後由督導確認");R.vnd();}}]);lucide.createIcons();},
+ vEdit(el){const c=vC(el.dataset.id);dialog("編輯草稿 "+c.id,vForm(c),[{label:"取消",fn:closeDlg},{label:"儲存",cls:"primary",fn:()=>{const f=vReadForm();if(!f)return;vApplyForm(c,f);if(c.st==="督導退回")c.st="草稿";vAct("編輯合約草稿："+c.id);closeDlg();toast("已儲存");R.vnd();}}]);lucide.createIcons();},
+ vSubmit(el){const c=vC(el.dataset.id);c.st="待督導確認";c.back="";VREQ.push({id:"RQ-"+(2000+VREQ.length),c:c.id,type:"新增合約",st:"待督導確認",detail:c.cat+"・"+VVEN[c.v].s+" "+c.start+"–"+c.end,reason:"新簽合約",by:me.r+" "+me.n,src:"網頁前台",tm:"11/06",res:false,isNew:true});vAct("送出合約草稿給督導確認："+c.id);toast("已送督導確認");R.vnd();},
+ vSupNew(el){const c=vC(el.dataset.id),ok=el.dataset.ok==="1",r=VREQ.find(x=>x.c===c.id&&x.isNew&&x.st==="待督導確認");
+  if(ok){c.st="生效中";c.ver.push("v1 生效（督導 陳志豪 確認）");if(r)r.st="督導已確認";toast("督導已確認，"+c.id+" 生效");}else{c.st="督導退回";c.back="督導 陳志豪：請補上報價單並確認付款週期";if(r){r.st="督導退回";r.back=c.back;}toast("督導已退回，請修改後重新送出");}R.vnd();},
+ vReq(el){const c=vC(el.dataset.id),ty=el.dataset.t;vResUp=false;const mc=c.party==="管委會";
+  const extra=ty==="續約"?`<div class="two"><label class="field"><span>續約後迄日</span><input class="in" id="vr_d" value="${vAdd(c.end,365)}"></label><label class="field"><span>條件變更（選填）</span><input class="in" id="vr_x" placeholder="例：單價調漲 5%"></label></div>`:ty==="變更"?`<div class="two"><label class="field"><span>生效日</span><input class="in" id="vr_d" value="2026/12/01"></label><label class="field"><span>變更內容</span><input class="in" id="vr_x" placeholder="例：保養頻率改為每月 2 次"></label></div>`:`<label class="field"><span>解約日</span><input class="in" id="vr_d" value="${c.end}"></label>`;
+  dialog(ty+"申請 "+c.id,`<p class="note">${c.cat}・${VVEN[c.v].s}・甲方 ${c.party}。送出後由督導確認（F-VND-06、B-VND-13）。</p>${extra}<label class="field"><span>原因（必填）</span><textarea class="in" id="vr_r" placeholder="例：管委會 11 月會議決議續約"></textarea></label>${mc?`<button class="big ghost" style="min-height:56px" data-act="vResPick" id="vResBtn"><i data-lucide="upload"></i>上傳管委會決議（必附，模擬）</button>`:`<p class="note">本公司簽約，不需附管委會決議。</p>`}`,
+   [{label:"取消",fn:closeDlg},{label:"送督導確認",cls:"primary",fn:()=>{const d=($("#vr_d")?.value||"").trim(),x=($("#vr_x")?.value||"").trim(),rs=($("#vr_r")?.value||"").trim();
+    if(!vOkDate(d)){$("#vr_d").classList.add("err");toast("日期格式應為 YYYY/MM/DD");return;}
+    if(ty==="變更"&&!x){$("#vr_x").classList.add("err");toast("請填寫變更內容");return;}
+    if(!rs){$("#vr_r").classList.add("err");toast("請填寫原因");return;}
+    if(mc&&!vResUp){toast("管委會簽約的合約需上傳管委會決議");return;}
+    VREQ.push({id:"RQ-"+(2000+VREQ.length),c:c.id,type:ty,st:"待督導確認",date:d,detail:ty==="續約"?"續約至 "+d+(x?"；"+x:""):ty==="變更"?d+" 起："+x:"解約日 "+d,reason:rs,by:me.r+" "+me.n,src:"網頁前台",tm:"11/06",res:mc});
+    vAct("提出"+ty+"申請："+c.id);closeDlg();toast("已送督導確認，可在「申請與紀錄」查看");R.vnd();}}]);lucide.createIcons();},
+ vResPick(el){vResUp=true;el.innerHTML='<i data-lucide="file-check"></i>已上傳：管委會第 12 屆第 11 次會議紀錄.pdf';lucide.createIcons();},
+ vSupReq(el){const r=VREQ.find(x=>x.id===el.dataset.id),c=vC(r.c),ok=el.dataset.ok==="1";
+  if(ok){r.st="督導已確認";if(r.isNew){c.st="生效中";}else if(r.type==="續約"){c.ver.push("v"+(c.ver.length+1)+" 續約至 "+r.date);c.end=r.date;c.due=c.due?c.due+Math.round(c.due/1):0;}else if(r.type==="變更"){c.ver.push("v"+(c.ver.length+1)+" "+r.detail);}else{c.st="已解約";c.ver.push("解約（"+r.date+"）");}toast("督導已確認："+r.type+" "+c.id);}
+  else{r.st="督導退回";r.back="督導 陳志豪：請補充議價紀錄或報價單";if(r.isNew){c.st="督導退回";c.back=r.back;}toast("督導已退回");}
+  R.vndact();},
+ vLog(){const cs=vMine().filter(c=>c.st==="生效中"&&c.due);vFileUp=false;
+  dialog("登記履約",`<label class="field"><span>合約</span><select class="in" id="vl_c">${cs.map(c=>`<option value="${c.id}">${c.cat}・${VVEN[c.v].s}（${c.id}）</option>`).join("")}</select></label><label class="field"><span>服務日期</span><input class="in" id="vl_d" value="2026/11/06"></label><label class="field"><span>服務內容</span><textarea class="in" id="vl_n" placeholder="例：電梯 1、2 號機月保完成"></textarea></label><button class="big ghost" style="min-height:56px" data-act="vFilePick" id="vFileBtn"><i data-lucide="camera"></i>上傳服務單或照片（模擬）</button>
+   <p class="note">${vp("conf")?"您有「確認履約」權限，登記後立即計入履約率。":"登記後需由總幹事確認，才計入履約率。"}</p>`,
+   [{label:"取消",fn:closeDlg},{label:"送出",cls:"primary",fn:()=>{const id=$("#vl_c").value,d=($("#vl_d").value||"").trim(),n=($("#vl_n").value||"").trim();
+    if(!vOkDate(d)){$("#vl_d").classList.add("err");toast("日期格式應為 YYYY/MM/DD");return;}if(!n){$("#vl_n").classList.add("err");toast("請填寫服務內容");return;}if(!vFileUp){toast("請上傳服務單或照片");return;}
+    const c=vC(id);if(vp("conf")){c.logs++;vAct("登記履約並生效："+id);toast("已登記，履約率 "+vRate(c)+"%");}else{VPEND.push({id:"PL-"+(300+VPEND.length),c:id,d:d.slice(5),by:me.r+" "+me.n,src:"網頁前台",ph:1,note:n,st:"待確認"});vAct("登記履約（待確認）："+id);toast("已送出，待總幹事確認");}
+    closeDlg();R.vndlogs();}}]);lucide.createIcons();},
+ vPendOk(el){const x=VPEND.find(p=>p.id===el.dataset.id),c=vC(x.c),b=vRate(c);x.st="已確認";c.logs++;vAct("確認履約："+x.c+"（"+x.by+"・"+x.src+"）");toast(c.cat+" 履約率 "+b+"% → "+vRate(c)+"%");R.vndlogs();},
+ vPendNo(el){const x=VPEND.find(p=>p.id===el.dataset.id);dialog("退回履約登記",`<label class="field"><span>退回原因（必填）</span><textarea class="in" id="vpn_r" placeholder="例：照片看不到服務單簽名"></textarea></label>`,[{label:"取消",fn:closeDlg},{label:"確認退回",cls:"primary",fn:()=>{const w=($("#vpn_r").value||"").trim();if(!w){$("#vpn_r").classList.add("err");toast("請填寫退回原因");return;}x.st="已退回";x.note+="（退回："+w+"）";vAct("退回履約："+x.c);closeDlg();toast("已退回並通知 "+x.by);R.vndlogs();}}]);},
+ vEval(el){const k=el.dataset.k,v=VVEN[k],s=(id,lb)=>`<label class="field"><span>${lb}</span><select class="in" id="${id}">${[5,4,3,2,1].map(n=>`<option>${n}</option>`).join("")}</select></label>`;
+  dialog("評鑑意見・"+v.s,`<div class="two">${s("ve1","到場時效")}${s("ve2","施工品質")}</div><div class="two">${s("ve3","配合度")}${s("ve4","價格")}</div><label class="field"><span>意見（必填）</span><textarea class="in" id="ve_c" placeholder="例：故障到場快，但報價偏高"></textarea></label><p class="note">現場評分會併入後台的年度廠商評鑑（B-VND-04）。</p>`,
+   [{label:"取消",fn:closeDlg},{label:"送出",cls:"primary",fn:()=>{const c=($("#ve_c").value||"").trim();if(!c){$("#ve_c").classList.add("err");toast("請填寫意見");return;}v.ev.unshift({d:"11/06",s:["ve1","ve2","ve3","ve4"].map(i=>+$("#"+i).value),c});vAct("填寫廠商評鑑意見："+v.s);closeDlg();toast("已送出評鑑意見");R.vndven();}}]);},
+});
+A.pickUser=(orig=>el=>{MODE="counter";try{sessionStorage.setItem("pcmp-site-mode","counter")}catch(e){}orig(el);})(A.pickUser);
+
+/* ---------- 首頁：個人登入顯示「廠商合約」磚與權限面板 ---------- */
+renderHome=(orig=>()=>{orig();const tl=$("#tiles"),pp=$("#perPanel");if(!tl||!pp)return;
+ if(MODE==="personal"&&vp("view")){const pend=VPEND.filter(x=>x.st==="待確認"&&vC(x.c)?.site===site).length;tl.insertAdjacentHTML("beforeend",`<button class="tile c6" data-go="vnd">${pend&&vp("conf")?`<span class="badge">${pend}</span>`:""}<i data-lucide="handshake"></i><span>廠商合約<small>合約、履約、續約</small></span></button>`);}
+ if(MODE!=="personal"){pp.innerHTML="";lucide.createIcons();return;}
+ const r=vPerm[me.role]||{};
+ pp.innerHTML=`<div class="sec-title"><i data-lucide="sliders-horizontal"></i>原型展示：廠商合約權限（§5.10.6）</div><div class="card"><p class="note" style="margin-top:0">勾選項目套用到目前登入者（${me.r} ${me.n}）。保全、清潔不能開放「查看合約金額」與「確認履約」；「確認續約」只能給督導以上。</p>
+ <div class="vperm">${VPERM.map(([k,n])=>{const why=vBlocked(me.role,k);return `<label class="${why?"dis":""}"><input type="checkbox" data-perm="${k}" ${r[k]&&!why?"checked":""} ${why?"disabled":""}><span>${n}${why?`<small>${why}</small>`:""}</span></label>`;}).join("")}</div>
+ <div class="vnav" style="margin-top:12px">${vp("view")?`<a href="#vnd"><i data-lucide="file-text"></i>合約</a><a href="#vndlogs"><i data-lucide="clipboard-check"></i>履約總覽</a><a href="#vndven"><i data-lucide="building"></i>廠商資料</a><a href="#vndact"><i data-lucide="history"></i>申請與紀錄</a>`:`<span class="note">目前沒有任何廠商合約權限，首頁不會出現「廠商合約」。</span>`}</div></div>`;
+ lucide.createIcons();})(renderHome);
+login=(orig=>()=>{orig();const lb=$("#lineBar span");if(lb)lb.innerHTML=MODE==="personal"?`個人登入（雙因子驗證）：${me.r} ${me.n}・可使用依權限開放的功能，例如「廠商合約」・<a href="liff.html">開啟 LINE 前台示範</a>`:`個人作業（交接、報修、通報、請假）建議使用 LINE，不用在櫃台電腦登入 · <a href="liff.html">開啟 LINE 前台示範</a>`;
+ $("#userName").textContent=me.n+(MODE==="personal"?" · 登出":" · 交班登出");})(login);
+__skipLogin=function(){devApproved=true;me=USERS[0];if(QS.get("mode")==="counter")MODE="counter";else MODE="personal";login();};
+
+R.home=renderHome;
+A.perBack=(orig=>()=>{orig();$("#perEntry").style.display="";})(A.perBack);
+A.perStart=(orig=>()=>{orig();$("#perEntry").style.display="none";})(A.perStart);
+
+$("#perUser").innerHTML=USERS.map((u,i)=>`<option value="${i}">${u.n}（${u.r}）</option>`).join("");
+
 /* ---------- 啟動 ---------- */
 let saved=null;try{saved=sessionStorage.getItem("pcmp-site-user")}catch(e){}
-if(saved!=null&&USERS[saved]){me=USERS[saved];login();}else{$("#s-login").classList.add("on");}
+if(saved!=null&&USERS[saved]&&devApproved){me=USERS[saved];login();}else{$("#s-login").classList.add("on");showLoginStep();}
+document.addEventListener("input",e=>{if(e.target.id==="resQ")renderRes();});
 lucide.createIcons();
 </script>
 </body>

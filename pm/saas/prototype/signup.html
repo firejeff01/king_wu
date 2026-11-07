@@ -78,6 +78,132 @@ a{color:var(--accent)}
 footer{text-align:center;color:var(--muted);font-size:12.5px;padding:0 16px 32px}
 @media (max-width:860px){.wrap{grid-template-columns:1fr;gap:16px}.hero h1{font-size:28px;margin-top:8px}}
 @media (max-width:520px){.wrap{padding:8px 16px 48px}.top{padding:12px 16px}.form-grid{grid-template-columns:1fr}.card{padding:20px}}
+/* ---------- v0.4：人機驗證、Email 驗證、統編檢核 ---------- */
+.botchk{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--ok);background:var(--ok-bg);border-radius:8px;padding:6px 10px}
+.botchk.bad{color:var(--bad);background:var(--bad-bg)}
+.botchk svg.lucide{width:15px;height:15px}
+.note{display:flex;gap:8px;align-items:flex-start;font-size:13px;border-radius:10px;padding:10px 12px;background:var(--info-bg);color:var(--info);margin:12px 0}
+.note.bad{background:var(--bad-bg);color:var(--bad)}
+.note svg.lucide{width:16px;height:16px;margin-top:2px}
+.mailart{width:76px;height:76px;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;margin:4px auto 12px}
+.mailart svg.lucide{width:38px;height:38px}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;text-align:left;font-size:13.5px;background:var(--panel-2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin:14px 0}
+.kv span{color:var(--muted)}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:10px}
+.dev{max-width:1120px;margin:0 auto 18px;padding:0 24px}
+.dev .box{border:1px dashed var(--border);border-radius:12px;padding:12px 14px;background:var(--panel);font-size:12.5px;color:var(--muted);display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.dev .box b{color:var(--text)}
+.dev .btn{height:32px;font-size:12.5px;padding:0 10px}
+.devnote{border:1px dashed var(--border);border-radius:10px;padding:8px 12px;font-size:12px;color:var(--muted);margin-top:12px;text-align:left}
+
+/* =====================================================================
+   捲軸設計（所有 SaaS 雛型共用）
+   - 全站：細捲軸（8px）、軌道透明、拇指圓角並隨深淺色主題變化
+   - 側邊功能列：品牌區與底部固定，只有選單區捲動；捲軸平常隱藏，
+     滑鼠移入或鍵盤聚焦時才淡入；上下緣淡出遮罩提示「還有更多」
+   - 手機外框（LIFF）：比照手機，不顯示捲軸
+   ===================================================================== */
+:root{
+  --sb-size:8px;
+  --sb-thumb:rgba(100,116,139,.28);
+  --sb-thumb-hover:rgba(100,116,139,.5);
+  --sb-side-thumb:rgba(148,163,184,.28);
+  --sb-side-thumb-hover:rgba(148,163,184,.55);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){--sb-thumb:rgba(148,163,184,.22);--sb-thumb-hover:rgba(148,163,184,.45)}
+}
+:root[data-theme="dark"]{--sb-thumb:rgba(148,163,184,.22);--sb-thumb-hover:rgba(148,163,184,.45)}
+
+/* Firefox */
+/* Firefox 專用：Chromium 設了標準屬性會停用 ::-webkit-scrollbar 並出現箭頭按鈕 */
+@supports not selector(::-webkit-scrollbar){
+  *{scrollbar-width:thin;scrollbar-color:var(--sb-thumb) transparent}
+  .side-nav{scrollbar-color:rgba(148,163,184,.16) transparent}
+  .side-nav:hover,.side-nav:focus-within{scrollbar-color:var(--sb-side-thumb) transparent}
+}
+::-webkit-scrollbar-button{display:none;width:0;height:0}
+/* Chromium / Safari */
+::-webkit-scrollbar{width:var(--sb-size);height:var(--sb-size)}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--sb-thumb);border-radius:999px;border:2px solid transparent;background-clip:padding-box;min-height:40px}
+::-webkit-scrollbar-thumb:hover{background:var(--sb-thumb-hover);background-clip:padding-box}
+::-webkit-scrollbar-corner{background:transparent}
+
+/* ---------- 側邊功能列 ----------
+   建議結構：
+   <aside id="side">
+     <div class="side-head">…Logo / 租戶名稱…</div>
+     <nav class="side-nav">…選單連結與分組標題…</nav>
+     <div class="side-foot">…目前使用者 / 方案 / 版本…</div>
+   </aside>
+   aside 本身不捲動（overflow:hidden），由 .side-nav 捲動 */
+.side-nav{
+  flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;
+  scrollbar-gutter:stable;padding:6px 2px 10px;margin:0 -4px 0 0;
+  display:flex;flex-direction:column;gap:2px;
+  -webkit-mask-image:linear-gradient(to bottom,transparent 0,#000 14px,#000 calc(100% - 22px),transparent 100%);
+          mask-image:linear-gradient(to bottom,transparent 0,#000 14px,#000 calc(100% - 22px),transparent 100%);
+}
+
+.side-nav::-webkit-scrollbar{width:6px}
+.side-nav::-webkit-scrollbar-thumb{background:rgba(148,163,184,.16);border:1px solid transparent;background-clip:padding-box}
+.side-nav:hover::-webkit-scrollbar-thumb,.side-nav:focus-within::-webkit-scrollbar-thumb{background:var(--sb-side-thumb);background-clip:padding-box}
+.side-nav::-webkit-scrollbar-thumb:hover{background:var(--sb-side-thumb-hover)!important;background-clip:padding-box!important}
+.side-head{flex-shrink:0;padding-bottom:10px;border-bottom:1px solid rgba(148,163,184,.12);margin-bottom:4px}
+.side-foot{flex-shrink:0;border-top:1px solid rgba(148,163,184,.12);padding-top:10px;margin-top:4px;font-size:12px}
+@media (prefers-reduced-motion: reduce){.side-nav{transition:none}}
+
+/* ---------- 手機外框（LIFF）內不顯示捲軸 ---------- */
+.phone *, .phone{scrollbar-width:none}
+.phone ::-webkit-scrollbar, .phone::-webkit-scrollbar{width:0;height:0;display:none}
+
+/* ---------- 橫向捲動的表格容器：細且只在需要時出現 ---------- */
+.table-wrap,.tbl-wrap,.tw{overflow-x:auto;scrollbar-gutter:auto}
+
+.lbtn{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:44px;padding:0 18px;border-radius:10px;border:1px solid var(--border);background:var(--panel);cursor:pointer;font-weight:600;color:var(--text);text-decoration:none}
+.lbtn.primary{background:linear-gradient(135deg,var(--accent),var(--accent-2));border:0;color:#fff}
+.lbtn:hover{border-color:var(--accent)}
+
+/* =====================================================================
+   下拉式選單與表單元件：跟隨網站深淺色主題
+   - color-scheme 讓瀏覽器原生的下拉清單、日期選擇器、捲軸改用對應主題
+   - option 明確指定底色與字色，避免深色模式出現「淺底淺字」
+   - 自訂箭頭、hover 與 focus 樣式，與網站輸入框一致
+   ===================================================================== */
+:root{
+  color-scheme:light;
+  --sel-chev:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  --sel-opt-bg:#ffffff; --sel-opt-text:#0f172a; --sel-opt-muted:#64748b;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --sel-chev:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    --sel-opt-bg:#111827; --sel-opt-text:#e5e7eb; --sel-opt-muted:#94a3b8;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --sel-chev:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  --sel-opt-bg:#111827; --sel-opt-text:#e5e7eb; --sel-opt-muted:#94a3b8;
+}
+html select{
+  -webkit-appearance:none!important;appearance:none!important;
+  font:inherit;color:var(--text,var(--sel-opt-text));cursor:pointer;
+  /* 以 !important 確保自訂箭頭不被 .input{background:…} 等簡寫屬性覆蓋 */
+  background-image:var(--sel-chev)!important;background-repeat:no-repeat!important;background-position:right 10px center!important;background-size:16px 16px!important;
+  padding-right:34px!important;text-overflow:ellipsis;
+  transition:border-color .15s,box-shadow .15s;
+}
+html select:not([multiple]){line-height:1.3}
+html select option,html select optgroup{background-color:var(--sel-opt-bg);color:var(--sel-opt-text);font-weight:400}
+html select optgroup{color:var(--sel-opt-muted);font-weight:600}
+html select option:disabled{color:var(--sel-opt-muted)}
+html select:hover{border-color:var(--accent,#0ea5e9)}
+html select:focus-visible{outline:none;border-color:var(--accent,#0ea5e9);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent,#0ea5e9) 22%,transparent)}
+html select:disabled{opacity:.55;cursor:not-allowed}
+html select::-ms-expand{display:none}
 </style>
 </head>
 <body>
@@ -94,44 +220,72 @@ footer{text-align:center;color:var(--muted);font-size:12.5px;padding:0 16px 32px
       <li><span class="i"><i data-lucide="message-circle"></i></span><span><b>現場用 LINE 操作</b><small>不用另裝 App，拍照、選項目、送出，三步完成</small></span></li>
       <li><span class="i"><i data-lucide="layout-dashboard"></i></span><span><b>總公司看得到每個社區</b><small>合約與證照到期、報修、事件、人力缺口一次掌握</small></span></li>
       <li><span class="i"><i data-lucide="activity"></i></span><span><b>看得到誰在用</b><small>各社區使用率儀表板，低使用率自動提醒督導</small></span></li>
-      <li><span class="i"><i data-lucide="languages"></i></span><span><b>外籍員工也看得懂</b><small>繁中、英、印尼、越南、泰文</small></span></li>
+      <li><span class="i"><i data-lucide="shield-check"></i></span><span><b>資安列為最高優先</b><small>雙因子驗證、租戶資料隔離、個資遮罩與稽核紀錄</small></span></li>
     </ul>
   </div>
 
+  <!-- ① 申請表 -->
   <div class="card" id="formCard">
     <h2>申請免費試用</h2>
-    <div class="hint">送出後專人將於 1 個工作天內與您聯繫</div>
+    <div class="hint">送出後請至信箱完成驗證，專人將於 1 個工作天內與您聯繫</div>
     <div class="form-grid">
       <label class="field full"><span>公司名稱 <em>*</em></span><input class="input" id="fCo" placeholder="例：○○物業管理有限公司"><div class="err" id="eCo">請填寫公司名稱</div></label>
-      <label class="field"><span>統一編號 <em>*</em></span><input class="input" id="fTax" maxlength="8" inputmode="numeric" placeholder="8 位數字"><div class="err" id="eTax">統一編號需為 8 位數字</div></label>
+      <label class="field"><span>統一編號 <em>*</em></span><input class="input" id="fTax" maxlength="8" inputmode="numeric" placeholder="8 位數字"><div class="err" id="eTax">統一編號格式或檢查碼不正確</div></label>
       <label class="field"><span>服務社區數 <em>*</em></span><select class="input" id="fSites"><option value="">請選擇</option><option>1～10</option><option>11～30</option><option>31～60</option><option>60 以上</option></select><div class="err" id="eSites">請選擇服務社區數</div></label>
       <label class="field"><span>聯絡人 <em>*</em></span><input class="input" id="fName"><div class="err" id="eName">請填寫聯絡人</div></label>
       <label class="field"><span>職稱</span><input class="input" id="fTitle" placeholder="例：總經理、督導"></label>
       <label class="field"><span>電話 <em>*</em></span><input class="input" id="fTel" inputmode="tel" placeholder="02-1234-5678 或 0912-345-678"><div class="err" id="eTel">請填寫正確的電話</div></label>
       <label class="field"><span>Email <em>*</em></span><input class="input" id="fMail" type="email" placeholder="name@company.com"><div class="err" id="eMail">請填寫正確的 Email</div></label>
       <label class="field full"><span>目前使用的工具</span><select class="input" id="fTool"><option value="">請選擇（選填）</option><option>紙本</option><option>Excel＋LINE 群組</option><option>其他系統</option></select></label>
-      <label class="field full"><span>推薦碼（選填）</span><input class="input" id="fRef" placeholder="例：HY-CHEN"><div class="ref" id="refMsg"></div></label>
-      <label class="check full"><input type="checkbox" id="fAgree"><span>我已閱讀並同意 <button type="button" class="linkbtn" data-act="terms" data-k="服務條款">服務條款</button> 與 <button type="button" class="linkbtn" data-act="terms" data-k="隱私權政策">隱私權政策</button> <em style="color:var(--bad);font-style:normal">*</em></span></label>
+      <label class="field full"><span>推薦碼（選填）</span><input class="input" id="fRef" placeholder="例：HY-CHEN"><div class="ref" id="refMsg"></div><div class="hint" style="margin-top:4px">推薦碼只用於記錄是哪位夥伴介紹，不會作為任何身分驗證（NF-REG-09）。</div></label>
+      <label class="check full"><input type="checkbox" id="fAgree"><span>我已閱讀並同意 <button type="button" class="linkbtn" data-act="terms" data-k="服務條款">服務條款</button> 與 <button type="button" class="linkbtn" data-act="terms" data-k="隱私權政策">隱私權政策</button>（v2026.10） <em style="color:var(--bad);font-style:normal">*</em></span></label>
       <div class="err full" id="eAgree">請勾選同意服務條款與隱私權政策</div>
+      <div class="full"><div class="botchk" id="botChk"><i data-lucide="shield-check"></i><span>已通過人機驗證（背景自動檢查，不需操作）</span></div></div>
+      <div class="note bad full" id="limitNote" style="display:none;margin:0"><i data-lucide="octagon-alert"></i><span>送出次數過多，請稍後再試（同一網路每小時最多 3 次，NF-REG-01）。</span></div>
       <div class="full"><button class="btn primary block" data-act="submit"><i data-lucide="send"></i>送出申請</button></div>
     </div>
   </div>
 
+  <!-- ② 請至信箱驗證 -->
+  <div class="card" id="verifyCard" style="display:none">
+    <div class="done">
+      <div class="mailart"><i data-lucide="mail-check"></i></div>
+      <h2>請至信箱點擊驗證連結</h2>
+      <p class="hint">若此 Email 可以使用，您會收到一封驗證信：<b id="vMail"></b><br>驗證連結 24 小時內有效、只能使用一次。完成驗證後，申請才會進入審核（NF-REG-02）。</p>
+      <div class="note"><i data-lucide="info"></i><span>沒收到信？請檢查垃圾郵件匣，或於 60 秒後重寄。</span></div>
+      <div class="btnrow">
+        <button class="btn" data-act="resend" id="resendBtn"><i data-lucide="send"></i>重寄驗證信</button>
+        <button class="btn" data-act="editMail"><i data-lucide="pencil"></i>返回修改 Email</button>
+        <button class="btn primary" data-act="verifyLink"><i data-lucide="mouse-pointer-click"></i>（原型）模擬點擊驗證連結</button>
+      </div>
+      <div class="devnote" id="dupNote" style="display:none"><b>原型說明（使用者看不到）：</b>此統編已有租戶或近期試用過。畫面與訊息和一般申請<b>完全相同</b>，不透露公司是否已是客戶；後台標記「重複申請，轉業務確認」（NF-REG-03、NF-REG-06）。</div>
+    </div>
+  </div>
+
+  <!-- ③ 已進入審核 -->
   <div class="card" id="doneCard" style="display:none">
     <div class="done">
       <div class="big"><i data-lucide="check"></i></div>
-      <h2>申請已送出</h2>
-      <p class="hint" id="doneInfo"></p>
+      <h2>Email 已驗證，申請已進入審核</h2>
+      <div class="kv" id="doneKv"></div>
       <ul class="steps">
-        <li><b>1</b><span>專人於 1 個工作天內來電，了解貴公司的社區與人員狀況</span></li>
-        <li><b>2</b><span>開通試用帳號，開通信寄至 <span id="doneMail"></span></span></li>
+        <li><b>1</b><span>業務人工審核後，專人於 1 個工作天內來電（試用帳號不會自動開通，NF-REG-04）</span></li>
+        <li><b>2</b><span>開通信寄至 <span id="doneMail"></span>，連結 72 小時內有效；設定密碼並<b>綁定雙因子驗證</b>後才能進入系統（NF-REG-05）</span></li>
         <li><b>3</b><span>線上說明會（約 30 分鐘），協助匯入社區與員工資料</span></li>
         <li><b>4</b><span>員工加入 LINE 官方帳號，開始試用 30 天</span></li>
       </ul>
-      <button class="btn" data-act="again"><i data-lucide="rotate-ccw"></i>再填一份</button>
+      <div class="btnrow"><a class="lbtn" href="activate.html"><i data-lucide="key-round"></i>預覽開通連結頁</a><button class="btn" data-act="again"><i data-lucide="rotate-ccw"></i>再填一份</button></div>
     </div>
   </div>
 </div>
+
+<div class="dev"><div class="box"><b>原型控制</b>
+  <button class="btn" data-act="fillDemo"><i data-lucide="wand-sparkles"></i>填入範例</button>
+  <button class="btn" data-act="fillDup"><i data-lucide="copy"></i>填入已存在的統編</button>
+  <button class="btn" data-act="botFail" id="botBtn"><i data-lucide="bot"></i>模擬人機驗證失敗</button>
+  <button class="btn" data-act="resetLimit"><i data-lucide="rotate-ccw"></i>重設送出次數</button>
+  <span>統編範例：53212539（有效）、10458574／10458575（第 7 碼為 7 的特例，皆有效）、12345678（檢查碼錯誤）</span>
+</div></div>
 <footer>原型 · 資料為虛構 · <a href="index.html">回原型總覽</a></footer>
 
 <div class="ov" id="ov" data-act="closeAll"></div>
@@ -140,6 +294,8 @@ footer{text-align:center;color:var(--muted);font-size:12.5px;padding:0 16px 32px
 
 <script>
 const PARTNERS={"HY-CHEN":"宏遠物業 陳董","TPA-01":"北市物業管理協進會","AJ-SEC":"安捷保全設備有限公司","CX-CPA":"誠信聯合會計師事務所"};
+const EXISTING_TAX=["24536806","22099131"];/* 已有租戶或近期試用（後台資料，畫面不透露） */
+const TERMS_VER="v2026.10";
 const $=s=>document.querySelector(s);
 const val=id=>($("#"+id).value||"").trim();
 let tt;function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("on");clearTimeout(tt);tt=setTimeout(()=>t.classList.remove("on"),2600);}
@@ -147,15 +303,27 @@ let FOOT={};
 function modal(title,body,btns){$("#mTitle").textContent=title;$("#mBody").innerHTML=body;FOOT={};$("#mFoot").innerHTML=btns.map((b,i)=>{FOOT[i]=b.fn;return `<button class="btn ${b.cls||""}" data-foot="${i}">${b.label}</button>`}).join("");$("#modal").classList.add("on");$("#ov").classList.add("on");lucide.createIcons();}
 function closeAll(){$("#modal").classList.remove("on");$("#ov").classList.remove("on");}
 function checkRef(){const c=val("fRef").toUpperCase();const m=$("#refMsg");if(!c){m.className="ref";return true;}if(PARTNERS[c]){m.className="ref on";m.textContent="✓ 推薦人："+PARTNERS[c];return true;}m.className="ref on bad";m.textContent="查無此推薦碼，請確認或留空";return false;}
-const TERMS={服務條款:"<p>本服務由平台營運方提供，租戶依訂閱方案使用系統功能。試用期滿未付款，帳號轉為唯讀。</p><p>租戶終止後，資料唯讀保留 90 天供匯出，期滿刪除並提供刪除證明。</p><p>（原型示意文字，正式條款需由法律顧問審閱。）</p>",隱私權政策:"<p>我們僅為提供試用與聯繫之目的蒐集您填寫的公司與聯絡資料，不會提供給第三方；透過推薦碼申請時，推薦夥伴僅能得知貴公司名稱與申請階段。</p><p>（原型示意文字。）</p>"};
+const TERMS={服務條款:"<p>本服務由平台營運方提供，租戶依訂閱方案使用系統功能。試用期滿未付款，帳號轉為唯讀。</p><p>租戶終止後，系統自動產生最終完整備份，資料唯讀保留 90 天供下載，期滿刪除並提供刪除證明。</p><p>（原型示意文字，正式條款由律師撰寫與審閱。）</p>",隱私權政策:"<p>我們僅為提供試用與聯繫之目的蒐集您填寫的公司與聯絡資料，不會提供給第三方；透過推薦碼申請時，推薦夥伴僅能得知貴公司名稱與申請階段。</p><p>（原型示意文字。）</p>"};
 function setErr(id,on){$("#e"+id).classList.toggle("on",on);const inp=$("#f"+id);if(inp&&inp.classList)inp.classList.toggle("bad",on);return !on;}
+/* 統一編號檢查碼（財政部規則：加權後各位數相加可被 5 整除；第 7 碼為 7 時，另一種算法也算有效） */
+function taxIdOk(id){if(!/^\d{8}$/.test(id))return false;const w=[1,2,1,2,1,2,4,1];let s=0;for(let i=0;i<8;i++){const p=+id[i]*w[i];s+=Math.floor(p/10)+p%10;}return s%5===0||(id[6]==="7"&&(s+1)%5===0);}
+const QS=new URLSearchParams(location.search);
+let bot=QS.get("bot")==="1",submits=0,cooldownUntil=0,cdTimer=null,app=null;
+function renderBot(){const b=$("#botChk");b.className="botchk"+(bot?" bad":"");b.innerHTML=bot?'<i data-lucide="shield-x"></i><span>人機驗證未通過，請重新整理頁面後再試</span>':'<i data-lucide="shield-check"></i><span>已通過人機驗證（背景自動檢查，不需操作）</span>';$("#botBtn").innerHTML=bot?'<i data-lucide="bot"></i>恢復人機驗證通過':'<i data-lucide="bot"></i>模擬人機驗證失敗';lucide.createIcons();}
+function show(id){["formCard","verifyCard","doneCard"].forEach(c=>$("#"+c).style.display=c===id?"":"none");window.scrollTo(0,0);lucide.createIcons();}
+function maskMail(m){const [u,d]=m.split("@");return u.slice(0,2)+"***@"+d;}
+function renderResend(){const left=Math.ceil((cooldownUntil-Date.now())/1000),b=$("#resendBtn");if(!b)return;b.innerHTML=left>0?`<i data-lucide="timer"></i>重寄驗證信（${left} 秒）`:'<i data-lucide="send"></i>重寄驗證信';lucide.createIcons();if(left<=0){clearInterval(cdTimer);cdTimer=null;}}
+function startCooldown(){cooldownUntil=Date.now()+60000;clearInterval(cdTimer);cdTimer=setInterval(renderResend,1000);renderResend();}
 const A={
  theme(){const r=document.documentElement;const dark=r.dataset.theme?r.dataset.theme==="dark":matchMedia("(prefers-color-scheme: dark)").matches;r.dataset.theme=dark?"light":"dark";},
  closeAll(){closeAll();},
- terms(el){const k=el.dataset.k;modal(k,TERMS[k],[{label:"關閉"},{label:"同意並關閉",cls:"primary",fn:()=>{$("#fAgree").checked=true;setErr("Agree",false);closeAll();}}]);},
- submit(){let ok=true;
+ terms(el){const k=el.dataset.k;modal(k+"（"+TERMS_VER+"）",TERMS[k],[{label:"關閉"},{label:"同意並關閉",cls:"primary",fn:()=>{$("#fAgree").checked=true;setErr("Agree",false);closeAll();}}]);},
+ submit(){
+  if(bot){toast("人機驗證未通過，請重新整理頁面後再試");return;}
+  if(submits>=3){$("#limitNote").style.display="";toast("送出次數過多，請稍後再試");return;}
+  let ok=true;
   ok=setErr("Co",!val("fCo"))&&ok;
-  ok=setErr("Tax",!/^\d{8}$/.test(val("fTax")))&&ok;
+  ok=setErr("Tax",!taxIdOk(val("fTax")))&&ok;
   ok=setErr("Sites",!val("fSites"))&&ok;
   ok=setErr("Name",!val("fName"))&&ok;
   ok=setErr("Tel",!/^[\d\-\s()+#]{8,}$/.test(val("fTel")))&&ok;
@@ -163,16 +331,29 @@ const A={
   ok=checkRef()&&ok;
   $("#eAgree").classList.toggle("on",!$("#fAgree").checked);ok=$("#fAgree").checked&&ok;
   if(!ok){toast("請修正標示紅色的欄位");const f=document.querySelector(".input.bad");if(f)f.focus();return;}
-  const no="AP-"+new Date().toISOString().slice(5,10).replace("-","")+"-"+String(Math.floor(Math.random()*90)+10);const ref=val("fRef").toUpperCase();
-  $("#doneInfo").innerHTML=`申請編號 <b>${no}</b> · ${val("fCo")}${ref&&PARTNERS[ref]?`<br>推薦人：${PARTNERS[ref]}`:""}`;$("#doneMail").textContent=val("fMail");
-  $("#formCard").style.display="none";$("#doneCard").style.display="";window.scrollTo(0,0);lucide.createIcons();},
- again(){["fCo","fTax","fName","fTitle","fTel","fMail"].forEach(id=>$("#"+id).value="");$("#fSites").value="";$("#fTool").value="";$("#fAgree").checked=false;document.querySelectorAll(".err").forEach(e=>e.classList.remove("on"));document.querySelectorAll(".input.bad").forEach(e=>e.classList.remove("bad"));$("#doneCard").style.display="none";$("#formCard").style.display="";checkRef();},
+  submits++;
+  const now=new Date();
+  app={no:"AP-"+now.toISOString().slice(5,10).replace("-","")+"-"+String(40+submits),co:val("fCo"),mail:val("fMail"),ref:val("fRef").toUpperCase(),dup:EXISTING_TAX.includes(val("fTax")),agreed:now.toLocaleString("zh-TW",{hour12:false})};
+  /* 不論是否為既有公司，畫面訊息完全一致（NF-REG-06） */
+  $("#vMail").textContent=maskMail(app.mail);$("#dupNote").style.display=app.dup?"":"none";
+  startCooldown();show("verifyCard");toast("已寄出驗證信");},
+ resend(){const left=Math.ceil((cooldownUntil-Date.now())/1000);if(left>0){toast("請於 "+left+" 秒後再重寄");return;}startCooldown();toast("已重寄驗證信（舊連結已失效）");},
+ editMail(){show("formCard");$("#fMail").focus();toast("請修改 Email 後重新送出");},
+ verifyLink(){if(!app)return;
+  $("#doneKv").innerHTML=`<span>申請編號</span><b>${app.no}</b><span>公司</span><b>${app.co}</b>${app.ref&&PARTNERS[app.ref]?`<span>推薦人</span><b>${PARTNERS[app.ref]}（僅作歸屬）</b>`:""}<span>Email</span><b>${maskMail(app.mail)}（已驗證）</b><span>同意條款</span><b>服務條款 ${TERMS_VER}、隱私權政策 ${TERMS_VER}</b><span>同意時間</span><b>${app.agreed}・IP 203.0.113.x</b><span>狀態</span><b>已進入審核</b>`;
+  $("#doneMail").textContent=maskMail(app.mail);show("doneCard");},
+ again(){["fCo","fTax","fName","fTitle","fTel","fMail"].forEach(id=>$("#"+id).value="");$("#fSites").value="";$("#fTool").value="";$("#fAgree").checked=false;document.querySelectorAll(".err").forEach(e=>e.classList.remove("on"));document.querySelectorAll(".input.bad").forEach(e=>e.classList.remove("bad"));app=null;show("formCard");checkRef();},
+ fillDemo(){show("formCard");$("#fCo").value="康和物業管理有限公司";$("#fTax").value="53212539";$("#fSites").value="11～30";$("#fName").value="林先生";$("#fTitle").value="總經理";$("#fTel").value="02-2345-6789";$("#fMail").value="lin@kanghe-pm.com.tw";$("#fAgree").checked=true;document.querySelectorAll(".err").forEach(e=>e.classList.remove("on"));document.querySelectorAll(".input.bad").forEach(e=>e.classList.remove("bad"));toast("已填入範例資料");},
+ fillDup(){A.fillDemo();$("#fCo").value="永信物業管理股份有限公司";$("#fTax").value="24536806";$("#fMail").value="owner@yongxin-pm.com.tw";toast("已填入已存在租戶的統編（送出後畫面與一般申請相同）");},
+ botFail(){bot=!bot;renderBot();toast(bot?"已模擬：人機驗證未通過":"人機驗證已恢復");},
+ resetLimit(){submits=0;$("#limitNote").style.display="none";toast("已重設送出次數");},
 };
 document.addEventListener("click",e=>{const f=e.target.closest("[data-foot]");if(f){const fn=FOOT[f.dataset.foot];fn?fn():closeAll();return;}const el=e.target.closest("[data-act]");if(!el)return;const fn=A[el.dataset.act];if(fn){e.preventDefault();fn(el);}});
 document.addEventListener("keydown",e=>{if(e.key==="Escape")closeAll();});
 $("#fRef").addEventListener("input",checkRef);
 $("#fTax").addEventListener("input",e=>{e.target.value=e.target.value.replace(/\D/g,"");});
-try{const r=new URLSearchParams(location.search).get("ref");if(r){$("#fRef").value=r.toUpperCase();checkRef();}}catch(e){}
+try{const r=QS.get("ref");if(r){$("#fRef").value=r.toUpperCase();checkRef();}}catch(e){}
+renderBot();
 lucide.createIcons();
 </script>
 </body>
