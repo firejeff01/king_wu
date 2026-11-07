@@ -26,6 +26,19 @@ ul{margin:12px 0 0;padding-left:20px;color:var(--muted);line-height:1.8;font-siz
 .links a:hover{border-color:#38bdf8}
 .note{margin-top:28px;color:var(--muted);font-size:13px;line-height:1.9;border-top:1px solid var(--border);padding-top:18px}
 .note a{color:#7dd3fc}
+.sync{background:linear-gradient(135deg,rgba(14,165,233,.16),rgba(16,185,129,.10));border:1px solid #1e5a7a;border-radius:20px;padding:24px 26px;margin:0 0 24px}
+.sync h2{display:flex;align-items:center;gap:10px}
+.sync .tag{background:#064e3b;color:#6ee7b7}
+.sync .open{display:flex;flex-wrap:wrap;gap:10px;margin:14px 0 4px}
+.sync .open a{display:inline-flex;align-items:center;gap:6px;color:#0b1220;background:#7dd3fc;font-weight:800;font-size:14px;text-decoration:none;border-radius:999px;padding:8px 16px}
+.sync .open a.l{background:#86efac}.sync .open a.s{background:#fcd34d}
+.sync ol{margin:16px 0 0;padding-left:0;list-style:none;counter-reset:st;display:grid;grid-template-columns:1fr 1fr;gap:10px 18px}
+.sync ol li{counter-increment:st;position:relative;padding:10px 12px 10px 46px;background:rgba(11,18,32,.55);border:1px solid var(--border);border-radius:14px;color:var(--text);font-size:14px;line-height:1.7}
+.sync ol li::before{content:counter(st);position:absolute;left:12px;top:10px;width:24px;height:24px;border-radius:50%;background:#0ea5e9;color:#fff;font-weight:800;font-size:13px;display:grid;place-items:center}
+.sync ol li b{color:#e2e8f0}.sync ol li span{color:var(--muted)}
+.sync .tip{margin-top:14px;color:var(--muted);font-size:13px;line-height:1.8}
+.sync .tip b{color:#fcd34d}
+@media (max-width:720px){.sync ol{grid-template-columns:1fr}}
 @media (max-width:720px){.grid{grid-template-columns:1fr}h1{font-size:26px}body{padding:32px 16px}}
 .tag.sec{background:#3f0d12;color:#fda4af}
 /* =====================================================================
@@ -138,7 +151,24 @@ html select::-ms-expand{display:none}
 <body>
 <div class="w">
   <h1>物業社區管理平台 SaaS 版 · 畫面原型</h1>
-  <p class="sub">v0.2 · 三個端：平台營運後台（我們）、租戶後台與前台（物業公司），另含官網申請與租戶開通頁。每個按鈕皆可操作，資料皆為虛構，對應《SaaS 版需求規劃書》v0.4（資安與效能最優先）。</p>
+  <p class="sub">v0.2 · 三個端：平台營運後台（我們）、租戶後台與前台（物業公司），另含官網申請與租戶開通頁。每個按鈕皆可操作，資料皆為虛構，對應《SaaS 版需求規劃書》v0.6。<b style="color:#e2e8f0">租戶後台、LINE 前台、網頁前台的資料互相連動</b>，見下方「連動展示」。</p>
+  <section class="sync" aria-labelledby="syncH">
+    <span class="tag">連動展示</span>
+    <h2 id="syncH">三個雛型共用同一份資料</h2>
+    <div class="d">租戶後台、LINE 前台、網頁前台在<b style="color:#e2e8f0">同一個瀏覽器</b>（Chrome 或 Edge，直接開啟檔案即可）共用資料：在一個頁面操作後，其他已開啟的頁面會<b style="color:#e2e8f0">即時更新</b>，右下角會出現「↻ 來源・誰・做了什麼」提示。建議把三個頁面開在不同分頁或並排的視窗，一邊操作一邊看另一邊變化。</div>
+    <div class="open"><a href="admin.html" target="_blank" rel="noopener">開啟租戶後台</a><a class="l" href="liff.html" target="_blank" rel="noopener">開啟 LINE 前台</a><a class="s" href="site.html" target="_blank" rel="noopener">開啟網頁前台</a></div>
+    <ol>
+      <li><b>報修：</b>LINE 前台切換為<b>保全</b>，拍照送出報修。<span>租戶後台「報修與事件」、網頁前台首頁「今日社區動態」立即出現。</span></li>
+      <li><b>派工：</b>租戶後台把這張報修指派給<b>機電 王志強</b>。<span>LINE 前台切換為機電，收到推播，在「我的工單」回報完工。</span></li>
+      <li><b>結案：</b>LINE 前台或網頁前台以<b>總幹事</b>確認結案。<span>後台工單狀態同步變成「結案」。</span></li>
+      <li><b>事件通報：</b>網頁前台通報一件<b>緊急</b>事件。<span>後台儀表板與通知出現緊急事件，督導收到 LINE 推播。</span></li>
+      <li><b>請假：</b>LINE 前台以保全申請請假 → 總幹事在 LINE 初審 → 租戶後台「排班請假」核准。<span>申請人在 LINE 收到核准通知，班表同步更新。</span></li>
+      <li><b>公告：</b>租戶後台發布公司公告。<span>LINE 前台收到推播；員工點開閱讀後，後台的已讀人數即時增加。</span></li>
+      <li><b>廠商合約：</b>網頁前台（個人登入・總幹事）新增合約草稿並送出 → 租戶後台「廠商與合約 › 前台送出」確認或退回。<span>網頁前台與 LINE 的合約狀態同步更新，退回時顯示原因。</span></li>
+      <li><b>改善單：</b>租戶後台督導稽核開立改善單 → 總幹事在 LINE 或網頁前台拍照回覆 → 後台複查結案。<span>每一步都會出現在三端的操作紀錄。</span></li>
+    </ol>
+    <div class="tip">每個頁面右下角都有「<b>資料連動中</b>」標示與「<b>重置示範資料</b>」按鈕，按下後三個雛型都會回到初始狀態。<br>注意：<b>Firefox 直接開啟檔案時，每個檔案的資料是獨立的，無法連動</b>；展示請使用 Chrome 或 Edge。平台營運後台（ops.html）、官網試用申請與開通頁不在連動範圍內。</div>
+  </section>
   <div class="grid">
     <a class="card" href="ops.html">
       <span class="tag ops">平台營運方 · 我們自己用</span>

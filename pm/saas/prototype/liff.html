@@ -526,6 +526,7 @@ html select::-ms-expand{display:none}
   </div>
 </div>
 
+<script src="shared-store.js"></script>
 <script>
 /* =====================================================================
    多語系（圖文選單、LIFF 標題、主要按鈕）
@@ -715,7 +716,7 @@ const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&g
 const fmt=n=>Number(n).toLocaleString("zh-TW");
 const icons=()=>lucide.createIcons();
 const tag=(x,c)=>`<span class="tag ${c}">${x}</span>`;
-const stTag=s=>tag(s,{"待處理":"t-bad","待接單":"t-bad","待改善":"t-bad","待確認":"t-warn","待初審":"t-warn","處理中":"t-info","待料/外包":"t-warn","已完成":"t-ok","已結案":"t-ok","已確認":"t-ok","已回覆待複查":"t-info","督導核准中":"t-info","總幹事初審中":"t-info","已核准":"t-ok","已駁回":"t-mute","待執行":"t-warn","已登錄":"t-ok","待簽核":"t-warn","處理中（客服）":"t-info","新進":"t-warn"}[s]||"t-mute");
+const stTag=s=>tag(s,{"待處理":"t-bad","待接單":"t-bad","待改善":"t-bad","待確認":"t-warn","待初審":"t-warn","處理中":"t-info","待料/外包":"t-warn","已完成":"t-ok","已結案":"t-ok","已確認":"t-ok","已回覆待複查":"t-info","督導核准中":"t-info","總幹事初審中":"t-info","已核准":"t-ok","已駁回":"t-mute","待執行":"t-warn","已登錄":"t-ok","待簽核":"t-warn","處理中（客服）":"t-info","新進":"t-warn","待總幹事初審":"t-warn","待核准":"t-info","已退回":"t-mute","結案":"t-ok","待審核":"t-warn","核准":"t-ok","已核准":"t-ok","退回":"t-mute","待主管確認":"t-warn","督導退回":"t-bad","待督導確認":"t-info","逾期":"t-bad","正常":"t-ok"}[s]||"t-mute");
 const now=()=>{const d=new Date();return String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");};
 const user=()=>USERS[S.role];
 const site=()=>S.site[S.role];
@@ -1416,7 +1417,275 @@ initState=(orig=>()=>{orig();S.vnd={cs:vSeed(),perm:JSON.parse(JSON.stringify(VP
  reqs:[],act:[]};})(initState);
 document.addEventListener("change",e=>{const k=e.target.dataset.perm;if(!k)return;const r=S.vnd.perm[S.role];if(vBlocked(S.role,k)){e.target.checked=false;return;}r[k]=e.target.checked?1:0;renderAll();toast((e.target.checked?"已開放：":"已取消：")+VPERM.find(x=>x[0]===k)[1]);});
 
-initState();renderAll();route();
+
+
+
+/* =====================================================================
+   共用資料層連動（shared-store.js）
+   與租戶後台 admin.html、網頁前台 site.html 共用：報修、事件、打卡、補卡、請假、公告、
+   改善單、交接日誌、廠商合約（合約、廠商、前台送出、權限）、LINE 推播收件匣
+   作法：S.* 只當畫面用的資料；每次從 PCMP 取出後轉成原本的格式（pull），所有寫入都經 PCMP.update
+   ===================================================================== */
+const DEMO_DAY="2026/11/07";
+const CAT2C={"水電":"c_water","機電":"c_water","電梯":"c_lift","門禁":"c_door","消防":"c_fire","清潔":"c_clean","其他":"c_other"};
+const C2CAT={c_water:"水電",c_lift:"電梯",c_door:"門禁",c_fire:"消防",c_clean:"清潔",c_other:"其他"};
+const LV2C={"一般":"lv1","重要":"lv2","緊急":"lv3"},C2LV={lv1:"一般",lv2:"重要",lv3:"緊急"};
+const isPerson=a=>typeof a==="string"&&/^[EA]\d{5}$/.test(a);
+const mt=(text,page)=>({src:"LINE",who:user().n,text,link:"liff.html#"+(page||S.page||"chat")});
+const shortTitle=()=>user().title.replace(/（.*）/,"").replace(/員$/,"");
+const tlStr=x=>[x.d,x.t].filter(Boolean).join(" ")+(x.by?"（"+x.by+"）":"");
+const daysSince=s=>{const m=String(s||"").match(/(\d{4})\/(\d{2})\/(\d{2})/);if(!m)return 0;return Math.max(0,Math.round((new Date(2026,10,7)-new Date(+m[1],+m[2]-1,+m[3]))/864e5));};
+const subStatus=x=>["pending","confirmed","returned"].includes(x.status)?x.status:x.st==="已退回"?"returned":(x.st==="已確認"||x.st==="已處理")?"confirmed":"pending";
+function vAmtStr(c){const u=fmt(c.unit||0),q=c.qty||1;
+ return c.mode==="按台"?`每台每月 NT$${u} × ${q} 台（${c.cycle||"月"}繳）`:c.mode==="按人"?`每人每月 NT$${u} × ${q} 人（${c.cycle||"月"}繳）`:c.mode==="年費"?`年費 NT$${u}（年繳）`:c.mode==="按次"?`每次 NT$${u}（按次）`:`月費 NT$${u}（${c.cycle||"月"}繳）`;}
+function punchEntries(r){const L=[],tags=r.tags||[],pendSt=r.st&&r.st!=="正常"?r.st:"待主管確認";
+ const inOut=r.inOut!=null?r.inOut:(tags.includes("範圍外")&&!r.outOut),outOut=!!r.outOut;
+ if(r.in&&r.in!=="—")L.push({type:"上班",t:r.in,how:r.inHow||r.m||"",st:inOut?pendSt:"正常",reason:r.inReason||(inOut?r.reason:"")});
+ if(r.out&&r.out!=="—")L.push({type:"下班",t:r.out,how:r.outHow||r.m||"",st:outOut?pendSt:"正常",reason:r.outReason||""});
+ return L;}
+
+/* ---------- 從共用資料層取出，轉成畫面格式 ---------- */
+function pull(){
+ if(!S||!S.vnd)return;
+ const u=user(),sp=site();
+ /* 報修 */
+ const reps=PCMP.get("repairs");
+ S.repairs=reps.filter(r=>r.site===sp).map(r=>({id:r.id,cat:CAT2C[r.cat]||"c_other",loc:String(r.loc||"—").replace(/^公設：/,""),desc:r.desc||"",st:r.st,who:r.who||"—",days:r.days??daysSince(r.createdAt),assignee:r.assignee||null,src:r.src||"",by:r.createdBy||""}));
+ S.workorders=reps.filter(r=>u.sites.includes(r.site)&&(r.assignee===u.id||(r.site===sp&&r.assignee&&!isPerson(r.assignee)&&!["結案","已結案"].includes(r.st)))).map(r=>{const mine=r.assignee===u.id;
+  return {id:r.id,site:r.site,cat:CAT2C[r.cat]||"c_other",loc:String(r.loc||"—").replace(/^公設：/,""),desc:r.desc||"",st:mine&&r.st==="待處理"?"待接單":r.st,log:(r.timeline||[]).map(tlStr),ro:!mine,who:r.who||""};});
+ /* 事件 */
+ S.incs=PCMP.get("incidents").filter(x=>x.site===sp).map(x=>({id:x.id,lv:LV2C[x.lv]||"lv1",cat:x.cat||x.ev,desc:x.ev||x.desc||"",t:x.t||"",st:x.st,log:(x.timeline||[]).map(tlStr)}));
+ /* 打卡（四個角色各自） */
+ const pun=PCMP.get("punches");
+ Object.keys(USERS).forEach(role=>{const r=pun.find(p=>p.empId===USERS[role].id&&(p.d||DEMO_DAY)===DEMO_DAY);S.clock[role]=r?punchEntries(r):[];});
+ /* 補卡 */
+ S.fixes=PCMP.get("makeups").filter(m=>m.empId===u.id).map(m=>({id:m.id,type:m.k,d:m.d,time:m.tm,reason:m.why,st:m.st}));
+ /* 請假 */
+ const lv=PCMP.get("leaves"),kOf=x=>x.kind||String(x.k||"").split(" ")[0],dOf=x=>x.days||String(x.k||"").split(" ").slice(1).join(" ");
+ S.leaves=lv.filter(x=>x.empId===u.id).map(x=>({id:x.id,k:kOf(x),d:x.d,days:dOf(x),st:x.st,flow:(x.history||[]).map(h=>[h.d,h.t].filter(Boolean).join(" "))}));
+ S.toApprove=S.role==="mgr"?lv.filter(x=>x.site===sp&&x.empId!==u.id).map(x=>({id:x.id,n:x.n,t:x.t,k:kOf(x),d:x.d,days:dOf(x),st:x.st==="待總幹事初審"?"待初審":x.st,cover:x.sub||"—"})):[];
+ /* 公告 */
+ S.news=PCMP.get("announcements").map(a=>({id:a.id,title:a.title,body:a.body,imp:!!a.important,read:!!(a.readBy||{})[u.id],d:String(a.d||"").slice(5)}));
+ /* 改善單（逾期仍可回覆） */
+ S.improves=PCMP.get("improvements").filter(x=>x.site===sp).map(x=>({id:x.id,item:x.item,due:x.due+(x.st==="逾期"?"（已逾期）":""),st:x.st==="逾期"||x.st==="退回"?"待改善":x.st,sup:x.sup,reply:x.reply||"",back:x.st==="退回"||(x.history||[]).some(h=>/退回/.test(h.t||""))&&x.st==="待改善"}));
+ /* 交接日誌 */
+ const sl=PCMP.get("shiftLogs").filter(x=>x.site===sp);
+ S.pendingShift=sl.filter(x=>x.st==="待接班確認"&&x.byId!==u.id).map(x=>({id:x.id,from:x.by+"（"+String(x.shift||"").split(" ")[0]+"）",to:"本班",t:String(x.at||"").slice(5),note:x.note||"",items:(x.items||[]).join("、"),st:"待確認"}));
+ S.shifts=sl.filter(x=>x.byId===u.id).map(x=>({id:x.id,tpl:x.tpl||"交接",t:String(x.at||"").slice(5),to:x.confirmedBy||"下一班",st:x.st==="待接班確認"?"待確認":x.st}));
+ /* 廠商合約 */
+ PCMP.get("vendors").forEach(v=>{VVEN[v.id]={n:v.n,s:v.short||v.n,ct:v.ct,ph:v.ph,em:v.em};});
+ S.vnd.cs=PCMP.get("contracts").map(c=>({id:c.id,site:c.site,v:c.vendor,cat:c.cat,party:c.party,start:c.start,end:c.end,auto:!!c.auto,notice:c.notice||30,amt:vAmtStr(c),freq:c.freq||"—",sla:c.sla||"—",warr:c.warr||"—",scope:c.scope||"",due:c.due||0,logs:(c.logs||[]).length,term:!!c.term||c.st==="已解約"||c.status==="已解約"})).filter(c=>VVEN[c.v]);
+ const subs=PCMP.get("submissions");
+ S.vnd.pend=subs.filter(x=>x.kind==="svclog").map(x=>{const s=subStatus(x),p=x.payload||{};return {id:x.id,c:x.contract,d:p.d||x.t||"",by:x.who||"",src:x.src||"LINE",ph:p.ph||0,note:(p.c||x.desc||"")+(s==="returned"&&x.reason?"（退回："+x.reason+"）":""),st:s==="pending"?"待確認":s==="confirmed"?"已確認":"已退回"};});
+ S.vnd.reqs=subs.filter(x=>["intent","renew","terminate","change"].includes(x.kind)&&!x.superseded).map(x=>{const s=subStatus(x);return {id:x.id,c:x.contract,intent:(x.payload||{}).intent||x.type,st:s==="pending"?"待督導確認":s==="returned"?"督導退回":"已確認",back:x.reason||x.returnReason||"",by:x.who,src:x.src};});
+ const pv=(PCMP.get("perms")||{}).vendor||{};
+ Object.keys(USERS).forEach(r=>{const p=pv[r]||{};S.vnd.perm[r]={view:p.view?1:0,amt:p.amt?1:0,log:p.log?1:0,conf:p.conf?1:0,maint:p.maint?1:0,req:p.req?1:0,apprv:p.approve?1:0};});
+}
+
+/* ---------- LINE 推播收件匣 → 聊天室卡片 ---------- */
+const MSG_KIND={incident:["k-emg","siren"],repair:["k-warn","wrench"],workorder:["k-warn","hard-hat"],leave:["k-info","calendar-x"],punch:["k-warn","map-pin-off"],makeup:["k-info","file-clock"],news:["k-ok","megaphone"],announcement:["k-ok","megaphone"],improve:["k-warn","clipboard-check"],improvement:["k-warn","clipboard-check"],shift:["k-gray","repeat"],vendor:["k-info","handshake"],svclog:["k-info","list-checks"],intent:["k-warn","file-clock"]};
+function linkPage(link){const h=String(link||"").split("#")[1]||"";const file=String(link||"").split("#")[0];if(file&&!/liff\.html$/.test(file))return {p:null,ext:link};return {p:PAGES[h]?h:null,ext:null};}
+function pullInbox(){
+ if(!S||!S.bound)return false;
+ const u=user(),L=PCMP.inboxFor(u.id,S.role,site());S.inboxSeen=S.inboxSeen||{};let changed=false;
+ L.slice().reverse().forEach(m=>{const key=u.id+"|"+m.id;if(S.inboxSeen[key])return;S.inboxSeen[key]=1;const [kind,ic]=MSG_KIND[m.kind]||["k-info","bell"],lp=linkPage(m.link);
+  S.chat.push({k:"card",kind:m.urgent?"k-emg":kind,ic:m.ic||ic,title:m.title||"通知",body:m.body||"",small:(m.from?"來自："+m.from:"")+(lp.ext?"（請到後台查看）":""),p:lp.p,tm:String(m.at||"").slice(11)||now(),emp:u.id,inbox:m.id});changed=true;});
+ const unread=L.filter(m=>!m.read).map(m=>m.id);
+ if(unread.length)PCMP.update("inbox",list=>{list.forEach(m=>{if(unread.includes(m.id))m.read=true;});},null);
+ return changed;}
+renderChat=(orig=>()=>{const all=S.chat,me=user().id;S.chat=all.filter(m=>!m.emp||m.emp===me);try{orig();}finally{S.chat=all;}})(renderChat);
+
+/* ---------- 其他頁面更新時即時重繪 ---------- */
+let syncDepth=0,syncT=null;
+function doSync(){if(!S||syncDepth)return;syncDepth++;
+ try{keepForm();pull();const ch=pullInbox();if(ch)renderChat();renderMenu();renderReq();renderPerm();if(S.page&&!S.disabled&&!S.sessExpired&&!S.authErr)openLiffKeep();}
+ finally{syncDepth--;}}
+/* 其他分頁的變更：Chrome 的 localStorage 跨分頁同步是非同步的，BroadcastChannel 可能比資料先到，
+   所以遠端事件延遲一點再讀，並以 storage 事件（資料已可讀取時才觸發）再保險一次 */
+function scheduleSync(){clearTimeout(syncT);syncT=setTimeout(doSync,60);}
+PCMP.on("*",(k,m,remote)=>{if(k==="activity")return;if(remote){scheduleSync();return;}doSync();});
+window.addEventListener("storage",e=>{if(e.key&&e.key.indexOf("pcmp.saas.v1:")===0&&!/activity$/.test(e.key))scheduleSync();});
+initState=(orig=>()=>{orig();S.inboxSeen={};pull();})(initState);
+renderAll=(orig=>()=>{pull();pullInbox();orig();})(renderAll);
+
+/* ---------- 報修（含總幹事指派、機電我的工單） ---------- */
+R.repair=()=>{
+ if(S.done.repair)return doneHero("報修已送出","工單編號 "+S.done.repair+"，處理進度會用 LINE 通知您",[["user-check",S.role==="mgr"?"已列入本社區報修，可指派機電":"已通知總幹事"],["monitor","後台「報修與事件」同步顯示"]]);
+ const techs=PCMP.get("people").filter(p=>p.role==="tech"&&p.sites.includes(site()));
+ return stepH(1,"s_photo")+photoBlock("repair")+
+ stepH(2,"s_cat")+`<div class="row3">${chips("rcat",CATS.map(([k,ic])=>[k,t(k),ic]))}</div>
+ <select class="in" id="rLoc" style="margin-top:10px">${["公設：大廳","公設：B1 機房","公設：B2 停車場","公設：中庭","公設：側門","住戶：A 棟 7F-2","住戶：B 棟 3F-1"].map(x=>`<option ${S.form.rLoc===x?"selected":""}>${x}</option>`).join("")}</select>
+ <textarea class="ta" id="rDesc" style="margin-top:10px" placeholder="簡單描述（可不填）">${esc(S.form.rDesc||"")}</textarea>
+ <button class="bb soft" data-act="voice" data-t="rDesc" id="vb-rDesc" style="margin-top:8px"><i data-lucide="mic"></i>${t("voice")}</button>`+
+ stepH(3,"s_send")+`<button class="bb go" data-act="repairSubmit"><i data-lucide="send"></i>${t("submit")}</button>`+
+ `<h4><i data-lucide="list"></i>本社區報修進度</h4>`+(S.repairs.length?S.repairs.map(x=>`<div class="li"><span class="ic"><i data-lucide="wrench"></i></span><span class="tx"><b>${x.id}・${t(x.cat)}・${esc(x.loc)}</b><small>${esc(x.desc)}・${esc(x.who)}${x.src?"・來源 "+esc(x.src):""}</small>${
+  S.role==="mgr"&&x.st==="已完成"?`<span class="acts"><button class="sb go" data-act="repairClose" data-id="${x.id}"><i data-lucide="check"></i>確認結案</button><button class="sb red" data-act="repairReopen" data-id="${x.id}"><i data-lucide="undo-2"></i>未修好</button></span>`:
+  S.role==="mgr"&&x.st==="待處理"&&techs.length?`<span class="acts"><button class="sb go" data-act="repAssign" data-id="${x.id}"><i data-lucide="user-plus"></i>${x.assignee?"改派":"指派機電"}</button></span>`:""}</span>${stTag(x.st)}</div>`).join(""):`<div class="small" style="font-size:15px">本社區目前沒有報修</div>`);
+};
+R.workorder=()=>{const L=S.workorders.filter(x=>x.site===site());
+ return `<div class="note info"><i data-lucide="building-2"></i><span>目前社區：${esc(site())}（可在「設定」切換）・總幹事或後台指派給您的工單</span></div>`+(L.length?L.map(x=>`<div class="li"><span class="ic"><i data-lucide="hard-hat"></i></span><span class="tx"><b>${x.id}・${t(x.cat)}・${esc(x.loc)}</b><small>${esc(x.desc)}</small>${x.log.length?`<small>${x.log.map(esc).join("<br>")}</small>`:""}<span class="acts">${
+  x.ro?`<span class="small">外包派工：${esc(x.who)}（僅供查看）</span>`:
+  x.st==="待接單"?`<button class="sb go" data-act="woAccept" data-id="${x.id}"><i data-lucide="hand"></i>${t("accept")}</button>`:
+  x.st==="處理中"||x.st==="待料/外包"?`<button class="sb" data-act="woUpdate" data-id="${x.id}"><i data-lucide="pencil"></i>更新進度</button><button class="sb" data-act="woVendor" data-id="${x.id}"><i data-lucide="truck"></i>待料/外包</button><button class="sb go" data-act="woDone" data-id="${x.id}"><i data-lucide="camera"></i>${t("complete")}</button>`:
+  `<span class="small">${x.st==="已完成"?"等待總幹事確認結案":"已結案"}</span>`}</span></span>${stTag(x.st)}</div>`).join(""):`<div class="done-hero"><div class="big"><i data-lucide="check"></i></div><h3>本社區沒有指派給您的工單</h3></div>`);};
+const repTL=(r,t,extra)=>{(r.timeline=r.timeline||[]).push({t,d:PCMP.short(),by:user().n});Object.assign(r,extra||{});};
+const repUpd=(id,fn,text)=>PCMP.update("repairs",L=>{const r=L.find(x=>x.id===id);if(r)fn(r);},mt(text,S.page));
+
+/* ---------- 交接日誌 ---------- */
+R.shift=(orig=>()=>{if(S.done.shift)return doneHero("交接日誌已送出","等待下一班同仁在 LINE 確認接班",[["notebook-pen","編號 "+S.done.shift],["monitor","後台與網頁前台同步顯示"]])+`<button class="bb soft" data-act="shiftAsNext"><i data-lucide="repeat"></i>（原型）切換成下一班同仁確認接班</button>`;return orig();})(R.shift);
+
+Object.assign(A,{
+ /* 報修 */
+ repairSubmit:()=>{keepForm();if(!S.form.rcat){toast("請選擇類別（步驟 2）");return;}
+  const send=()=>{const u=user(),id=PCMP.id("R"),cat=C2CAT[S.form.rcat]||"其他",loc=S.form.rLoc||"公設：大廳",desc=S.form.rDesc||"（附照片）",ph=(S.photos.repair||[]).length;
+   PCMP.update("repairs",L=>{L.unshift({id,site:site(),cat,days:0,st:"待處理",desc,who:"—",assignee:null,src:"LINE",loc,createdBy:u.n,createdById:u.id,createdAt:PCMP.now(),photos:ph,timeline:[{t:"建立（LINE）",d:PCMP.short(),by:u.n}]});},mt("送出報修 "+id+"："+cat+"・"+desc,"repair"));
+   if(S.role!=="mgr")PCMP.push({to:"role:mgr@"+site(),kind:"repair",title:"新報修 "+id,body:cat+"・"+loc+"\n"+desc+"\n報修人："+u.n,link:"liff.html#repair",from:u.n});
+   S.done.repair=id;S.form.rcat=null;S.form.rDesc="";S.photos.repair=[];closeAll();addMsg({k:"bot",txt:"🔧 報修已送出 "+id+"\n類別："+cat+"・狀態：待處理"});openLiffKeep();refresh();};
+  if(!(S.photos.repair||[]).length)modal(`<i data-lucide="camera-off"></i>沒有照片`,`<p style="margin:0">有照片能幫助師傅更快判斷問題。確定不拍照直接送出？</p>`,[{label:"回去拍照"},{label:"直接送出",cls:"primary",fn:send}]);else send();},
+ repAssign:el=>{const id=el.dataset.id,techs=PCMP.get("people").filter(p=>p.role==="tech"&&p.sites.includes(site()));
+  modal(`<i data-lucide="user-plus"></i>指派 ${id}`,`<p style="margin:0 0 10px">選擇本社區的機電人員，系統會用 LINE 通知對方。</p>${techs.map(p=>`<button class="bb soft" data-act="repAssignTo" data-id="${id}" data-emp="${p.id}"><i data-lucide="hard-hat"></i>${esc(p.title)} ${esc(p.n)}</button>`).join("")}`,[{label:t("cancel")}]);},
+ repAssignTo:el=>{const id=el.dataset.id,p=PCMP.person(el.dataset.emp);
+  repUpd(id,r=>repTL(r,"指派 "+p.n,{assignee:p.id,who:"機電 "+p.n,st:"待處理"}),"指派報修 "+id+" 給 "+p.n);
+  const r=PCMP.get("repairs").find(x=>x.id===id);
+  PCMP.push({to:p.id,kind:"workorder",title:"新工單 "+id,body:(r?r.cat+"・"+r.loc+"\n"+r.desc:"")+"\n指派人：總幹事 "+user().n,link:"liff.html#workorder",from:user().n});
+  closeAll();toast("已指派給 "+p.n+"，已 LINE 通知");refresh();},
+ repairClose:el=>{const id=el.dataset.id;repUpd(id,r=>repTL(r,"總幹事確認結案",{st:"結案"}),"報修 "+id+" 確認結案");addMsg({k:"bot",txt:"✔️ 報修 "+id+" 已結案"});refresh();},
+ repairReopen:el=>{const id=el.dataset.id,r0=PCMP.get("repairs").find(x=>x.id===id);repUpd(id,r=>repTL(r,"總幹事退回：未修好",{st:"處理中"}),"報修 "+id+" 退回處理中");
+  if(r0&&isPerson(r0.assignee))PCMP.push({to:r0.assignee,kind:"workorder",title:"工單退回 "+id,body:"總幹事確認未修好，請再處理\n"+r0.desc,link:"liff.html#workorder",from:user().n});
+  addMsg({k:"bot",txt:"↩️ 報修 "+id+" 退回處理中，已通知處理人"});refresh();},
+ woAccept:el=>{const id=el.dataset.id;repUpd(id,r=>repTL(r,"已接單",{st:"處理中"}),"接單 "+id);addMsg({k:"bot",txt:"已接單 "+id+"，總幹事會收到通知"});refresh();},
+ woUpdate:el=>{const id=el.dataset.id;modal(`<i data-lucide="pencil"></i>更新進度 ${id}`,`<textarea class="ta" id="woLog" placeholder="處理狀況"></textarea>`,[{label:t("cancel")},{label:t("submit"),cls:"primary",fn:()=>{const v=formVal("woLog");if(!v){toast("請填寫進度");return;}repUpd(id,r=>repTL(r,v),"更新工單 "+id+"："+v);closeAll();refresh();toast("已更新");}}]);},
+ woVendor:el=>{const id=el.dataset.id;modal(`<i data-lucide="truck"></i>待料／外包 ${id}`,`<select class="in" id="woV"><option>叫料中（等待零件）</option><option>外包：恆昇電梯</option><option>外包：大安機電</option><option>外包：安心消防</option></select><input class="in" id="woCost" type="number" placeholder="預估費用（元，可不填）" style="margin-top:10px"><label class="chk"><input type="checkbox" id="woCmt" checked>費用由管委會支付（F-REP-05）</label>`,[{label:t("cancel")},{label:t("confirm"),cls:"primary",fn:()=>{const v=formVal("woV")+(formVal("woCost")?"・預估 NT$"+fmt(formVal("woCost")):"");repUpd(id,r=>repTL(r,v,{st:"待料/外包"}),"工單 "+id+" 待料/外包");closeAll();refresh();toast("已更新為待料/外包");}}]);},
+ woDone:el=>{const id=el.dataset.id;S.photos.wo=[];modal(`<i data-lucide="camera"></i>${t("complete")} ${id}`,`${photoBlock("wo","拍完工照片")}<textarea class="ta" id="woNote" style="margin-top:10px" placeholder="處理說明"></textarea>`,[{label:t("cancel")},{label:t("submit"),cls:"primary",fn:()=>{if(!(S.photos.wo||[]).length){toast("請拍完工照片");return;}
+  const note=formVal("woNote")||"已修復",r0=PCMP.get("repairs").find(x=>x.id===id);repUpd(id,r=>repTL(r,"完工："+note,{st:"已完成",donePhotos:(S.photos.wo||[]).length}),"工單 "+id+" 完工");
+  if(r0)PCMP.push({to:"role:mgr@"+r0.site,kind:"repair",title:"報修已完工 "+id,body:r0.desc+"\n機電 "+user().n+"：「"+note+"」\n請確認結案",link:"liff.html#repair",from:user().n});
+  closeAll();addMsg({k:"bot",txt:"🛠️ "+id+" 已完工，等待總幹事確認結案"});refresh();}}]);},
+ /* 事件 */
+ incSubmit:()=>{keepForm();if(!S.form.ilv){toast("請選擇等級（步驟 2）");return;}
+  const u=user(),id=PCMP.id("INC"),lv=S.form.ilv,lvz=C2LV[lv],cat=formVal("iCat")||"其他",desc=S.form.iDesc||"（附照片）";
+  PCMP.update("incidents",L=>{L.unshift({id,lv:lvz,site:site(),ev:desc,cat,t:"今天 "+now(),st:"處理中",src:"LINE",loc:"",by:u.n,byId:u.id,createdAt:PCMP.now(),photos:(S.photos.incident||[]).length,timeline:[{t:"通報（LINE）",d:PCMP.short(),by:u.n}]});},mt(lvz+"事件通報 "+id+"："+cat+"・"+desc,"incident"));
+  if(lv==="lv3"||lv==="lv2")PCMP.push({to:"role:sup",kind:"incident",urgent:lv==="lv3",title:(lv==="lv3"?"緊急事件 ":"重要事件 ")+id,body:site()+"・"+cat+"\n"+desc+"\n通報人："+u.n,link:"admin.html#ops",from:u.n});
+  if(S.role!=="mgr")PCMP.push({to:"role:mgr@"+site(),kind:"incident",urgent:lv==="lv3",title:lvz+"事件 "+id,body:cat+"・"+desc+"\n通報人："+u.n,link:"liff.html#incident",from:u.n});
+  S.done.incident={id,lv};S.form.ilv=null;S.form.iDesc="";S.photos.incident=[];
+  addMsg({k:"card",kind:lv==="lv3"?"k-emg":lv==="lv2"?"k-warn":"k-info",ic:"siren",title:"事件已通報 "+id,body:t(lv)+"・"+cat+"\n"+desc,small:lv==="lv3"?"已即時通知督導、區域經理、營運副總":lv==="lv2"?"已通知督導":"已通知總幹事",p:"incident"});openLiffKeep();refresh();},
+ incUpdate:el=>{const id=el.dataset.id;modal(`<i data-lucide="pencil"></i>更新進度 ${id}`,`<textarea class="ta" id="incLog" placeholder="目前處理狀況"></textarea>`,[{label:t("cancel")},{label:t("submit"),cls:"primary",fn:()=>{const v=formVal("incLog");if(!v){toast("請填寫進度");return;}PCMP.update("incidents",L=>{const x=L.find(i=>i.id===id);if(x)(x.timeline=x.timeline||[]).push({t:v,d:PCMP.short(),by:user().n});},mt("更新事件 "+id+"："+v,"incident"));closeAll();toast("已更新進度");refresh();}}]);},
+ incClose:el=>{const id=el.dataset.id;modal(`<i data-lucide="file-check"></i>結案報告 ${id}`,`<textarea class="ta" id="incSum" placeholder="處理結果與後續預防"></textarea>${photoBlock("incClose","拍結案照片")}`,[{label:t("cancel")},{label:"結案",cls:"primary",fn:()=>{const v=formVal("incSum");if(!v){toast("請填寫結案說明");return;}PCMP.update("incidents",L=>{const x=L.find(i=>i.id===id);if(x){x.st="已結案";(x.timeline=x.timeline||[]).push({t:"結案："+v,d:PCMP.short(),by:user().n});}},mt("事件 "+id+" 結案","incident"));closeAll();addMsg({k:"bot",txt:"✔️ 事件 "+id+" 已結案"});refresh();}}]);},
+ /* 打卡、補卡 */
+ _punch:(type,how,st,reason)=>{const u=user(),tm=now(),out=st!=="正常";
+  PCMP.update("punches",L=>{let r=L.find(p=>p.empId===u.id&&(p.d||DEMO_DAY)===DEMO_DAY);
+   if(!r){r={id:PCMP.id("PU"),d:DEMO_DAY,n:u.n,empId:u.id,site:site(),sh:SHIFT[S.role],in:"—",out:"—",m:how,tags:["正常"],src:"LINE"};L.unshift(r);}
+   if(type==="上班"){r.in=tm;r.inHow=how;r.inOut=out;r.inReason=reason||"";}else{r.out=tm;r.outHow=how;r.outOut=out;r.outReason=reason||"";}
+   r.m=how+(S.clockPhoto?"・附照片":"");r.site=site();
+   if(out){r.tags=(r.tags||[]).filter(x=>x!=="正常");if(!r.tags.includes("範圍外"))r.tags.push("範圍外");r.st="待主管確認";r.reason=reason;}
+  },mt(type+"打卡 "+tm+"・"+site()+(out?"（範圍外，待主管確認）":""),"clock"));
+  if(out)PCMP.push({to:"role:sup",kind:"punch",title:"範圍外打卡待確認",body:u.n+" "+type+" "+tm+"・"+site()+"\n原因："+reason,link:"admin.html#attend",from:u.n});
+  S.photos.clock=[];closeAll();
+  addMsg({k:"bot",txt:(out?"⚠️ ":"✅ ")+type+"打卡 "+tm+"・"+site()+"\n"+how+(out?"\n已送主管確認（原因："+reason+"）":"")});openLiffKeep();refresh();toast(type+"打卡成功");},
+ clockFix:()=>modal(`<i data-lucide="file-clock"></i>${t("clock_fix")}`,`<div class="row2">${chips("fixType",[["上班","補上班卡","log-in"],["下班","補下班卡","log-out"]])}</div><div class="row2" style="margin-top:10px"><input class="in" type="date" id="fixDate" value="2026-11-06"><input class="in" type="time" id="fixTime" value="18:00"></div><textarea class="ta" id="fixReason" style="margin-top:10px" placeholder="原因（必填）"></textarea><p class="small" style="font-size:14px;margin:8px 0 0">送出後由主管在後台審核，核准後才會寫入出勤（B-SCH-05）。</p>`,[{label:t("cancel")},{label:t("apply"),cls:"primary",fn:()=>{
+  if(!S.form.fixType){toast("請選擇補上班或下班卡");return;}const r=formVal("fixReason");if(!r){toast("請填寫原因");return;}const u=user(),d=formVal("fixDate").slice(5).replace("-","/"),tm=formVal("fixTime"),k=S.form.fixType,id=PCMP.id("MK");
+  PCMP.update("makeups",L=>{L.unshift({id,n:u.n,empId:u.id,site:site(),d,k,tm,why:r,st:"待審核",src:"LINE",at:PCMP.now()});},mt("補"+k+"卡申請 "+d+" "+tm,"clock"));
+  PCMP.push({to:"role:sup",kind:"makeup",title:"補卡申請待審核",body:u.n+" 補"+k+"卡 "+d+" "+tm+"\n原因："+r,link:"admin.html#attend",from:u.n});
+  S.form.fixType=null;closeAll();addMsg({k:"bot",txt:"📝 補卡申請已送出："+d+" "+tm+"\n主管審核後會通知您"});openLiffKeep();refresh();}}]),
+ /* 請假 */
+ lvSubmit:()=>{if(!S.form.lvk){toast("請選擇假別");return;}const f=formVal("lvFrom"),to=formVal("lvTo");if(!f||!to||to<f){toast("請確認請假日期");return;}
+  const u=user(),d=f.slice(5).replace("-","/")+(to!==f?"–"+to.slice(5).replace("-","/"):""),half=formVal("lvHalf"),days=half==="全天"?((new Date(to)-new Date(f))/864e5+1)+" 天":"0.5 天",id=PCMP.id("LV"),mgr=S.role==="mgr",kind=S.form.lvk;
+  PCMP.update("leaves",L=>{L.unshift({id,n:u.n,empId:u.id,t:shortTitle(),site:site(),d,k:kind+" "+days,kind,days,half,reason:formVal("lvReason"),first:mgr?"—（總幹事本人）":"待總幹事初審",sub:"—",st:mgr?"待核准":"待總幹事初審",src:"LINE",history:[{t:"申請（LINE）",d:PCMP.short()}]});},mt("申請"+kind+" "+d+"（"+days+"）","leave"));
+  PCMP.push(mgr?{to:"role:sup",kind:"leave",title:"請假待核准",body:u.n+"（總幹事）"+kind+" "+d+" "+days,link:"admin.html#schedule",from:u.n}:{to:"role:mgr@"+site(),kind:"leave",title:"請假待初審",body:u.n+"（"+shortTitle()+"）"+kind+" "+d+" "+days,link:"liff.html#leave",from:u.n});
+  addMsg({k:"bot",txt:"📅 請假申請已送出："+kind+" "+d+"\n審核結果會用 LINE 通知您"});S.form.lvk=null;openLiffKeep();refresh();toast("已送出申請");},
+ lvOk:el=>{const id=el.dataset.id,x=PCMP.get("leaves").find(l=>l.id===id);
+  PCMP.update("leaves",L=>{const l=L.find(v=>v.id===id);l.st="待核准";l.first="總幹事已同意";(l.history=l.history||[]).push({t:"總幹事 "+user().n+" 初審同意",d:PCMP.short()});},mt("初審同意 "+x.n+" 的"+(x.kind||x.k),"leave"));
+  PCMP.push({to:"role:sup",kind:"leave",title:"請假待核准",body:x.n+"（"+x.t+"）"+(x.kind||x.k)+" "+x.d+"\n總幹事已同意"+(x.sub==="需安排代班"?"・需安排代班":""),link:"admin.html#schedule",from:user().n});
+  PCMP.push({to:x.empId,kind:"leave",title:"請假初審通過",body:(x.kind||x.k)+" "+x.d+"\n總幹事已同意，送督導核准",link:"liff.html#leave",from:user().n});
+  addMsg({k:"bot",txt:"已同意 "+x.n+" 的"+(x.kind||x.k)+"，送督導核准"});refresh();},
+ lvNo:el=>{const id=el.dataset.id,x=PCMP.get("leaves").find(l=>l.id===id);modal(`<i data-lucide="x-circle"></i>駁回 ${esc(x.n)} 的請假`,`<textarea class="ta" id="lvNoR" placeholder="駁回原因（會通知員工）"></textarea>`,[{label:t("cancel")},{label:"確定駁回",cls:"danger",fn:()=>{const why=formVal("lvNoR");if(!why){toast("請填寫原因");return;}
+  PCMP.update("leaves",L=>{const l=L.find(v=>v.id===id);l.st="已退回";l.first="總幹事駁回";l.reason2=why;(l.history=l.history||[]).push({t:"總幹事 "+user().n+" 駁回："+why,d:PCMP.short()});},mt("駁回 "+x.n+" 的請假","leave"));
+  PCMP.push({to:x.empId,kind:"leave",title:"請假已退回",body:(x.kind||x.k)+" "+x.d+"\n原因："+why,link:"liff.html#leave",from:user().n});
+  closeAll();toast("已駁回並通知員工");refresh();}}]);},
+ /* 公告 */
+ newsOpen:el=>{const id=el.dataset.id,x=S.news.find(n=>n.id===id);if(!x)return;
+  const mark=()=>PCMP.update("announcements",L=>{const a=L.find(v=>v.id===id);if(a){a.readBy=a.readBy||{};a.readBy[user().id]=PCMP.short();}},mt("已讀公告："+x.title,"news"));
+  if(!x.imp&&!x.read)mark();
+  modal(`<i data-lucide="megaphone"></i>${x.imp?"【重要】":""}${esc(x.title)}`,`<div class="small" style="font-size:14px;margin-bottom:8px">${x.d}・總公司</div><div style="white-space:pre-line">${esc(x.body)}</div>${x.imp&&!x.read?`<div class="note" style="margin-top:12px"><i data-lucide="info"></i><span>重要公告需按「我已閱讀」確認（B-DOC-03）</span></div>`:""}`,
+  x.imp&&!x.read?[{label:t("close")},{label:"我已閱讀",cls:"primary",fn:()=>{mark();closeAll();toast("已確認閱讀");refresh();}}]:[{label:t("close")}]);refresh();},
+ /* 改善單 */
+ impOpen:el=>{impSel=el.dataset.id;const x=findBy(S.improves,impSel);if(!x){impSel=null;return;}if(x.st!=="待改善"){modal(`<i data-lucide="clipboard-check"></i>${x.id}`,`<p style="margin:0">${esc(x.item)}</p><div class="note info"><i data-lucide="info"></i><span>${x.st==="已結案"?"督導已複查結案。":"已回覆："+esc(x.reply)+"<br>等待督導複查。"}</span></div>`,[{label:t("close")}]);impSel=null;return;}S.photos.imp=[];openLiffKeep();},
+ impSubmit:()=>{keepForm();if(!(S.photos.imp||[]).length){toast("請拍改善後照片（步驟 1）");return;}if(!S.form.impText){toast("請填寫改善說明");return;}
+  const id=impSel,txt=S.form.impText,ph=(S.photos.imp||[]).length,x=PCMP.get("improvements").find(v=>v.id===id);
+  PCMP.update("improvements",L=>{const v=L.find(i=>i.id===id);v.st="已回覆待複查";v.reply=txt;v.replyPhotos=ph;v.replyBy=user().n;v.replyAt=PCMP.short();(v.history=v.history||[]).push({t:"總幹事回覆（LINE）："+txt,d:PCMP.short(),by:user().n});},mt("回覆改善單 "+id,"improve"));
+  PCMP.push({to:"role:sup",kind:"improve",title:"改善單已回覆 "+id,body:(x?x.site+"・"+x.item:"")+"\n回覆："+txt+"\n請複查",link:"admin.html#audit",from:user().n});
+  S.form.impText="";impSel=null;addMsg({k:"bot",txt:"📋 改善單 "+id+" 已回覆，等待督導複查"});openLiffKeep();refresh();toast("已回覆");},
+ /* 交接 */
+ shiftSubmit:()=>{keepForm();if(!S.form.tpl&&!formVal("shiftText")){toast("請選擇範本或填寫說明");return;}
+  const u=user(),id=PCMP.id("SL"),items=$$(".hk").map(c=>c.checked?c.parentElement.textContent.trim():null).filter(Boolean),tpl=S.form.tpl||"自行填寫",note=formVal("shiftText");
+  PCMP.update("shiftLogs",L=>{L.unshift({id,site:site(),shift:SHIFT[S.role],by:u.n,byId:u.id,at:PCMP.now(),tpl,items:["範本："+tpl,...items.map(x=>"點交 "+x)],note,st:"待接班確認",confirmedBy:null,src:"LINE"});},mt("送出交接日誌 "+id+"（"+tpl+"）","shift"));
+  Object.keys(USERS).filter(r=>r!==S.role).forEach(r=>{if(USERS[r].sites.includes(site()))PCMP.push({to:USERS[r].id,kind:"shift",title:"交接待確認",body:u.n+" 已送出交接日誌（"+tpl+"）\n請確認接班",link:"liff.html#shift",from:u.n});});
+  S.done.shift=id;S.form.tpl=null;S.form.shiftText="";addMsg({k:"bot",txt:"📝 交接日誌 "+id+" 已送出\n等待下一班確認接班"});openLiffKeep();refresh();},
+ takeover:el=>{const id=el.dataset.id,x=PCMP.get("shiftLogs").find(s=>s.id===id);if(!x)return;
+  PCMP.update("shiftLogs",L=>{const s=L.find(v=>v.id===id);s.st="已確認";s.confirmedBy=user().n;s.confirmedById=user().id;s.confirmedAt=PCMP.now();},mt("確認接班 "+id+"（"+x.by+"）","shift"));
+  if(x.byId)PCMP.push({to:x.byId,kind:"shift",title:"已確認接班",body:user().n+" 已確認您的交接日誌 "+id,link:"liff.html#shift",from:user().n});
+  addMsg({k:"bot",txt:"✅ 已確認接班："+x.by+"\n點交："+(x.items||[]).join("、")});toast("已確認接班");refresh();},
+ shiftAsNext:()=>{const cur=S.role,next=["guard","mgr","clean","tech"].find(r=>r!==cur&&USERS[r].sites.includes(site()));S.done.shift=null;S.role=next;S.lang=user().lang;renderAll();go("shift");if(S.page==="shift")openLiffKeep();toast("已切換為 "+user().title+" "+user().n);},
+});
+
+/* ---------- 保養異常轉報修 → 寫入共用報修 ---------- */
+A.mtRecord=(orig=>el=>{orig(el);const btns=$$("#mFoot [data-foot]");const save=btns[btns.length-1];if(!save)return;const fi=save.dataset.foot,fn=FOOT[fi],x=findBy(S.maint,el.dataset.id);
+ FOOT[fi]=()=>{const bad=formVal("mtRes").startsWith("異常");fn();if(bad){const u=user(),id=PCMP.id("R");PCMP.update("repairs",L=>{L.unshift({id,site:x.site,cat:"其他",days:0,st:"處理中",desc:x.n+" 保養發現異常",who:"機電 "+u.n,assignee:u.id,src:"LINE",loc:"設備",createdBy:u.n,createdAt:PCMP.now(),timeline:[{t:"由保養紀錄轉報修",d:PCMP.short(),by:u.n}]});},mt("保養異常轉報修 "+id,"maint"));}};})(A.mtRecord);
+
+/* ---------- 廠商合約：寫入共用資料層 ---------- */
+Object.assign(A,{
+ vLogSubmit:()=>{keepForm();const n=($("#vlNote")?.value||"").trim();S.form.vlNote=n;
+  if(!S.form.vlc){toast("請先選擇合約");return;}
+  if(!(S.photos.vlog||[]).length){toast("請拍下服務單或現場照片");return;}
+  const u=user(),c=vC(S.form.vlc),ph=S.photos.vlog.length,ok=vp("conf"),d=DEMO_DAY,note=n||"（未填說明）";
+  if(ok)PCMP.update("contracts",L=>{const k=L.find(v=>v.id===c.id);(k.logs=k.logs||[]).push({d,c:note,ph:true,rep:false,src:"LINE",by:u.n});},mt("登記履約並生效："+c.id+"（"+c.cat+"）","vndlog"));
+  else{PCMP.update("submissions",L=>{L.unshift({id:PCMP.id("FS"),kind:"svclog",type:"待確認履約",src:"LINE",who:shortTitle()+" "+u.n,whoId:u.id,contract:c.id,site:c.site,t:PCMP.short(),desc:note+"（照片 "+ph+" 張）",st:"待處理",status:"pending",payload:{d,c:note,ph}});},mt("登記履約（待確認）："+c.id+"（"+c.cat+"）","vndlog"));
+   PCMP.push({to:"role:mgr@"+c.site,kind:"svclog",title:"有待確認的履約",body:shortTitle()+" "+u.n+" 登記了 "+c.cat+"・"+VVEN[c.v].s+"\n請確認後才計入履約率",link:"liff.html#vndpend",from:u.n});}
+  const c2=vC(c.id);S.done.vndlog={ok,c:c.id,msg:ok?"已計入履約率，目前 "+(vRate(c2)??"—")+"%":"總幹事確認後才計入履約率"};
+  S.photos.vlog=[];S.form.vlc=null;S.form.vlNote="";
+  addMsg({k:"bot",txt:(ok?"✅ 履約已登記：":"📝 履約已送出，待總幹事確認：")+c.cat+"・"+VVEN[c.v].s});openLiffKeep();renderMenu();},
+ vPendOk:el=>{const sid=el.dataset.id,sub=PCMP.get("submissions").find(x=>x.id===sid);if(!sub)return;const c=vC(sub.contract),b=vRate(c),p=sub.payload||{};
+  PCMP.update("contracts",L=>{const k=L.find(v=>v.id===sub.contract);(k.logs=k.logs||[]).push({d:p.d||DEMO_DAY,c:p.c||sub.desc||"履約",ph:!!p.ph,rep:false,src:sub.src||"LINE",by:sub.who,confirmedBy:user().n});},null);
+  PCMP.update("submissions",L=>{const s=L.find(v=>v.id===sid);s.status="confirmed";s.st="已確認";s.decidedBy=user().n;s.decidedAt=PCMP.short();},mt("確認履約："+sub.contract+"（"+sub.who+" 登記）","vndpend"));
+  if(sub.whoId)PCMP.push({to:sub.whoId,kind:"svclog",title:"履約已確認",body:c.cat+"・"+VVEN[c.v].s+"\n總幹事 "+user().n+" 已確認，計入履約率",link:"liff.html#vnd",from:user().n});
+  toast("已確認，"+c.cat+" 履約率 "+b+"% → "+vRate(vC(c.id))+"%");openLiffKeep();renderMenu();},
+ vPendNo:el=>{const sid=el.dataset.id,sub=PCMP.get("submissions").find(x=>x.id===sid);if(!sub)return;modal("退回履約登記",`<p style="font-size:16px;margin-top:0">退回後會通知登記人重新補件。</p><textarea class="ta" id="vNoWhy" placeholder="退回原因（必填）"></textarea>`,[{label:t("cancel")},{label:"確認退回",cls:"go",fn:()=>{const w=($("#vNoWhy")?.value||"").trim();if(!w){toast("請填寫退回原因");return;}
+  PCMP.update("submissions",L=>{const s=L.find(v=>v.id===sid);s.status="returned";s.st="已退回";s.reason=w;s.decidedBy=user().n;s.decidedAt=PCMP.short();},mt("退回履約："+sub.contract,"vndpend"));
+  if(sub.whoId)PCMP.push({to:sub.whoId,kind:"svclog",title:"履約登記被退回",body:sub.contract+"\n原因："+w,link:"liff.html#vndlog",from:user().n});
+  closeAll();toast("已退回並通知 "+sub.who);openLiffKeep();renderMenu();}}]);},
+ vRenewSubmit:()=>{keepForm();const n=($("#vrNote")?.value||"").trim();S.form.vrNote=n;
+  if(!S.form.vrc){toast("請先選擇合約");return;}
+  if(!S.form.vri){toast("請選擇處理意向");return;}
+  const u=user(),c=vC(S.form.vrc),intent=S.form.vri,ph=(S.photos.vres||[]).length;
+  if(c.party==="管委會"&&!ph){toast("管委會簽約的合約需附管委會決議照片");return;}
+  PCMP.update("submissions",L=>{L.forEach(s=>{if(s.contract===c.id&&["intent","renew"].includes(s.kind)&&subStatus(s)==="returned")s.superseded=true;});
+   L.unshift({id:PCMP.id("FS"),kind:"intent",type:"續約意向",src:"LINE",who:"總幹事 "+u.n,whoId:u.id,contract:c.id,site:c.site,t:PCMP.short(),desc:"續約意向「"+intent+"」"+(n?"："+n:"")+(ph?"（附管委會決議 "+ph+" 張）":""),st:"待處理",status:"pending",payload:{intent,note:n,resolution:ph}});},mt("提出續約意向（"+intent+"）："+c.id,"vndrenew"));
+  PCMP.push({to:"role:sup",kind:"intent",title:"續約意向待確認",body:c.site+"・"+c.cat+"・"+VVEN[c.v].s+"\n意向：「"+intent+"」",link:"admin.html#vendors",from:u.n});
+  S.done.vndrenew=c.cat+"・"+VVEN[c.v].s+"：「"+intent+"」";S.form.vrc=null;S.form.vri=null;S.form.vrNote="";S.photos.vres=[];
+  addMsg({k:"bot",txt:"📨 續約意向已送督導確認："+c.id});openLiffKeep();renderMenu();},
+});
+
+/* ---------- 控制面板權限勾選 → 寫入共用權限（後台矩陣同步） ---------- */
+document.addEventListener("change",e=>{const k=e.target.dataset&&e.target.dataset.perm;if(!k)return;e.stopImmediatePropagation();
+ if(vBlocked(S.role,k)){e.target.checked=false;return;}const on=e.target.checked,role=S.role,sk=k==="apprv"?"approve":k;
+ PCMP.update("perms",P=>{P.vendor=P.vendor||{};P.vendor[role]=P.vendor[role]||{};P.vendor[role][sk]=on?1:0;},{src:"LINE",who:"原型展示",text:(on?"開放":"取消")+" "+USERS[role].title.replace(/（.*）/,"")+"「"+VPERM.find(x=>x[0]===k)[1]+"」權限",link:"admin.html#roles"});
+ renderAll();toast((on?"已開放：":"已取消：")+VPERM.find(x=>x[0]===k)[1]+"（後台權限矩陣同步）");},true);
+
+/* ---------- 模擬推播：改寫入共用資料層 ---------- */
+doPush=(orig=>k=>{
+ if(!S.disabled&&S.bound){const sp=site(),u=user();
+  if(k==="improve"&&!PCMP.get("improvements").some(x=>x.id==="IM-1110"))PCMP.update("improvements",L=>{L.unshift({id:"IM-1110",site:sp,item:"垃圾分類區異味",sup:"陳志豪",due:"11/15",st:"待改善",reply:"",history:[{t:"督導巡點開立（模擬推播）",d:PCMP.short(),by:"陳志豪"}]});},{src:"後台",who:"督導 陳志豪",text:"開立改善單 IM-1110："+sp,link:"admin.html#audit"});
+  if(k==="news"&&!PCMP.get("announcements").some(x=>x.id==="AN-SIM-4"))PCMP.update("announcements",L=>{L.unshift({id:"AN-SIM-4",d:"2026/11/07",title:"年終盤點作業通知",body:"請於 12/15 前完成社區財產盤點，盤點表請上傳至公告文件中心。",important:false,target:"全部社區",readBy:{}});},{src:"後台",who:"王建民",text:"發布公告：年終盤點作業通知",link:"admin.html#docs"});
+  if(k==="takeover"&&!PCMP.get("shiftLogs").some(x=>x.id==="SL-SIM-N"))PCMP.update("shiftLogs",L=>{L.unshift({id:"SL-SIM-N",site:sp,shift:"夜班 19:00–07:00",by:"Budi Santoso",byId:"E11320",at:"2026/11/07 07:00",items:["02:30 B2 車道積水已通報","冷藏包裹 1 件","鑰匙 6 串、對講機 3 支"],note:"",st:"待接班確認",confirmedBy:null,src:"LINE"});},{src:"LINE",who:"Budi Santoso",text:"送出交接日誌 SL-SIM-N",link:"liff.html#shift"});
+  if(k==="emg")PCMP.update("incidents",L=>{L.unshift({id:PCMP.id("INC"),lv:"緊急",site:sp,ev:"B2 疑似火警警報",cat:"火警",t:"今天 "+now(),st:"處理中",src:"LINE",by:"Budi Santoso",byId:"E11320",timeline:[{t:"通報（LINE）",d:PCMP.short(),by:"Budi Santoso"},{t:"已即時推播督導與主管",d:PCMP.short()}]});},{src:"LINE",who:"Budi Santoso",text:"緊急事件：B2 疑似火警警報",link:"liff.html#incident"});
+  if(k==="vpend"&&!PCMP.get("submissions").some(x=>x.kind==="svclog"&&subStatus(x)==="pending"&&x.site===sp))PCMP.update("submissions",L=>{L.unshift({id:PCMP.id("FS"),kind:"svclog",type:"待確認履約",src:"LINE",who:"機電 王志強",whoId:"E10455",contract:"VC-2026-019",site:"春暉苑",t:PCMP.short(),desc:"除蟲專家到場消毒地下室 B1、B2（照片 1 張）",st:"待處理",status:"pending",payload:{d:DEMO_DAY,c:"除蟲專家到場消毒地下室 B1、B2",ph:1}});},{src:"LINE",who:"機電 王志強",text:"登記履約（待確認）：VC-2026-019",link:"liff.html#vndpend"});
+  if(k==="vret"&&!PCMP.get("submissions").some(x=>x.id==="FS-SIM-RET"))PCMP.update("submissions",L=>{L.unshift({id:"FS-SIM-RET",kind:"intent",type:"續約意向",src:"LINE",who:"總幹事 劉德華",whoId:"E10231",contract:"VC-2026-018",site:"春暉苑",t:PCMP.short(),desc:"續約意向「續約」",st:"已退回",status:"returned",reason:"督導 陳志豪：請補上管委會 11 月會議決議後再送。",payload:{intent:"續約"}});},{src:"後台",who:"督導 陳志豪",text:"退回續約意向：VC-2026-018",link:"admin.html#vendors"});
+  pull();}
+ orig(k);pull();refresh();})(doPush);
+
+/* ---------- 共用資料徽章：放進控制面板頂端 ---------- */
+function mountSync(){PCMP.mountBadge();const b=$("#pcmpSync"),c=$(".ctrl");if(b&&c){b.style.cssText+=";position:static;margin:0 0 14px;justify-content:space-between;width:100%;box-shadow:none";c.prepend(b);}}
+
+initState();renderAll();route();mountSync();
 </script>
 </body>
 </html>
