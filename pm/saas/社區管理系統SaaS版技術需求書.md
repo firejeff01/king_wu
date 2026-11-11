@@ -45,7 +45,7 @@
 
 | 層級 | 選擇 | 版本建議 |
 |---|---|---|
-| 前端 | Vue 3＋TypeScript＋Vite | Vue 2 以上 |
+| 前端 | Vue 3＋TypeScript＋Vite | Vue 3.5 以上 |
 | 後端 | .NET（ASP.NET Core） | **.NET 10 LTS** |
 | 資料庫 | **PostgreSQL** | 17 以上，使用雲端託管服務 |
 | 快取 | Redis | — |
